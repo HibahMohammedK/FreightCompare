@@ -1,0 +1,106 @@
+import React, { useEffect, useRef } from 'react';
+import { useAppSelector, useAppDispatch } from '../../../hooks/redux';
+import { addMessage } from '../../../redux/chatSlice';
+import { MessageBubble } from './MessageBubble';
+import { ChatInput } from './ChatInput';
+import { MessageSquareIcon } from 'lucide-react';
+export const ChatWindow: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const { conversations, activeConversationId, messages } = useAppSelector(
+    (state) => state.chat
+  );
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const activeConversation = conversations.find(
+    (c) => c.id === activeConversationId
+  );
+  const activeMessages = activeConversationId ?
+  messages[activeConversationId] || [] :
+  [];
+  const otherParticipant = activeConversation?.participants.find(
+    (p) => p.id !== currentUser?.id
+  );
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
+  }, [activeMessages]);
+  const handleSendMessage = (content: string) => {
+    if (!activeConversationId || !currentUser) return;
+    dispatch(
+      addMessage({
+        id: `msg-${Date.now()}`,
+        conversationId: activeConversationId,
+        senderId: currentUser.id,
+        senderName: currentUser.name,
+        content,
+        createdAt: new Date().toISOString(),
+        read: true
+      })
+    );
+  };
+  if (!activeConversationId) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-bg-light p-8 text-center">
+        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-text-lighter mb-4 shadow-sm">
+          <MessageSquareIcon size={32} />
+        </div>
+        <h3 className="text-lg font-semibold text-text-dark mb-2">
+          Your Messages
+        </h3>
+        <p className="text-sm text-text-light max-w-sm">
+          Select a conversation from the sidebar to start chatting, or create a
+          new ticket to get support.
+        </p>
+      </div>);
+
+  }
+  return (
+    <div className="flex-1 flex flex-col bg-bg-light h-full">
+      {/* Header */}
+      <div className="h-16 bg-white border-b border-border-light px-6 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold text-sm">
+              {otherParticipant?.name.charAt(0).toUpperCase() || '?'}
+            </div>
+            {activeConversation?.status === 'active' &&
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white" />
+            }
+          </div>
+          <div>
+            <h3 className="font-semibold text-text-dark text-sm">
+              {otherParticipant?.name || 'Unknown'}
+            </h3>
+            <p className="text-xs text-text-light capitalize">
+              {otherParticipant?.role || 'User'}
+            </p>
+          </div>
+        </div>
+        {activeConversation?.status === 'closed' &&
+        <span className="px-3 py-1 bg-bg-light text-text-medium text-xs font-medium rounded-full">
+            Closed
+          </span>
+        }
+      </div>
+
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {activeMessages.map((msg) =>
+        <MessageBubble
+          key={msg.id}
+          message={msg}
+          isOwnMessage={msg.senderId === currentUser?.id} />
+
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <ChatInput
+        onSendMessage={handleSendMessage}
+        disabled={activeConversation?.status === 'closed'} />
+      
+    </div>);
+
+};
