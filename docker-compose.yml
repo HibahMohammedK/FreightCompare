@@ -23,7 +23,7 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_DB: freightcompare
+      POSTGRES_DB: freightcompare_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:

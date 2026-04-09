@@ -1,12 +1,47 @@
-# Frontend dependencies/build
+# ----------------------------
+# Frontend
+# ----------------------------
 frontend/node_modules/
 frontend/dist/
 frontend/build/
 
+# ----------------------------
+# Backend (Django / Python)
+# ----------------------------
+backend/.env
+backend/db.sqlite3
+backend/venv
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Django stuff
+*.log
+staticfiles/
+media/
+
+# ----------------------------
+# General env files
+# ----------------------------
+.env
+.env.*
+
+# ----------------------------
 # IDE files
+# ----------------------------
 .vscode/
 .idea/
 
+# ----------------------------
 # OS files
+# ----------------------------
 .DS_Store
 Thumbs.db
