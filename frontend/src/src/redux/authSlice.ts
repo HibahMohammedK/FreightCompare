@@ -1,70 +1,74 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-export type UserRole = 'user' | 'staff' | 'admin';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface User {
   id: string;
-  name: string;
   email: string;
-  role: UserRole;
-  isPremium: boolean;
-  avatarUrl?: string;
+  username: string;
+  is_verified: boolean;
+  is_staff: boolean;
+  created_at: string;
 }
 
 interface AuthState {
   user: User | null;
+  accessToken: string | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: AuthState = {
-  user: {
-    id: '1',
-    name: 'hibahmohammed.k',
-    email: 'hibah@example.com',
-    role: 'user',
-    isPremium: false
-  },
-  isAuthenticated: true, // Auto-login for demo
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
   loading: false,
-  error: null
+  error: null,
 };
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
+    // 🔐 Set access token (after login or refresh)
+    setAccessToken: (state, action: PayloadAction<string>) => {
+      state.accessToken = action.payload;
+      state.isAuthenticated = true;
+    },
+
+    // 👤 Set user profile
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+    },
+
+    // 🚀 Login start (UI state)
     loginStart: (state) => {
       state.loading = true;
       state.error = null;
     },
-    loginSuccess: (state, action: PayloadAction<User>) => {
-      state.loading = false;
-      state.isAuthenticated = true;
-      state.user = action.payload;
-    },
+
+    // ❌ Login failed
     loginFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
       state.error = action.payload;
     },
+
+    // 🚪 Logout
     logout: (state) => {
       state.user = null;
+      state.accessToken = null;
       state.isAuthenticated = false;
+      state.loading = false;
+      state.error = null;
     },
-    upgradeToPremium: (state) => {
-      if (state.user) {
-        state.user.isPremium = true;
-      }
-    }
-  }
+  },
 });
 
 export const {
+  setAccessToken,
+  setUser,
   loginStart,
-  loginSuccess,
   loginFailure,
   logout,
-  upgradeToPremium
 } = authSlice.actions;
+
 export default authSlice.reducer;

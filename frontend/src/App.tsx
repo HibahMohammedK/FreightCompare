@@ -1,13 +1,17 @@
-// import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './src/redux/store';
+import { useEffect } from "react";
+import { useAppDispatch } from "./src/hooks/redux";
+import { setAccessToken, setUser, logout } from "./src/redux/authSlice";
+import API from "./src/api/axios";
+import { getProfile } from "./src/api/auth";
+
 // Auth Pages
 import { LoginPage } from './src/pages/auth/LoginPage';
 import { RegisterPage } from './src/pages/auth/RegisterPage';
 import { ForgotPasswordPage } from './src/pages/auth/ForgotPasswordPage';
 import { EmailSentPage } from './src/pages/auth/EmailSentPage';
 import { OTPVerificationPage } from './src/pages/auth/OTPVerificationPage';
+
 // User Pages
 import { HomePage } from './src/pages/user/HomePage';
 import { SearchResultsPage } from './src/pages/user/SearchResultsPage';
@@ -17,12 +21,14 @@ import { HistoryPage } from './src/pages/user/HistoryPage';
 import { PricingPage } from './src/pages/user/PricingPage';
 import { SupportPage } from './src/pages/user/SupportPage';
 import { UserChatPage } from './src/pages/user/UserChatPage';
-// Staff Pages
+
+// Staff
 import { StaffLayout } from './src/components/staff/StaffLayout';
 import { StaffDashboardPage } from './src/pages/staff/StaffDashboardPage';
 import { StaffTicketsPage } from './src/pages/staff/StaffTicketsPage';
 import { StaffChatPage } from './src/pages/staff/StaffChatPage';
-// Admin Pages
+
+// Admin
 import { AdminLayout } from './src/components/admin/AdminLayout';
 import { AdminDashboardPage } from './src/pages/admin/AdminDashboardPage';
 import { UserManagementPage } from './src/pages/admin/UserManagementPage';
@@ -32,53 +38,82 @@ import { TicketMonitoringPage } from './src/pages/admin/TicketMonitoringPage';
 import { ChatMonitoringPage } from './src/pages/admin/ChatMonitoringPage';
 import { TransportManagementPage } from './src/pages/admin/TransportManagementPage';
 import { CsvUploadPage } from './src/pages/admin/CsvUploadPage';
+
+// Auth Guards
+import ProtectedRoute from './src/components/auth/ProtectedRoute';
+import PublicRoute from './src/components/auth/PublicRoute';
+
 export function App() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const res = await API.post("/users/token/refresh/");
+        dispatch(setAccessToken(res.data.access));
+
+        const profile = await getProfile();
+        dispatch(setUser(profile.data));
+      } catch {
+        dispatch(logout());
+      }
+    };
+
+    initAuth();
+  }, []);
   return (
-    <Provider store={store}>
       <BrowserRouter>
         <Routes>
-          {/* Auth Routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+
+          {/* 🔓 PUBLIC ROUTES */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/email-sent" element={<EmailSentPage />} />
           <Route path="/verify" element={<OTPVerificationPage />} />
 
-          {/* User Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/search" element={<SearchResultsPage />} />
-          <Route path="/saved" element={<SavedPage />} />
-          <Route path="/compare" element={<ComparePage />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/support" element={<SupportPage />} />
-          <Route path="/chat" element={<UserChatPage />} />
-
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboardPage />} />
-            <Route path="users" element={<UserManagementPage />} />
-            <Route
-              path="subscriptions"
-              element={<SubscriptionManagementPage />} />
-            <Route path="transports" element={<TransportManagementPage />} />
-            <Route path="csv-upload" element={<CsvUploadPage />} />
-            <Route path="staff" element={<StaffManagementPage />} />
-            <Route path="tickets" element={<TicketMonitoringPage />} />
-            <Route path="chats" element={<ChatMonitoringPage />} />
+          {/* 🔐 USER ROUTES */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/search" element={<SearchResultsPage />} />
+            <Route path="/saved" element={<SavedPage />} />
+            <Route path="/compare" element={<ComparePage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/chat" element={<UserChatPage />} />
           </Route>
 
-          {/* Staff Routes */}
-          <Route path="/staff" element={<StaffLayout />}>
-            <Route index element={<StaffDashboardPage />} />
-            <Route path="tickets" element={<StaffTicketsPage />} />
-            <Route path="chat" element={<StaffChatPage />} />
+          {/* 🔐 ADMIN ROUTES */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="users" element={<UserManagementPage />} />
+              <Route path="subscriptions" element={<SubscriptionManagementPage />} />
+              <Route path="transports" element={<TransportManagementPage />} />
+              <Route path="csv-upload" element={<CsvUploadPage />} />
+              <Route path="staff" element={<StaffManagementPage />} />
+              <Route path="tickets" element={<TicketMonitoringPage />} />
+              <Route path="chats" element={<ChatMonitoringPage />} />
+            </Route>
           </Route>
 
-          {/* Fallback */}
+          {/* 🔐 STAFF ROUTES */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/staff" element={<StaffLayout />}>
+              <Route index element={<StaffDashboardPage />} />
+              <Route path="tickets" element={<StaffTicketsPage />} />
+              <Route path="chat" element={<StaffChatPage />} />
+            </Route>
+          </Route>
+
+          {/* 🔁 FALLBACK */}
           <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
       </BrowserRouter>
-    </Provider>);
-
+  );
 }
