@@ -52,7 +52,7 @@ export const HomePage: React.FC = () => {
             className="mb-8">
             
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Welcome back, {user?.name}
+              Welcome back, {user?.username}
             </h1>
             <p className="text-primary-lighter text-lg">
               Find and compare the best air and sea freight options.

@@ -4,8 +4,10 @@ interface User {
   id: string;
   email: string;
   username: string;
+  role: "admin" | "staff" | "customer";
   is_verified: boolean;
   is_staff: boolean;
+  isPremium?: boolean;
   created_at: string;
 }
 

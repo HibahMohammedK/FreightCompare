@@ -153,7 +153,7 @@ class LoginView(TokenObtainPairView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        if not user.is_verified:
+        if not user.is_verified and user.role == "customer":
             return Response(
                 {"error": "Please verify your email first"},
                 status=status.HTTP_403_FORBIDDEN

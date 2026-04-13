@@ -46,3 +46,10 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+    
+    def save(self, *args, **kwargs):
+        if self.is_superuser:
+            self.role = "admin"
+            self.is_verified = True
+            self.is_active = True
+        super().save(*args, **kwargs)

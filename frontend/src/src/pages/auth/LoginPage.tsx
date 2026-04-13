@@ -42,7 +42,18 @@ export const LoginPage: React.FC = () => {
       dispatch(setUser(profileRes.data));
 
       // 5. Navigate
-      navigate('/');
+      const user = profileRes.data;
+
+      dispatch(setUser(user));
+
+      // 🔥 ROLE BASED REDIRECT
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else if (user.role === "staff") {
+        navigate("/staff");
+      } else {
+        navigate("/");
+      }
 
     } catch (err: any) {
       dispatch(loginFailure("Invalid email or password"));

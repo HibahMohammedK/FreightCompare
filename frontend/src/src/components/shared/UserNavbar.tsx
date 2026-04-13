@@ -97,10 +97,10 @@ export const UserNavbar: React.FC = () => {
           <NotificationBell />
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold text-xs">
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
+              {user?.username?.charAt(0).toUpperCase() || 'U'}
             </div>
             <span className="text-sm font-medium text-text-medium">
-              {user?.name}
+              {user?.username}
             </span>
           </div>
           <button

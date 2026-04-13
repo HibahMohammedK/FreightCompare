@@ -88,7 +88,7 @@ export function App() {
           </Route>
 
           {/* 🔐 ADMIN ROUTES */}
-          <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboardPage />} />
               <Route path="users" element={<UserManagementPage />} />
@@ -102,7 +102,7 @@ export function App() {
           </Route>
 
           {/* 🔐 STAFF ROUTES */}
-          <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
             <Route path="/staff" element={<StaffLayout />}>
               <Route index element={<StaffDashboardPage />} />
               <Route path="tickets" element={<StaffTicketsPage />} />

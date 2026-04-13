@@ -115,11 +115,11 @@ export const AdminLayout: React.FC = () => {
 
           <div className="flex items-center gap-3 p-2 mb-4">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm">
-              {user?.name?.charAt(0).toUpperCase() || 'A'}
+              {user?.username?.charAt(0).toUpperCase() || 'A'}
             </div>
             <div className="text-left">
               <p className="text-sm font-semibold text-white truncate w-32">
-                {user?.name}
+                {user?.username}
               </p>
               <p className="text-xs text-primary-lighter">Administrator</p>
             </div>
