@@ -84,7 +84,7 @@ export const TransportCard: React.FC<TransportCardProps> = ({
           <div className="flex items-center gap-2 text-slate-500">
             <ClockIcon size={18} className="text-slate-400" />
             <span className="font-semibold text-slate-700">
-              {carrier.durationDays} days
+              {carrier.durationText} days
             </span>
           </div>
           <div className="flex items-center gap-2 text-slate-500">

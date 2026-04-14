@@ -29,9 +29,25 @@ export const HomePage: React.FC = () => {
   const [transportType, setTransportType] = useState<'all' | 'air' | 'sea'>(
     'all'
   );
+  const [origin, setOrigin] = useState('');
+  const [destination, setDestination] = useState('');
+  const [date, setDate] = useState('');
+  
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/search');
+
+    const queryParams = new URLSearchParams();
+
+    queryParams.set("source", origin.trim());
+    queryParams.set("destination", destination.trim());
+
+    if (date) {
+      queryParams.set("date", date);  // ✅ optional
+    }
+
+    queryParams.set("type", transportType);
+
+    navigate(`/search?${queryParams.toString()}`);
   };
   return (
     <div className="min-h-screen bg-bg-light flex flex-col">
@@ -126,9 +142,10 @@ export const HomePage: React.FC = () => {
                 label="Origin"
                 placeholder="City or port"
                 icon={<MapPinIcon size={18} />}
-                containerClassName="w-full"
-                className="bg-bg-light"
-                required />
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+                required
+              />
               
             </div>
 
@@ -141,9 +158,10 @@ export const HomePage: React.FC = () => {
                 label="Destination"
                 placeholder="City or port"
                 icon={<MapPinIcon size={18} />}
-                containerClassName="w-full"
-                className="bg-bg-light"
-                required />
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                required
+              />
               
             </div>
 
@@ -152,9 +170,9 @@ export const HomePage: React.FC = () => {
                 label="Date"
                 type="date"
                 icon={<CalendarIcon size={18} />}
-                containerClassName="w-full"
-                className="bg-bg-light"
-                required />
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
               
             </div>
 

@@ -8,7 +8,7 @@ export interface Carrier {
   destination: string;
   price: number;
   currency: string;
-  durationDays: number;
+  durationText: number;
   departureDate: string;
   logoInitial: string;
 }
@@ -34,7 +34,7 @@ export const mockCarriers: Carrier[] = [
   destination: 'Rotterdam',
   price: 1950,
   currency: 'USD',
-  durationDays: 22,
+  durationText: 22,
   departureDate: '2026-04-01',
   logoInitial: 'C'
 },
@@ -46,7 +46,7 @@ export const mockCarriers: Carrier[] = [
   destination: 'Rotterdam',
   price: 2100,
   currency: 'USD',
-  durationDays: 21,
+  durationText: 21,
   departureDate: '2026-04-01',
   logoInitial: 'M'
 },
@@ -58,7 +58,7 @@ export const mockCarriers: Carrier[] = [
   destination: 'Rotterdam',
   price: 2250,
   currency: 'USD',
-  durationDays: 19,
+  durationText: 19,
   departureDate: '2026-04-01',
   logoInitial: 'H'
 },
@@ -70,7 +70,7 @@ export const mockCarriers: Carrier[] = [
   destination: 'Rotterdam',
   price: 2400,
   currency: 'USD',
-  durationDays: 18,
+  durationText: 18,
   departureDate: '2026-04-01',
   logoInitial: 'M'
 },
@@ -82,7 +82,7 @@ export const mockCarriers: Carrier[] = [
   destination: 'Rotterdam',
   price: 7800,
   currency: 'USD',
-  durationDays: 3,
+  durationText: 3,
   departureDate: '2026-04-01',
   logoInitial: 'F'
 },
@@ -94,7 +94,7 @@ export const mockCarriers: Carrier[] = [
   destination: 'Rotterdam',
   price: 8100,
   currency: 'USD',
-  durationDays: 2.5,
+  durationText: 2.5,
   departureDate: '2026-03-28',
   logoInitial: 'E'
 },
@@ -106,7 +106,7 @@ export const mockCarriers: Carrier[] = [
   destination: 'Rotterdam',
   price: 8500,
   currency: 'USD',
-  durationDays: 2,
+  durationText: 2,
   departureDate: '2026-04-01',
   logoInitial: 'D'
 },
@@ -118,7 +118,7 @@ export const mockCarriers: Carrier[] = [
   destination: 'Rotterdam',
   price: 9200,
   currency: 'USD',
-  durationDays: 1.5,
+  durationText: 1.5,
   departureDate: '2026-04-01',
   logoInitial: 'U'
 }];
