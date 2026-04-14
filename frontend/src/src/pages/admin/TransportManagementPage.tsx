@@ -1,26 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   Edit3Icon,
   PlusIcon,
   SearchIcon,
   Trash2Icon,
   TruckIcon
 } from 'lucide-react';
+
 import { Card } from '../../components/shared/Card';
 import { Input } from '../../components/shared/Input';
 import { Button } from '../../components/shared/Button';
+
 import { TransportDeleteDialog } from '../../components/admin/TransportDeleteDialog';
 import { TransportFormModal, TransportFormValues } from '../../components/admin/TransportFormModal';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
+
 import {
-  addAdminTransport,
-  deleteAdminTransport,
-  updateAdminTransport
-} from '../../redux/transportSlice';
-import { AdminTransport, mockAdminUsers } from '../../utils/mockData';
+  getTransports,
+  createTransport,
+  deleteTransport,
+  updateTransport // ✅ FIXED
+} from '../../api/transport';
 
 const PAGE_SIZE = 5;
 
@@ -37,248 +37,216 @@ const formatDepartureDate = (value: string) => {
 };
 
 export const TransportManagementPage: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const transports = useAppSelector((state) => state.transport.adminTransports);
+  const [transports, setTransports] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingTransport, setEditingTransport] = useState<AdminTransport | null>(null);
-  const [transportToDelete, setTransportToDelete] = useState<AdminTransport | null>(null);
+  const [editingTransport, setEditingTransport] = useState<any | null>(null);
+  const [transportToDelete, setTransportToDelete] = useState<any | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const companies = useMemo(() => {
-    const companySet = new Set<string>([
-      ...mockAdminUsers.filter((user) => user.role === 'staff' || user.role === 'admin').map((user) => user.name),
-      ...transports.map((transport) => transport.company),
-      'CMA CGM',
-      'MSC Cargo',
-      'Emirates SkyCargo',
-      'DHL Express',
-      'FedEx Freight'
-    ]);
+  // ✅ TOAST STATE (FIXED LOCATION)
+  const [toast, setToast] = useState<{ message: string; type?: string } | null>(null);
 
-    return Array.from(companySet).sort((left, right) => left.localeCompare(right));
-  }, [transports]);
+  const showToast = (message: string, type: string = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
+  // 🔥 FETCH
+  const fetchTransports = async () => {
+    try {
+      const res = await getTransports();
+      setTransports(res.data);
+    } catch (error) {
+      console.error("Error fetching transports:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransports();
+  }, []);
+
+  // 🔍 SEARCH
   const filteredTransports = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return transports;
 
-    return transports.filter((transport) =>
-      [
-        transport.company,
-        transport.transportType,
-        transport.source,
-        transport.destination,
-        transport.duration
-      ].some((value) => value.toLowerCase().includes(query))
+    return transports.filter((t) =>
+      [t.company, t.transport_type, t.source, t.destination]
+        .some((v) => v?.toLowerCase().includes(query))
     );
   }, [search, transports]);
 
+  // 📄 PAGINATION
   const totalPages = Math.max(1, Math.ceil(filteredTransports.length / PAGE_SIZE));
+
   const paginatedTransports = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredTransports.slice(startIndex, startIndex + PAGE_SIZE);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredTransports.slice(start, start + PAGE_SIZE);
   }, [currentPage, filteredTransports]);
 
   useEffect(() => {
-    setCurrentPage((page) => Math.min(page, totalPages));
+    setCurrentPage((p) => Math.min(p, totalPages));
   }, [totalPages]);
+
+  const rangeStart =
+    filteredTransports.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredTransports.length);
+
+  // ➕ CREATE / UPDATE
+  const handleFormSubmit = async (values: TransportFormValues) => {
+    try {
+      const payload = {
+        company_name: values.company,
+        transport_type: values.transportType.toLowerCase(),
+        source: values.source.trim(),
+        destination: values.destination.trim(),
+        price: Number(values.price),
+        duration: Number(values.duration),
+        departure_date: values.departureDate,
+        booking_url: values.bookingUrl,
+      };
+
+      if (editingTransport) {
+        await updateTransport(editingTransport.id, payload);
+        showToast("Transport updated successfully");
+      } else {
+        await createTransport(payload);
+        showToast("Transport created successfully");
+      }
+
+      await fetchTransports();
+
+      setIsFormOpen(false);
+      setEditingTransport(null);
+      setCurrentPage(1);
+
+    } catch (error: any) {
+      console.error(error.response?.data);
+      showToast("Something went wrong", "error");
+    }
+  };
+
+  // ❌ DELETE
+  const handleDelete = async () => {
+    if (!transportToDelete) return;
+
+    try {
+      await deleteTransport(transportToDelete.id);
+      await fetchTransports();
+      setTransportToDelete(null);
+      showToast("Transport deleted successfully");
+    } catch (error) {
+      console.error(error);
+      showToast("Delete failed", "error");
+    }
+  };
+
+  const handleEdit = (t: any) => {
+    setEditingTransport(t);
+    setIsFormOpen(true);
+  };
 
   const openCreateModal = () => {
     setEditingTransport(null);
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = (values: TransportFormValues) => {
-    const normalizedTransport: AdminTransport = {
-      id: editingTransport?.id ?? `transport-${Date.now()}`,
-      company: values.company,
-      transportType: values.transportType,
-      source: values.source.trim(),
-      destination: values.destination.trim(),
-      price: Number(values.price),
-      duration: values.duration.trim(),
-      departureDate: values.departureDate,
-      bookingUrl: values.bookingUrl.trim()
-    };
-
-    if (editingTransport) {
-      dispatch(updateAdminTransport(normalizedTransport));
-    } else {
-      dispatch(addAdminTransport(normalizedTransport));
-    }
-
-    setIsFormOpen(false);
-    setEditingTransport(null);
-    setCurrentPage(1);
-  };
-
-  const handleDelete = () => {
-    if (!transportToDelete) return;
-    dispatch(deleteAdminTransport(transportToDelete.id));
-    setTransportToDelete(null);
-  };
-
-  const rangeStart = filteredTransports.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredTransports.length);
-
   return (
     <div className="flex-1 overflow-y-auto p-8">
-      <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-text-dark">Manage Transports</h1>
-          <p className="mt-1 text-sm text-text-light">
-            Maintain transport listings, booking data, and bulk imports from one place.
-          </p>
+
+      {/* ✅ TOAST UI (FIXED POSITION) */}
+      {toast && (
+        <div className={`fixed top-5 right-5 px-4 py-2 rounded-lg shadow-lg text-white 
+          ${toast.type === "error" ? "bg-red-500" : "bg-green-500"}`}>
+          {toast.message}
         </div>
-        <Button icon={<PlusIcon size={16} />} onClick={openCreateModal}>
+      )}
+
+      {/* HEADER */}
+      <div className="mb-8 flex justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Manage Transports</h1>
+          <p className="text-sm text-gray-500">Maintain transport listings</p>
+        </div>
+        <Button onClick={openCreateModal} icon={<PlusIcon size={16} />}>
           Add Transport
         </Button>
       </div>
 
+      {/* SEARCH */}
       <Card className="mb-6 p-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-text-dark">Transport Listings</h2>
-            <p className="mt-1 text-sm text-text-light">
-              Review and update live transport options shown to your operations team.
-            </p>
-          </div>
-          <div className="w-full md:w-80">
-            <Input
-              placeholder="Search company, route, or type..."
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setCurrentPage(1);
-              }}
-              icon={<SearchIcon size={18} />}
-            />
-          </div>
-        </div>
+        <Input
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+          icon={<SearchIcon size={18} />}
+        />
       </Card>
 
+      {/* TABLE */}
       <Card className="p-0 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse text-left">
-            <thead>
-              <tr className="border-b border-border-light bg-bg-light">
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-medium">Company Name</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-medium">Transport Type</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-medium">Source</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-medium">Destination</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-medium">Price</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-medium">Duration</th>
-                <th className="p-4 text-xs font-semibold uppercase tracking-wider text-text-medium">Departure Date</th>
-                <th className="p-4 text-right text-xs font-semibold uppercase tracking-wider text-text-medium">Actions</th>
+        <div className="p-4 text-sm text-gray-500">
+          Showing {rangeStart}–{rangeEnd} of {filteredTransports.length}
+        </div>
+
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className="p-4">Company</th>
+              <th className="p-4">Type</th>
+              <th className="p-4">Route</th>
+              <th className="p-4">Price</th>
+              <th className="p-4">Departure</th>
+              <th className="p-4 text-right">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {paginatedTransports.map((t) => (
+              <tr key={t.id}>
+                <td className="p-4 flex gap-2">
+                  <TruckIcon size={16} />
+                  {t.company}
+                </td>
+                <td className="p-4">{t.transport_type}</td>
+                <td className="p-4">{t.source} → {t.destination}</td>
+                <td className="p-4">{formatPrice(Number(t.price))}</td>
+                <td className="p-4">{formatDepartureDate(t.departure_date)}</td>
+
+                <td className="p-4 flex gap-2 justify-end">
+                  <Button size="sm" onClick={() => handleEdit(t)}>
+                    <Edit3Icon size={14} />
+                  </Button>
+
+                  <Button size="sm" onClick={() => setTransportToDelete(t)}>
+                    <Trash2Icon size={14} />
+                  </Button>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-border-light">
-              {paginatedTransports.map((transport) => (
-                <tr key={transport.id} className="transition-colors hover:bg-bg-light/50">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light text-primary">
-                        <TruckIcon size={18} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-text-dark">{transport.company}</p>
-                        <a
-                          href={transport.bookingUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-primary hover:text-primary-dark"
-                        >
-                          Booking link
-                        </a>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                        transport.transportType === 'AIR'
-                          ? 'border-air-border bg-air-bg text-air-text'
-                          : 'border-sea-border bg-sea-bg text-sea-text'
-                      }`}
-                    >
-                      {transport.transportType}
-                    </span>
-                  </td>
-                  <td className="p-4 text-sm text-text-medium">{transport.source}</td>
-                  <td className="p-4 text-sm text-text-medium">{transport.destination}</td>
-                  <td className="p-4 text-sm font-semibold text-text-dark">{formatPrice(transport.price)}</td>
-                  <td className="p-4 text-sm text-text-medium">{transport.duration}</td>
-                  <td className="p-4 text-sm text-text-medium">{formatDepartureDate(transport.departureDate)}</td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        icon={<Edit3Icon size={14} />}
-                        onClick={() => {
-                          setEditingTransport(transport);
-                          setIsFormOpen(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="danger"
-                        icon={<Trash2Icon size={14} />}
-                        onClick={() => setTransportToDelete(transport)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {paginatedTransports.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="p-8 text-center text-sm text-text-light">
-                    No transport records found for the current search.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex flex-col gap-4 border-t border-border-light px-4 py-4 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-text-light">
-            Showing {rangeStart}-{rangeEnd} of {filteredTransports.length} transports
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              icon={<ChevronLeftIcon size={14} />}
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-            >
-              Previous
-            </Button>
-            <span className="px-3 text-sm font-medium text-text-medium">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              icon={<ChevronRightIcon size={14} />}
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </Card>
 
+      {/* PAGINATION */}
+      <div className="mt-4 flex justify-between">
+        <span>Page {currentPage} / {totalPages}</span>
+        <div className="flex gap-2">
+          <Button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+            Prev
+          </Button>
+          <Button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+            Next
+          </Button>
+        </div>
+      </div>
+
+      {/* MODALS */}
       <TransportFormModal
         isOpen={isFormOpen}
         onClose={() => {
@@ -286,13 +254,11 @@ export const TransportManagementPage: React.FC = () => {
           setEditingTransport(null);
         }}
         onSubmit={handleFormSubmit}
-        companies={companies}
         initialValues={editingTransport}
       />
 
       <TransportDeleteDialog
-        isOpen={Boolean(transportToDelete)}
-        transportLabel={transportToDelete ? `${transportToDelete.company} (${transportToDelete.source} to ${transportToDelete.destination})` : undefined}
+        isOpen={!!transportToDelete}
         onClose={() => setTransportToDelete(null)}
         onConfirm={handleDelete}
       />

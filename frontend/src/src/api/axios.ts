@@ -4,7 +4,13 @@ import { setAccessToken, logout } from "../redux/authSlice";
 
 const API = axios.create({
   baseURL: "http://localhost:8000/api",
-  withCredentials: true, // 🔥 REQUIRED for cookies
+  withCredentials: true,
+});
+
+// 🔥 Separate instance (no interceptors)
+const refreshAPI = axios.create({
+  baseURL: "http://localhost:8000/api",
+  withCredentials: true,
 });
 
 // Attach access token
@@ -18,25 +24,33 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
-// Auto refresh on 401
+// Response interceptor
 API.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
 
+    // 🔐 TOKEN EXPIRED
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        const res = await API.post("/users/token/refresh/");
+        const res = await refreshAPI.post("/users/token/refresh/"); // ✅ FIXED
 
         store.dispatch(setAccessToken(res.data.access));
 
         originalRequest.headers.Authorization = `Bearer ${res.data.access}`;
         return API(originalRequest);
       } catch (err) {
+        console.error("Refresh failed:", err);
         store.dispatch(logout());
+        return Promise.reject(err);
       }
+    }
+
+    // 🚫 FORBIDDEN
+    if (error.response?.status === 403) {
+      console.error("Access denied:", error.response.data);
     }
 
     return Promise.reject(error);

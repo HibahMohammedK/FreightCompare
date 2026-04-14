@@ -171,7 +171,7 @@ class LoginView(TokenObtainPairView):
                 key="refresh_token",
                 value=refresh,
                 httponly=True,
-                secure=False,  # 🔥 True in production
+                secure=False,  
                 samesite="Lax",
             )
 
