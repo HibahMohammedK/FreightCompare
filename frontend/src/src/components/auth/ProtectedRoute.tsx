@@ -8,17 +8,16 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
-  // ❌ Not logged in
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // ❌ Role not allowed
   if (allowedRoles && (!user || !allowedRoles.includes(user.role))) {
+    if (user?.role === "admin") return <Navigate to="/admin" replace />;
+    if (user?.role === "staff") return <Navigate to="/staff" replace />;
     return <Navigate to="/" replace />;
   }
 
-  // ✅ Allowed
   return <Outlet />;
 };
 

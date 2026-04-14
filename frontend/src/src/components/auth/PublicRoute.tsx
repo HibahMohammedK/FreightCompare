@@ -2,9 +2,15 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAppSelector } from "../../hooks/redux";
 
 const PublicRoute = () => {
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
-  return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
+  if (isAuthenticated && user) {
+    if (user.role === "admin") return <Navigate to="/admin" replace />;
+    if (user.role === "staff") return <Navigate to="/staff" replace />;
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 };
 
 export default PublicRoute;
