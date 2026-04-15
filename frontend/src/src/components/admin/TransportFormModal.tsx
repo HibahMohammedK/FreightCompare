@@ -3,6 +3,8 @@ import { CalendarIcon, LinkIcon } from 'lucide-react';
 import { Modal } from '../shared/Modal';
 import { Button } from '../shared/Button';
 import { Input } from '../shared/Input';
+import { getCompanies } from "../../api/company";
+import CreatableSelect from "react-select/creatable";
 
 export interface TransportFormValues {
   company: string;
@@ -43,6 +45,22 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
 }) => {
   const [values, setValues] = useState<TransportFormValues>(emptyValues);
   const [errors, setErrors] = useState<Partial<Record<keyof TransportFormValues, string>>>({});
+  const [companies, setCompanies] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+  const fetchCompanies = async () => {
+    try {
+      const res = await getCompanies();
+      setCompanies(res.data);
+    } catch (err) {
+      console.error("Failed to fetch companies", err);
+    }
+  };
+
+  if (isOpen) {
+    fetchCompanies();
+  }
+}, [isOpen]);
 
   useEffect(() => {
     if (backendErrors) {
@@ -134,13 +152,41 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
           )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          <Input
-            label="Company"
-            value={values.company}
-            onChange={(e) => updateField('company', e.target.value)}
-            error={errors.company}
-            placeholder="Enter or create company"
-          />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-text-medium">
+              Company
+            </label>
+
+            
+
+              <CreatableSelect
+                options={companies.map(c => ({
+                  label: c.name,
+                  value: c.name
+                }))}
+
+                value={
+                  values.company
+                    ? { label: values.company, value: values.company }
+                    : null
+                }
+
+                onChange={(selected: any) => {
+                  updateField("company", selected?.value || "");
+                }}
+
+                onCreateOption={(inputValue: string) => {
+                  updateField("company", inputValue);
+                }}
+
+                placeholder="Select or type company"
+              />
+
+              
+            {errors.company && (
+              <span className="text-xs text-red-500">{errors.company}</span>
+            )}
+          </div>
           
 
           <div className="flex flex-col gap-1.5">
