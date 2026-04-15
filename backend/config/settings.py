@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "transports",
     "companies",
+    "saved",
 ]
 
 MIDDLEWARE = [

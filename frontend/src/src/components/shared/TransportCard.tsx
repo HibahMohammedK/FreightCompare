@@ -12,23 +12,25 @@ import {
   CalendarIcon } from
 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { toggleSavedRoute, toggleCompareItem } from '../../redux/transportSlice';
+import {toggleCompareItem } from '../../redux/transportSlice';
 interface TransportCardProps {
   carrier: Carrier;
   onBook?: () => void;
   onTrack?: () => void;
   index?: number;
+  isSaved?: boolean;
+  onSaveToggle?: () => void;
 }
 export const TransportCard: React.FC<TransportCardProps> = ({
   carrier,
   onBook,
   onTrack,
-  index = 0
+  index = 0,
+  isSaved,
+  onSaveToggle
 }) => {
   const dispatch = useAppDispatch();
-  const savedRoutes = useAppSelector((state) => state.transport.savedRoutes);
   const compareItems = useAppSelector((state) => state.transport.compareItems);
-  const isSaved = savedRoutes.some((r) => r.id === carrier.id);
   const isComparing = compareItems.some((c) => c.id === carrier.id);
   const isAir = carrier.type === 'air';
   const formatPrice = (price: number) => {
@@ -109,7 +111,7 @@ export const TransportCard: React.FC<TransportCardProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => dispatch(toggleSavedRoute(carrier))}
+            onClick={onSaveToggle}
             className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-medium transition-colors ${isSaved ? 'border-red-200 bg-red-50 text-red-500' : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
             <HeartIcon size={16} className={isSaved ? 'fill-current' : ''} />
             {isSaved ? 'Saved' : 'Save'}

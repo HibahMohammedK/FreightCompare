@@ -16,6 +16,7 @@ import { setFilters } from '../../redux/transportSlice';
 
 import { getTransports } from '../../api/transport';
 import { useLocation, useNavigate } from "react-router-dom";
+import { getSavedTransports, saveTransport, unsaveTransport } from "../../api/saved";
 
 export const SearchResultsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -36,6 +37,49 @@ export const SearchResultsPage: React.FC = () => {
   const source = params.get("source") || "";
   const destination = params.get("destination") || "";
   const date = params.get("date") || "";
+  const [savedMap, setSavedMap] = useState<Record<number, number>>({});
+  
+
+  const fetchSaved = async () => {
+    try {
+      const res = await getSavedTransports();
+
+      const map: Record<number, number> = {};
+
+      res.data.forEach((item: any) => {
+        map[item.transport] = item.id; // 🔥 key = transport_id, value = saved_id
+      });
+
+      setSavedMap(map);
+    } catch (err) {
+      console.error("Failed to fetch saved", err);
+    }
+  };
+
+  const handleSaveToggle = async (transportId: number) => {
+    try {
+      if (savedMap[transportId]) {
+        // 🔴 UNSAVE
+        await unsaveTransport(savedMap[transportId]);
+
+        setSavedMap((prev) => {
+          const updated = { ...prev };
+          delete updated[transportId];
+          return updated;
+        });
+      } else {
+        // 🟢 SAVE
+        const res = await saveTransport(transportId);
+
+        setSavedMap((prev) => ({
+          ...prev,
+          [transportId]: res.data.id,
+        }));
+      }
+    } catch (err) {
+      console.error("Save toggle failed", err);
+    }
+  };
 
   // 🔥 Editable state
   const [searchSource, setSearchSource] = useState(source);
@@ -54,6 +98,10 @@ export const SearchResultsPage: React.FC = () => {
 
     navigate(`/search?${query.toString()}`);
   };
+
+  useEffect(() => {
+    fetchSaved();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -354,6 +402,8 @@ export const SearchResultsPage: React.FC = () => {
                 key={carrier.id}
                 carrier={carrier}
                 onTrack={() => handleTrack(carrier)}
+                isSaved={!!savedMap[carrier.id]}  
+                onSaveToggle={() => handleSaveToggle(carrier.id)}
               />
             ))
           ) : (

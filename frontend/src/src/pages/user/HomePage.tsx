@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserNavbar } from '../../components/shared/UserNavbar';
 import { Button } from '../../components/shared/Button';
@@ -20,11 +20,12 @@ import {
   ShieldCheckIcon } from
 'lucide-react';
 import { useAppSelector } from '../../hooks/redux';
+import { getSavedTransports } from '../../api/saved';
 import { motion } from 'framer-motion';
 export const HomePage: React.FC = () => {
   const user = useAppSelector((state) => state.auth.user);
   const searchHistory = useAppSelector((state) => state.transport.searchHistory);
-  const savedRoutes = useAppSelector((state) => state.transport.savedRoutes);
+  const [savedRoutes, setSavedRoutes] = useState<any[]>([]);
   const navigate = useNavigate();
   const [transportType, setTransportType] = useState<'all' | 'air' | 'sea'>(
     'all'
@@ -49,6 +50,30 @@ export const HomePage: React.FC = () => {
 
     navigate(`/search?${queryParams.toString()}`);
   };
+
+  useEffect(() => {
+    const fetchSaved = async () => {
+      try {
+        const res = await getSavedTransports();
+
+        const mapped = res.data.map((item: any) => ({
+          id: item.transport_details.id,
+          name: item.transport_details.company,
+          type: item.transport_details.transport_type,
+          price: Number(item.transport_details.price),
+          origin: item.transport_details.source,
+          destination: item.transport_details.destination,
+          currency: "USD", // 🔥 fallback (your UI expects this)
+        }));
+
+        setSavedRoutes(mapped);
+      } catch (err) {
+        console.error("Failed to fetch saved routes", err);
+      }
+    };
+
+    fetchSaved();
+  }, []);
   return (
     <div className="min-h-screen bg-bg-light flex flex-col">
       <UserNavbar />
