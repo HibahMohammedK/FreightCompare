@@ -19,7 +19,7 @@ import {
   getTransports,
   createTransport,
   deleteTransport,
-  updateTransport // ✅ FIXED
+  updateTransport
 } from '../../api/transport';
 
 const PAGE_SIZE = 5;
@@ -43,8 +43,7 @@ export const TransportManagementPage: React.FC = () => {
   const [editingTransport, setEditingTransport] = useState<any | null>(null);
   const [transportToDelete, setTransportToDelete] = useState<any | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-
-  // ✅ TOAST STATE (FIXED LOCATION)
+  const [formErrors, setFormErrors] = useState<any>({});
   const [toast, setToast] = useState<{ message: string; type?: string } | null>(null);
 
   const showToast = (message: string, type: string = "success") => {
@@ -52,7 +51,6 @@ export const TransportManagementPage: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // 🔥 FETCH
   const fetchTransports = async () => {
     try {
       const res = await getTransports();
@@ -66,7 +64,6 @@ export const TransportManagementPage: React.FC = () => {
     fetchTransports();
   }, []);
 
-  // 🔍 SEARCH
   const filteredTransports = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return transports;
@@ -77,7 +74,6 @@ export const TransportManagementPage: React.FC = () => {
     );
   }, [search, transports]);
 
-  // 📄 PAGINATION
   const totalPages = Math.max(1, Math.ceil(filteredTransports.length / PAGE_SIZE));
 
   const paginatedTransports = useMemo(() => {
@@ -94,8 +90,10 @@ export const TransportManagementPage: React.FC = () => {
 
   const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredTransports.length);
 
-  // ➕ CREATE / UPDATE
+  // ✅ CREATE / UPDATE
   const handleFormSubmit = async (values: TransportFormValues) => {
+    setFormErrors({}); // 🔥 clear old errors
+
     try {
       const payload = {
         company_name: values.company,
@@ -123,12 +121,12 @@ export const TransportManagementPage: React.FC = () => {
       setCurrentPage(1);
 
     } catch (error: any) {
-      console.error(error.response?.data);
-      showToast("Something went wrong", "error");
+      const errors = error.response?.data;
+      setFormErrors(errors || {});
     }
   };
 
-  // ❌ DELETE
+  // DELETE
   const handleDelete = async () => {
     if (!transportToDelete) return;
 
@@ -143,39 +141,26 @@ export const TransportManagementPage: React.FC = () => {
     }
   };
 
-  const handleEdit = (t: any) => {
-    setEditingTransport(t);
-    setIsFormOpen(true);
-  };
-
-  const openCreateModal = () => {
-    setEditingTransport(null);
-    setIsFormOpen(true);
-  };
-
   return (
     <div className="flex-1 overflow-y-auto p-8">
 
-      {/* ✅ TOAST UI (FIXED POSITION) */}
       {toast && (
-        <div className={`fixed top-5 right-5 px-4 py-2 rounded-lg shadow-lg text-white 
+        <div className={`fixed top-5 right-5 px-4 py-2 rounded-lg text-white 
           ${toast.type === "error" ? "bg-red-500" : "bg-green-500"}`}>
           {toast.message}
         </div>
       )}
 
-      {/* HEADER */}
       <div className="mb-8 flex justify-between">
         <div>
           <h1 className="text-2xl font-bold">Manage Transports</h1>
           <p className="text-sm text-gray-500">Maintain transport listings</p>
         </div>
-        <Button onClick={openCreateModal} icon={<PlusIcon size={16} />}>
+        <Button onClick={() => setIsFormOpen(true)} icon={<PlusIcon size={16} />}>
           Add Transport
         </Button>
       </div>
 
-      {/* SEARCH */}
       <Card className="mb-6 p-4">
         <Input
           placeholder="Search..."
@@ -188,24 +173,12 @@ export const TransportManagementPage: React.FC = () => {
         />
       </Card>
 
-      {/* TABLE */}
       <Card className="p-0 overflow-hidden">
         <div className="p-4 text-sm text-gray-500">
           Showing {rangeStart}–{rangeEnd} of {filteredTransports.length}
         </div>
 
         <table className="w-full">
-          <thead>
-            <tr>
-              <th className="p-4">Company</th>
-              <th className="p-4">Type</th>
-              <th className="p-4">Route</th>
-              <th className="p-4">Price</th>
-              <th className="p-4">Departure</th>
-              <th className="p-4 text-right">Actions</th>
-            </tr>
-          </thead>
-
           <tbody>
             {paginatedTransports.map((t) => (
               <tr key={t.id}>
@@ -217,9 +190,11 @@ export const TransportManagementPage: React.FC = () => {
                 <td className="p-4">{t.source} → {t.destination}</td>
                 <td className="p-4">{formatPrice(Number(t.price))}</td>
                 <td className="p-4">{formatDepartureDate(t.departure_date)}</td>
-
                 <td className="p-4 flex gap-2 justify-end">
-                  <Button size="sm" onClick={() => handleEdit(t)}>
+                  <Button size="sm" onClick={() => {
+                    setEditingTransport(t);
+                    setIsFormOpen(true);
+                  }}>
                     <Edit3Icon size={14} />
                   </Button>
 
@@ -231,30 +206,47 @@ export const TransportManagementPage: React.FC = () => {
             ))}
           </tbody>
         </table>
+        <div className="flex items-center justify-between p-4 border-t">
+          {/* Page Info */}
+          <div className="text-sm text-text-light">
+            Page {currentPage} of {totalPages}
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </Card>
 
-      {/* PAGINATION */}
-      <div className="mt-4 flex justify-between">
-        <span>Page {currentPage} / {totalPages}</span>
-        <div className="flex gap-2">
-          <Button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
-            Prev
-          </Button>
-          <Button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
-            Next
-          </Button>
-        </div>
-      </div>
-
-      {/* MODALS */}
       <TransportFormModal
         isOpen={isFormOpen}
         onClose={() => {
           setIsFormOpen(false);
           setEditingTransport(null);
+          setFormErrors({});
         }}
         onSubmit={handleFormSubmit}
         initialValues={editingTransport}
+        backendErrors={formErrors}
       />
 
       <TransportDeleteDialog

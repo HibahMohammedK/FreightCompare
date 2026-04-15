@@ -19,7 +19,8 @@ interface TransportFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (values: TransportFormValues) => void;
-  initialValues?: any | null; // 🔥 no mock dependency
+  initialValues?: any | null;
+  backendErrors?: any; 
 }
 
 const emptyValues: TransportFormValues = {
@@ -37,10 +38,26 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  initialValues
+  initialValues,
+  backendErrors
 }) => {
   const [values, setValues] = useState<TransportFormValues>(emptyValues);
   const [errors, setErrors] = useState<Partial<Record<keyof TransportFormValues, string>>>({});
+
+  useEffect(() => {
+    if (backendErrors) {
+      setErrors((prev) => ({
+        ...prev,
+        company: backendErrors.company?.[0],
+        source: backendErrors.source?.[0],
+        destination: backendErrors.destination?.[0],
+        price: backendErrors.price?.[0],
+        duration: backendErrors.duration?.[0],
+        departureDate: backendErrors.departure_date?.[0],
+        bookingUrl: backendErrors.booking_url?.[0],
+      }));
+    }
+  }, [backendErrors]);
 
   // 🔥 HANDLE EDIT / CREATE
   useEffect(() => {
@@ -110,6 +127,11 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-3xl">
       <form className="space-y-6" onSubmit={handleSubmit}>
+        {backendErrors?.non_field_errors && (
+            <div className="text-sm text-red-500">
+              {backendErrors.non_field_errors[0]}
+            </div>
+          )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <Input
