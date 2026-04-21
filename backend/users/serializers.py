@@ -41,3 +41,47 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "is_staff",
             "created_at",
         ]
+
+
+class AdminUserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "username",
+            "role",
+            "is_active",
+            "is_verified",
+            "created_at",
+        ]
+
+
+class CreateStaffSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    class Meta:
+        model = User
+        fields = [
+            "email",
+            "username",
+            "password",
+        ]
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "Email already exists."
+            )
+        return value
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            email=validated_data["email"],
+            username=validated_data["username"],
+            password=validated_data["password"],
+            role="staff",
+            is_verified=True,
+            is_active=True,
+        )
+        return user

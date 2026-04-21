@@ -1,29 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/shared/Card';
 import { Button } from '../../components/shared/Button';
 import { Input } from '../../components/shared/Input';
 import { SearchIcon, ShieldIcon, UserIcon } from 'lucide-react';
-import { mockAdminUsers } from '../../utils/mockData';
+import {
+  getAdminUsers,
+  getUsersByUrl,
+  toggleBlockUser
+} from "../../api/adminUsers";
+
 export const UserManagementPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const [users, setUsers] = useState(mockAdminUsers);
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
-  const toggleBlockUser = (id: string) => {
-  setUsers(
-    users.map((u) =>
-      u.id === id
-        ? { ...u, isBlocked: !u.isBlocked }
-        : u
-    )
-  );
-};
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [nextPage, setNextPage] = useState<string | null>(null);
+  const [prevPage, setPrevPage] = useState<string | null>(null);
+
+  const handleToggleBlock = async (id: string) => {
+    try {
+        await toggleBlockUser(id);
+
+        setUsers(prev =>
+          prev.map(user =>
+              user.id === id
+              ? {
+                  ...user,
+                  is_active: !user.is_active
+                }
+              : user
+          )
+        );
+
+    } catch (err) {
+        console.error("Block failed", err);
+    }
+  };
+
+  const fetchUsers = async (
+    url?: string,
+    role?: string,
+    searchTerm?: string
+  ) => {
+
+    try {
+
+      let res;
+
+      if (url) {
+
+        res = await getUsersByUrl(url);
+
+      } else {
+
+        res = await getAdminUsers(
+          role || roleFilter,
+          searchTerm || search
+        );
+
+      }
+
+      setUsers(res.data.results || []);
+      setNextPage(res.data.next);
+      setPrevPage(res.data.previous);
+
+    } catch (err) {
+
+      console.error("Failed loading users", err);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
+
+ useEffect(() => {
+
+    fetchUsers(
+      undefined,
+      roleFilter,
+      search
+    );
+
+  }, [roleFilter, search]);
+
+  if (loading) {
+    return <div className="p-8">Loading users...</div>;
+  }
 
   return (
     <div className="flex-1 overflow-y-auto p-8">
@@ -53,7 +118,7 @@ export const UserManagementPage: React.FC = () => {
               className="w-full rounded-xl border border-border-light bg-white px-4 py-2.5 text-sm text-text-darker focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
               
               <option value="all">All Roles</option>
-              <option value="user">Users</option>
+              <option value="customer">Users</option>
               <option value="staff">Staff</option>
               <option value="admin">Admins</option>
             </select>
@@ -91,7 +156,7 @@ export const UserManagementPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-light">
-              {filteredUsers.map((user) =>
+              {users.map((user) =>
               <tr
                 key={user.id}
                 className="hover:bg-bg-light/50 transition-colors">
@@ -109,10 +174,10 @@ export const UserManagementPage: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-text-dark">
-                          {user.name}
+                          {user.username}
                         </p>
                         <p className="text-xs text-text-light">{user.email}</p>
-                        {user.isBlocked && (
+                        {!user.is_active && (
                         <span className="ml-2 text-xs text-error font-medium">
                           Blocked
                         </span>
@@ -128,7 +193,7 @@ export const UserManagementPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="p-4">
-                    {user.role === 'user' ?
+                    {user.role === 'customer' ?
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isPremium ? 'bg-warning-bg text-warning border border-yellow-200' : 'bg-bg-light text-text-medium border border-border-light'}`}>
                     
@@ -141,18 +206,18 @@ export const UserManagementPage: React.FC = () => {
                   <td className="p-4 text-right">
                    {user.role !== 'admin' && (
                     <Button
-                      variant={user.isBlocked ? 'secondary' : 'danger'}
+                      variant={!user.is_active ? 'secondary' : 'danger'}
                       size="sm"
-                      onClick={() => toggleBlockUser(user.id)}
+                      onClick={() => handleToggleBlock(user.id)}
                     >
-                      {user.isBlocked ? 'Unblock' : 'Block'}
+                      {!user.is_active ? 'Unblock' : 'Block'}
                     </Button>
                   )}
                   </td>
                 </tr>
               )}
               
-              {filteredUsers.length === 0 &&
+              {users.length === 0 &&
               <tr>
                   <td colSpan={4} className="p-8 text-center text-text-light">
                     No users found matching your search.
@@ -161,8 +226,24 @@ export const UserManagementPage: React.FC = () => {
               }
             </tbody>
           </table>
+          <div className="flex justify-between p-4">
+        <Button
+        disabled={!prevPage}
+        onClick={() => prevPage && fetchUsers(prevPage)}
+        >
+        Previous
+        </Button>
+
+        <Button
+        disabled={!nextPage}
+        onClick={() => nextPage && fetchUsers(nextPage)}
+        >
+        Next
+        </Button>
+        </div>
         </div>
       </Card>
+      
     </div>);
 
 };

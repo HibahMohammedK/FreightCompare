@@ -12,10 +12,20 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from django.core.cache import cache
 from django.contrib.auth import authenticate
+from django.db.models import Q
 
 import uuid
 
 from .utils import generate_otp, hash_otp, send_otp_email
+
+from rest_framework.permissions import BasePermission
+from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView
+from rest_framework.pagination import PageNumberPagination
+
+from .serializers import (
+    AdminUserListSerializer,
+    CreateStaffSerializer,
+)
 
 
 # =========================
@@ -215,3 +225,74 @@ class ProfileView(RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+    
+# ========================================================================================================
+# ================  ADMIN VIEWS =============================
+# ========================================================================================================
+
+class IsAdminRole(BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated
+            and request.user.role == "admin"
+        )
+    
+class AdminUserPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+class AdminUserListView(ListAPIView):
+    serializer_class = AdminUserListSerializer
+    permission_classes = [IsAuthenticated, IsAdminRole]
+    pagination_class = AdminUserPagination
+
+    def get_queryset(self):
+
+        queryset = User.objects.all().order_by("-created_at")
+
+        role = self.request.query_params.get("role")
+        search = self.request.query_params.get("search")
+
+        if role and role != "all":
+            queryset = queryset.filter(role=role)
+
+        if search:
+            queryset = queryset.filter(
+                Q(username__icontains=search) |
+                Q(email__icontains=search)
+            )
+
+        return queryset
+
+
+class CreateStaffView(CreateAPIView):
+    serializer_class = CreateStaffSerializer
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+
+class ToggleUserBlockView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def patch(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=404
+            )
+
+        if user.role == "admin":
+            return Response(
+                {"error": "Admin cannot be blocked"},
+                status=400
+            )
+
+        user.is_active = not user.is_active
+        user.save()
+
+        return Response({
+            "message": "User updated",
+            "is_active": user.is_active
+        })
