@@ -43,3 +43,99 @@ def send_otp_email(email, otp):
 
     email_msg.attach_alternative(html_content, "text/html")
     email_msg.send()
+
+
+def send_staff_credentials_email(
+    email,
+    username,
+    password
+):
+    subject = "Your Frieght Compare Staff Account Has Been Created"
+
+    text_content = f"""
+Hello {username},
+
+An administrator created your Write Compiler staff account.
+
+Login Email: {email}
+
+Temporary Password: {password}
+
+Please log in and change your password after first login.
+
+Regards,
+Frieght Compare Team
+"""
+
+    html_content = f"""
+    <html>
+      <body style="font-family: Arial; background:#f9f9f9; padding:20px;">
+        <div style="
+            max-width:500px;
+            margin:auto;
+            background:white;
+            padding:30px;
+            border-radius:10px;
+        ">
+
+          <h2 style="color:#1e40af;">
+            Welcome to Frieght Compare
+          </h2>
+
+          <p>
+            Your staff account has been created.
+          </p>
+
+          <p>
+            Use the credentials below to log in:
+          </p>
+
+          <div style="
+            background:#f3f4f6;
+            padding:20px;
+            border-radius:8px;
+            margin-top:20px;
+            margin-bottom:20px;
+          ">
+
+            <p>
+              <strong>Email:</strong> {email}
+            </p>
+
+            <p>
+              <strong>Username:</strong> {username}
+            </p>
+
+            <p>
+              <strong>Temporary Password:</strong> {password}
+            </p>
+
+          </div>
+
+          <p style="color:#b91c1c;">
+            Please change your password after first login.
+          </p>
+
+          <p>
+            Regards,<br/>
+            Frieght Compare Team
+          </p>
+
+        </div>
+      </body>
+    </html>
+    """
+
+    email_msg = EmailMultiAlternatives(
+        subject,
+        text_content,
+        None,
+        [email],
+    )
+
+    email_msg.attach_alternative(
+        html_content,
+        "text/html"
+    )
+
+    email_msg.send()

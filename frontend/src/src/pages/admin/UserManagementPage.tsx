@@ -6,17 +6,59 @@ import { SearchIcon, ShieldIcon, UserIcon } from 'lucide-react';
 import {
   getAdminUsers,
   getUsersByUrl,
-  toggleBlockUser
+  toggleBlockUser,
+  createStaff
 } from "../../api/adminUsers";
+
+import { Modal } from "../../components/shared/Modal";
+import {
+ EyeIcon,
+ EyeOffIcon
+} from "lucide-react";
 
 export const UserManagementPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [prevPage, setPrevPage] = useState<string | null>(null);
+
+  const [showCreateStaffModal, setShowCreateStaffModal] = useState(false);
+  const [staffForm, setStaffForm] = useState({
+    username:"",
+    email:"",
+    password:""
+  });
+
+  const handleCreateStaff = async (
+    e: React.FormEvent
+    ) => {
+
+    e.preventDefault();
+
+    try {
+
+      await createStaff(staffForm);
+      setStaffForm({
+        username:"",
+        email:"",
+        password:""
+      });
+
+      setShowCreateStaffModal(false);
+
+      fetchUsers(); // refresh list
+
+    } catch(err) {
+
+      console.error(err);
+
+    }
+
+    };
 
   const handleToggleBlock = async (id: string) => {
     try {
@@ -127,7 +169,7 @@ export const UserManagementPage: React.FC = () => {
             <Button
             variant="primary"
             size="md"
-            onClick={() => console.log('Open create staff modal')}
+            onClick={() => setShowCreateStaffModal(true)}
           >
             + Create Staff
           </Button>
@@ -243,7 +285,81 @@ export const UserManagementPage: React.FC = () => {
         </div>
         </div>
       </Card>
-      
-    </div>);
+      <Modal
+        isOpen={showCreateStaffModal}
+        onClose={() => setShowCreateStaffModal(false)}
+        title="Create Staff Account"
+        maxWidth="max-w-md"
+      >
 
+    <form onSubmit={handleCreateStaff} className="space-y-4">
+
+      <Input
+        label="Username"
+        value={staffForm.username}
+        onChange={(e) =>
+          setStaffForm({
+            ...staffForm,
+            username: e.target.value
+          })
+        }
+      />
+
+      <Input
+        label="Email"
+        value={staffForm.email}
+        onChange={(e) =>
+          setStaffForm({
+            ...staffForm,
+            email: e.target.value
+          })
+        }
+      />
+
+      <div className="relative">
+
+        <Input
+          label="Temporary Password"
+          type={showPassword ? "text" : "password"}
+          value={staffForm.password}
+          onChange={(e) =>
+            setStaffForm({
+              ...staffForm,
+              password: e.target.value
+            })
+          }
+        />
+
+        <button
+          type="button"
+          onClick={() =>
+            setShowPassword(!showPassword)
+          }
+          className="
+            absolute
+            right-3
+            top-[68%]
+            -translate-y-1/2
+            p-1
+            text-text-lighter
+            hover:text-text-medium
+          "
+        >
+
+        {showPassword
+            ? <EyeOffIcon size={20} />
+            : <EyeIcon size={20} />
+        }
+
+        </button>
+      </div>
+
+      <Button type="submit" fullWidth>
+        Create Staff
+      </Button>
+
+    </form>
+
+  </Modal>
+  </div>);
 };

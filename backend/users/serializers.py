@@ -57,8 +57,14 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         ]
 
 
+from .utils import send_staff_credentials_email
+
+
 class CreateStaffSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(
+        write_only=True,
+        min_length=8
+    )
 
     class Meta:
         model = User
@@ -69,19 +75,34 @@ class CreateStaffSerializer(serializers.ModelSerializer):
         ]
 
     def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
+        if User.objects.filter(
+            email=value
+        ).exists():
+
             raise serializers.ValidationError(
                 "Email already exists."
             )
+
         return value
 
+
     def create(self, validated_data):
+
+        raw_password = validated_data["password"]
+
         user = User.objects.create_user(
             email=validated_data["email"],
             username=validated_data["username"],
-            password=validated_data["password"],
+            password=raw_password,
             role="staff",
             is_verified=True,
             is_active=True,
         )
+
+        send_staff_credentials_email(
+            email=user.email,
+            username=user.username,
+            password=raw_password
+        )
+
         return user
