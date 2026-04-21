@@ -37,6 +37,8 @@ import { StaffManagementPage } from './src/pages/admin/StaffManagementPage';
 import { TicketMonitoringPage } from './src/pages/admin/TicketMonitoringPage';
 import { ChatMonitoringPage } from './src/pages/admin/ChatMonitoringPage';
 import { TransportManagementPage } from './src/pages/admin/TransportManagementPage';
+import { CompanyManagementPage } from './src/pages/admin/CompanyManagementPage';
+
 import { CsvUploadPage } from './src/pages/admin/CsvUploadPage';
 
 // Auth Guards
@@ -91,6 +93,7 @@ export function App() {
             <Route path="users" element={<UserManagementPage />} />
             <Route path="subscriptions" element={<SubscriptionManagementPage />} />
             <Route path="transports" element={<TransportManagementPage />} />
+            <Route path="companies" element={<CompanyManagementPage />} />
             <Route path="csv-upload" element={<CsvUploadPage />} />
             <Route path="staff" element={<StaffManagementPage />} />
             <Route path="tickets" element={<TicketMonitoringPage />} />

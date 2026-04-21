@@ -8,7 +8,9 @@ import {
   TicketIcon,
   MessageSquareIcon,
   ArrowRightIcon,
-  PlaneTakeoffIcon } from
+  PlaneTakeoffIcon,
+  Building2Icon
+ } from
 'lucide-react';
 import { useAppSelector } from '../../hooks/redux';
 import { mockAdminUsers, mockStaffMembers } from '../../utils/mockData';
@@ -68,6 +70,12 @@ export const AdminDashboardPage: React.FC = () => {
     desc: 'Manage routes and bulk CSV uploads',
     path: '/admin/transports',
     icon: <PlaneTakeoffIcon size={20} />
+  },
+  {
+    title: 'Companies',
+    desc: 'Manage transport providers',
+    path: '/admin/companies',
+    icon: <Building2Icon size={20} />
   },
   {
     title: 'Manage Users',

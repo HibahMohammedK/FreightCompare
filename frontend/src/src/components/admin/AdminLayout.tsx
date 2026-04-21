@@ -10,7 +10,9 @@ import {
   UserCogIcon,
   TicketIcon,
   MessageSquareIcon,
-  LogOutIcon } from
+  LogOutIcon,
+  Building2Icon
+ } from
 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { logout } from '../../redux/authSlice';
@@ -34,6 +36,11 @@ export const AdminLayout: React.FC = () => {
     name: 'Transport Management',
     path: '/admin/transports',
     icon: <PlaneTakeoffIcon size={20} />
+  },
+  {
+    name: 'Companies',
+    path: '/admin/companies',
+    icon: <Building2Icon size={20} />
   },
   {
     name: 'CSV Upload',
