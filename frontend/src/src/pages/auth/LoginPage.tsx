@@ -13,7 +13,9 @@ import {
   loginFailure,
 } from '../../redux/authSlice';
 
-import { loginUser, getProfile } from '../../api/auth';
+import { loginUser, getProfile, loginWithGoogle  } from '../../api/auth';
+import { GoogleLogin } from "@react-oauth/google";
+
 
 export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +26,29 @@ export const LoginPage: React.FC = () => {
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const handleGoogleLogin = async (credentialResponse: any) => {
+    try {
+      const res = await loginWithGoogle({
+        token: credentialResponse.credential,
+      });
+
+      dispatch(setAccessToken(res.data.access));
+
+      const profileRes = await getProfile();
+      const user = profileRes.data;
+
+      dispatch(setUser(user));
+
+      if (user.role === "admin") navigate("/admin");
+      else if (user.role === "staff") navigate("/staff");
+      else navigate("/");
+
+    } catch (err: any) {
+      setError("Google login failed");
+      console.error(err);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +172,21 @@ export const LoginPage: React.FC = () => {
           Sign up
         </Link>
       </p>
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border-light"></div>
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-text-light">Or continue with</span>
+        </div>
+      </div>
+
+      <div className="flex justify-center">
+        <GoogleLogin
+          onSuccess={handleGoogleLogin}
+          onError={() => setError("Google login failed")}
+        />
+      </div>
     </AuthLayout>
   );
 };

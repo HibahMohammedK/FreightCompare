@@ -3,6 +3,11 @@ import hashlib
 import secrets
 from django.core.mail import EmailMultiAlternatives
 
+from google.oauth2 import id_token
+from google.auth.transport import requests
+import os
+
+
 def generate_otp():
     return str(random.randint(100000, 999999))
 
@@ -187,3 +192,15 @@ def send_password_reset_email(email, token):
 
     email_msg.attach_alternative(html_content, "text/html")
     email_msg.send()
+
+
+def verify_google_token(token):
+    try:
+        idinfo = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            os.getenv("GOOGLE_CLIENT_ID")
+        )
+        return idinfo
+    except Exception:
+        return None

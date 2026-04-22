@@ -14,7 +14,8 @@ from .views import (
     ChangePasswordView,
 
     ForgotPasswordView,
-    ResetPasswordView
+    ResetPasswordView,
+    GoogleLoginView
 )
 
 urlpatterns = [
@@ -23,6 +24,7 @@ urlpatterns = [
     path('resend-otp/', ResendOTPView.as_view()),
 
     path('login/', LoginView.as_view(), name='login'),
+    path('google-login/', GoogleLoginView.as_view(), name='google-login'),
 
     path('token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
 

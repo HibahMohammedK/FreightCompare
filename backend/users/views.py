@@ -29,7 +29,7 @@ from .serializers import (
     ForgotPasswordSerializer,
     ResetPasswordSerializer
 )
-
+from .utils import verify_google_token
 
 # =========================
 # REGISTER
@@ -294,6 +294,47 @@ class ResetPasswordView(APIView):
         return Response({
             "message": "Password reset successful"
         })
+    
+
+class GoogleLoginView(APIView):
+    def post(self, request):
+        token = request.data.get("token")
+
+        idinfo = verify_google_token(token)
+
+        if not idinfo:
+            return Response(
+                {"error": "Invalid Google token"},
+                status=400
+            )
+
+        email = idinfo.get("email")
+        name = idinfo.get("name")
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                "username": name,
+                "is_verified": True,
+            }
+        )
+
+        refresh = RefreshToken.for_user(user)
+
+        res = Response({
+            "access": str(refresh.access_token)
+        })
+
+        res.set_cookie(
+            key="refresh_token",
+            value=str(refresh),
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+        )
+
+        return res
+    
 # =========================
 # PROFILE
 # =========================

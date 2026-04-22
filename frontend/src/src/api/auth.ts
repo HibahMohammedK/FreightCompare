@@ -26,3 +26,6 @@ export const changePassword = (
  );
 
 };
+
+export const loginWithGoogle = (data: { token: string }) =>
+  API.post("/users/google-login/", data);
