@@ -25,7 +25,9 @@ from rest_framework.pagination import PageNumberPagination
 from .serializers import (
     AdminUserListSerializer,
     CreateStaffSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer,
+    ForgotPasswordSerializer,
+    ResetPasswordSerializer
 )
 
 
@@ -216,7 +218,82 @@ class CookieTokenRefreshView(TokenRefreshView):
         request.data["refresh"] = refresh
         return super().post(request, *args, **kwargs)
 
+# =========================
+# Change Password
+# =========================
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def post(self, request):
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        user.set_password(serializer.validated_data["new_password"])
+        user.save()
+
+        return Response({
+            "message": "Password changed successfully"
+        })
+
+from .models import PasswordResetToken
+from .utils import generate_reset_token, hash_token, send_password_reset_email
+from django.utils import timezone
+from datetime import timedelta
+
+class ForgotPasswordView(APIView):
+
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # 🔐 NEVER reveal user existence
+            return Response({
+                "message": "If an account exists, a reset link has been sent."
+            })
+
+        token = generate_reset_token()
+        token_hash = hash_token(token)
+
+        PasswordResetToken.objects.create(
+            user=user,
+            token_hash=token_hash,
+            expires_at=timezone.now() + timedelta(minutes=15)
+        )
+
+        send_password_reset_email(user.email, token)
+
+        return Response({
+            "message": "If an account exists, a reset link has been sent."
+        })
+
+class ResetPasswordView(APIView):
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        reset_obj = serializer.validated_data["reset_obj"]
+        user = reset_obj.user
+
+        user.set_password(serializer.validated_data["new_password"])
+        user.save()
+
+        reset_obj.is_used = True
+        reset_obj.save()
+
+        return Response({
+            "message": "Password reset successful"
+        })
 # =========================
 # PROFILE
 # =========================
@@ -298,22 +375,3 @@ class ToggleUserBlockView(APIView):
             "is_active": user.is_active
         })
     
-
-class ChangePasswordView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        serializer = ChangePasswordSerializer(
-            data=request.data,
-            context={"request": request}
-        )
-
-        serializer.is_valid(raise_exception=True)
-
-        user = request.user
-        user.set_password(serializer.validated_data["new_password"])
-        user.save()
-
-        return Response({
-            "message": "Password changed successfully"
-        })

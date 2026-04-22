@@ -137,3 +137,45 @@ class ChangePasswordSerializer(serializers.Serializer):
             })
 
         return attrs
+    
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+from .models import PasswordResetToken
+from .utils import hash_token
+
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField(min_length=8)
+    confirm_password = serializers.CharField()
+
+    def validate(self, attrs):
+
+        if attrs["new_password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError({
+                "confirm_password": "Passwords do not match"
+            })
+
+        try:
+            validate_password(attrs["new_password"])
+        except Exception as e:
+            raise serializers.ValidationError({
+                "new_password": list(e.messages)
+            })
+
+        token_hash = hash_token(attrs["token"])
+
+        try:
+            reset_obj = PasswordResetToken.objects.get(token_hash=token_hash)
+        except PasswordResetToken.DoesNotExist:
+            raise serializers.ValidationError({
+                "token": "Invalid or expired token"
+            })
+
+        if not reset_obj.is_valid():
+            raise serializers.ValidationError({
+                "token": "Token expired or already used"
+            })
+
+        attrs["reset_obj"] = reset_obj
+        return attrs

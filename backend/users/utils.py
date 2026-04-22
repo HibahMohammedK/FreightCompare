@@ -1,5 +1,6 @@
 import random
 import hashlib
+import secrets
 from django.core.mail import EmailMultiAlternatives
 
 def generate_otp():
@@ -138,4 +139,51 @@ Frieght Compare Team
         "text/html"
     )
 
+    email_msg.send()
+
+
+
+def generate_reset_token():
+    return secrets.token_urlsafe(32)
+
+
+def hash_token(token: str):
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def send_password_reset_email(email, token):
+    reset_link = f"http://localhost:5173/reset-password?token={token}"
+
+    subject = "Reset your FreightCompare password"
+
+    text_content = f"Click the link to reset your password: {reset_link}"
+
+    html_content = f"""
+    <html>
+      <body style="font-family: Arial; background:#f9f9f9; padding:20px;">
+        <div style="max-width:500px; margin:auto; background:white; padding:30px; border-radius:10px;">
+          
+          <h2 style="color:#1e40af;">Reset Your Password</h2>
+
+          <p>Click the button below to reset your password:</p>
+
+          <a href="{reset_link}" style="display:inline-block; padding:10px 20px; background:#1e40af; color:white; text-decoration:none; border-radius:6px;">
+            Reset Password
+          </a>
+
+          <p style="margin-top:20px;">This link expires in 15 minutes.</p>
+
+        </div>
+      </body>
+    </html>
+    """
+
+    email_msg = EmailMultiAlternatives(
+        subject,
+        text_content,
+        None,
+        [email],
+    )
+
+    email_msg.attach_alternative(html_content, "text/html")
     email_msg.send()

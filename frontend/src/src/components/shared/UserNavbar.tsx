@@ -11,6 +11,7 @@ import {
   LogOutIcon } from
 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
+import { logoutUser } from '../../api/auth';
 import { logout } from '../../redux/authSlice';
 import { NotificationBell } from './notification/NotificationBell';
 export const UserNavbar: React.FC = () => {
@@ -20,9 +21,17 @@ export const UserNavbar: React.FC = () => {
   const compareCount = useAppSelector(
     (state) => state.transport.compareItems.length
   );
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser(); // 🔥 clears refresh cookie in backend
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
+      dispatch(logout()); // clear redux state
+      navigate('/login');
+    }
   };
   const navItems = [
   {

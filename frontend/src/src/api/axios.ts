@@ -31,7 +31,13 @@ API.interceptors.response.use(
     const originalRequest = error.config;
 
     // 🔐 TOKEN EXPIRED
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+        error.response?.status === 401 &&
+        !originalRequest._retry &&
+        store.getState().auth.accessToken &&
+        !originalRequest.url.includes("/users/login") &&
+        !originalRequest.url.includes("/users/token/refresh")
+      ){
       originalRequest._retry = true;
 
       try {

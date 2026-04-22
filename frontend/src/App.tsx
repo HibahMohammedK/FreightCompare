@@ -9,6 +9,7 @@ import { getProfile } from "./src/api/auth";
 import { LoginPage } from './src/pages/auth/LoginPage';
 import { RegisterPage } from './src/pages/auth/RegisterPage';
 import { ForgotPasswordPage } from './src/pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from './src/pages/auth/ResetPasswordPage';
 import { EmailSentPage } from './src/pages/auth/EmailSentPage';
 import { OTPVerificationPage } from './src/pages/auth/OTPVerificationPage';
 
@@ -74,6 +75,7 @@ export function App() {
         </Route>
 
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/email-sent" element={<EmailSentPage />} />
         <Route path="/verify" element={<OTPVerificationPage />} />
 

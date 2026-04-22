@@ -6,12 +6,14 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const { accessToken, user } = useAppSelector((state) => state.auth);
 
-  if (!isAuthenticated) {
+  // 🔴 No token → block immediately
+  if (!accessToken) {
     return <Navigate to="/login" replace />;
   }
 
+  // 🔴 Role mismatch
   if (allowedRoles && (!user || !allowedRoles.includes(user.role))) {
     if (user?.role === "admin") return <Navigate to="/admin" replace />;
     if (user?.role === "staff") return <Navigate to="/staff" replace />;

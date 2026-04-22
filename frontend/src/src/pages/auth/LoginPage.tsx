@@ -19,6 +19,8 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -26,27 +28,23 @@ export const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (loading) return;
+    if (!email.trim() || !password.trim()) return;
+
+    setError(null);
+    setLoading(true);
     dispatch(loginStart());
 
     try {
-      // 1. Login
       const res = await loginUser({ email, password });
 
-      // 2. Store access token
       dispatch(setAccessToken(res.data.access));
 
-      // 3. Fetch profile
       const profileRes = await getProfile();
-
-      // 4. Store user
-      dispatch(setUser(profileRes.data));
-
-      // 5. Navigate
       const user = profileRes.data;
 
       dispatch(setUser(user));
 
-      // 🔥 ROLE BASED REDIRECT
       if (user.role === "admin") {
         navigate("/admin");
       } else if (user.role === "staff") {
@@ -56,8 +54,17 @@ export const LoginPage: React.FC = () => {
       }
 
     } catch (err: any) {
-      dispatch(loginFailure("Invalid email or password"));
-      console.error(err);
+      const data = err.response?.data;
+
+      if (data?.error) {
+        setError(data.error);
+      } else {
+        setError("Invalid email or password");
+      }
+
+      dispatch(loginFailure(data?.error || "Login failed"));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,13 +78,17 @@ export const LoginPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleLogin} className="space-y-5">
+
         <Input
           label="Email address"
           type="email"
           placeholder="you@company.com"
           icon={<MailIcon size={18} />}
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError(null);
+          }}
           required
         />
 
@@ -100,7 +111,10 @@ export const LoginPage: React.FC = () => {
               placeholder="••••••••"
               icon={<LockIcon size={18} />}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError(null);
+              }}
               required
             />
 
@@ -114,9 +128,17 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        <Button type="submit" fullWidth className="mt-2">
-          Sign in
+        {/* ✅ Proper error placement */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg mt-2">
+            {error}
+          </div>
+        )}
+
+        <Button type="submit" fullWidth disabled={loading}>
+          {loading ? "Signing in..." : "Sign in"}
         </Button>
+
       </form>
 
       <p className="mt-8 text-center text-sm text-text-light">
