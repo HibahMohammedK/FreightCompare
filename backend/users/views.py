@@ -25,6 +25,7 @@ from rest_framework.pagination import PageNumberPagination
 from .serializers import (
     AdminUserListSerializer,
     CreateStaffSerializer,
+    ChangePasswordSerializer
 )
 
 
@@ -295,4 +296,24 @@ class ToggleUserBlockView(APIView):
         return Response({
             "message": "User updated",
             "is_active": user.is_active
+        })
+    
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        user.set_password(serializer.validated_data["new_password"])
+        user.save()
+
+        return Response({
+            "message": "Password changed successfully"
         })

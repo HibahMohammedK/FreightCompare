@@ -95,14 +95,24 @@ export const UserNavbar: React.FC = () => {
         {/* User Menu */}
         <div className="flex items-center gap-4">
           <NotificationBell />
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/profile")}
+            className="
+              flex items-center
+              gap-2
+              px-2 py-1
+              rounded-lg
+              hover:bg-gray-100
+              transition-colors
+              "
+            >
             <div className="w-8 h-8 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold text-xs">
               {user?.username?.charAt(0).toUpperCase() || 'U'}
             </div>
             <span className="text-sm font-medium text-text-medium">
               {user?.username}
             </span>
-          </div>
+          </button>
           <button
             onClick={handleLogout}
             className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-text-medium-light hover:bg-gray-200 transition-colors"

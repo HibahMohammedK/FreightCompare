@@ -106,3 +106,34 @@ class CreateStaffSerializer(serializers.ModelSerializer):
         )
 
         return user
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField()
+    new_password = serializers.CharField(min_length=8)
+    confirm_password = serializers.CharField()
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+
+        # 🔴 Current password check
+        if not user.check_password(attrs["current_password"]):
+            raise serializers.ValidationError({
+                "current_password": "Current password is incorrect"
+            })
+
+        # 🔴 Match check
+        if attrs["new_password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError({
+                "confirm_password": "Passwords do not match"
+            })
+
+        # 🔴 Django password validators (VERY IMPORTANT)
+        try:
+            validate_password(attrs["new_password"], user)
+        except Exception as e:
+            raise serializers.ValidationError({
+                "new_password": list(e.messages)
+            })
+
+        return attrs

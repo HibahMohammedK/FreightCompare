@@ -11,3 +11,18 @@ export const getProfile = () =>
 
 export const logoutUser = () =>
   API.post("/users/logout/");
+
+export const changePassword = (
+ data: {
+   current_password: string;
+   new_password: string;
+   confirm_password: string;
+ }
+) => {
+
+ return API.post(
+   "/users/change-password/",
+   data
+ );
+
+};

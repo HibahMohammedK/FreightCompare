@@ -15,6 +15,7 @@ import { OTPVerificationPage } from './src/pages/auth/OTPVerificationPage';
 // User Pages
 import { HomePage } from './src/pages/user/HomePage';
 import { SearchResultsPage } from './src/pages/user/SearchResultsPage';
+import { ProfilePage } from './src/pages/user/ProfilePage';
 import { SavedPage } from './src/pages/user/SavedPage';
 import { ComparePage } from './src/pages/user/ComparePage';
 import { HistoryPage } from './src/pages/user/HistoryPage';
@@ -78,6 +79,7 @@ export function App() {
 
         <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/saved" element={<SavedPage />} />
           <Route path="/compare" element={<ComparePage />} />

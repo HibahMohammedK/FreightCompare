@@ -11,6 +11,7 @@ from .views import (
     AdminUserListView,
     CreateStaffView,
     ToggleUserBlockView,
+    ChangePasswordView
 )
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
 
     path('profile/', ProfileView.as_view(), name='profile'),
+    path("change-password/", ChangePasswordView.as_view(), name="change_password"),
 
     path("admin/users/", AdminUserListView.as_view(), name='admin_users'),
     path("admin/staff/create/", CreateStaffView.as_view(), name='create_staff'),
