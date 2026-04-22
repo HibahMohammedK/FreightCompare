@@ -15,15 +15,22 @@ import {
  } from
 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
-import { logout } from '../../redux/authSlice';
 import { NotificationBell } from '../shared/notification/NotificationBell';
+import { logoutUser } from '../../api/auth';
+import { logout } from '../../redux/authSlice';
 export const AdminLayout: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
+      dispatch(logout());
+      navigate("/login");
+    }
   };
   const navItems = [
   {
@@ -120,7 +127,10 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-2 mb-4">
+          <button
+            onClick={() => navigate("/admin/profile")}
+            className="w-full flex items-center gap-3 p-2 mb-4 rounded-xl hover:bg-white/5 transition-colors text-left"
+          >
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm">
               {user?.username?.charAt(0).toUpperCase() || 'A'}
             </div>
@@ -130,7 +140,7 @@ export const AdminLayout: React.FC = () => {
               </p>
               <p className="text-xs text-primary-lighter">Administrator</p>
             </div>
-          </div>
+          </button>
 
           <button
             onClick={handleLogout}

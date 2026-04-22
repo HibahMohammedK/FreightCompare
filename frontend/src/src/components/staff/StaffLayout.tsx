@@ -11,15 +11,22 @@ import {
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { logout } from '../../redux/authSlice';
 import { NotificationBell } from '../shared/notification/NotificationBell';
+import { logoutUser } from '../../api/auth';
 export const StaffLayout: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [status, setStatus] = useState<'online' | 'busy' | 'offline'>('online');
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
+      dispatch(logout());
+      navigate("/login");
+    }
   };
   const navItems = [
   {
@@ -92,48 +99,61 @@ export const StaffLayout: React.FC = () => {
           </div>
 
           <div className="relative mb-4">
+            {/* Profile Button */}
             <button
-              onClick={() => setIsStatusOpen(!isStatusOpen)}
-              className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-bg-light transition-colors">
-              
+              onClick={() => navigate("/staff/profile")}
+              className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-bg-light transition-colors"
+            >
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold text-sm">
-                    {user?.name?.charAt(0).toUpperCase() || 'S'}
+                    {user?.username?.charAt(0).toUpperCase() || 'S'}
                   </div>
+
                   <div
-                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(status)}`} />
-                  
+                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(status)}`}
+                  />
                 </div>
+
                 <div className="text-left">
                   <p className="text-sm font-semibold text-text-dark truncate w-28">
-                    {user?.name}
+                    {user?.username}
                   </p>
-                  <p className="text-xs text-text-light capitalize">{status}</p>
+                  <p className="text-xs text-text-light capitalize">
+                    {status}
+                  </p>
                 </div>
               </div>
-              <ChevronDownIcon size={16} className="text-text-lighter" />
             </button>
 
-            {isStatusOpen &&
-            <div className="absolute bottom-full left-0 w-full mb-2 bg-white rounded-xl shadow-lg border border-border-light overflow-hidden z-50">
-                {(['online', 'busy', 'offline'] as const).map((s) =>
-              <button
-                key={s}
-                onClick={() => {
-                  setStatus(s);
-                  setIsStatusOpen(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-dark hover:bg-bg-light capitalize">
-                
+            {/* Status Dropdown Button */}
+            <button
+              onClick={() => setIsStatusOpen(!isStatusOpen)}
+              className="w-full mt-2 flex items-center justify-center gap-2 py-2 rounded-xl border border-border-light hover:bg-bg-light transition-colors text-sm text-text-medium"
+            >
+              Change Status
+              <ChevronDownIcon size={16} />
+            </button>
+
+            {isStatusOpen && (
+              <div className="absolute bottom-full left-0 w-full mb-2 bg-white rounded-xl shadow-lg border border-border-light overflow-hidden z-50">
+                {(['online', 'busy', 'offline'] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      setStatus(s);
+                      setIsStatusOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-dark hover:bg-bg-light capitalize"
+                  >
                     <div
-                  className={`w-2 h-2 rounded-full ${getStatusColor(s)}`} />
-                
+                      className={`w-2 h-2 rounded-full ${getStatusColor(s)}`}
+                    />
                     {s}
                   </button>
-              )}
+                ))}
               </div>
-            }
+            )}
           </div>
 
           <button

@@ -29,6 +29,7 @@ import { StaffLayout } from './src/components/staff/StaffLayout';
 import { StaffDashboardPage } from './src/pages/staff/StaffDashboardPage';
 import { StaffTicketsPage } from './src/pages/staff/StaffTicketsPage';
 import { StaffChatPage } from './src/pages/staff/StaffChatPage';
+import { StaffProfilePage } from './src/pages/staff/StaffProfilePage';
 
 // Admin
 import { AdminLayout } from './src/components/admin/AdminLayout';
@@ -40,6 +41,7 @@ import { TicketMonitoringPage } from './src/pages/admin/TicketMonitoringPage';
 import { ChatMonitoringPage } from './src/pages/admin/ChatMonitoringPage';
 import { TransportManagementPage } from './src/pages/admin/TransportManagementPage';
 import { CompanyManagementPage } from './src/pages/admin/CompanyManagementPage';
+import { AdminProfilePage } from './src/pages/admin/AdminProfilePage';
 
 import { CsvUploadPage } from './src/pages/admin/CsvUploadPage';
 
@@ -94,6 +96,7 @@ export function App() {
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
+            <Route path="/admin/profile" element={<AdminProfilePage />} />
             <Route path="users" element={<UserManagementPage />} />
             <Route path="subscriptions" element={<SubscriptionManagementPage />} />
             <Route path="transports" element={<TransportManagementPage />} />
@@ -107,6 +110,7 @@ export function App() {
 
         <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
           <Route path="/staff" element={<StaffLayout />}>
+            <Route path="/staff/profile" element={<StaffProfilePage />} />
             <Route index element={<StaffDashboardPage />} />
             <Route path="tickets" element={<StaffTicketsPage />} />
             <Route path="chat" element={<StaffChatPage />} />

@@ -62,7 +62,7 @@ export const StaffDashboardPage: React.FC = () => {
     <div className="flex-1 overflow-y-auto p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-text-dark">
-          Welcome back, {user?.name}
+          Welcome back, {user?.username}
         </h1>
         <p className="text-sm text-text-light">
           Here is what's happening with your assigned support tasks today.
