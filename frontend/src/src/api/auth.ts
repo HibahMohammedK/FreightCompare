@@ -9,6 +9,16 @@ export const registerUser = (data: any) =>
 export const getProfile = () =>
   API.get("/users/profile/");
 
+export const updateProfile = (
+  data: {
+    username: string;
+  }
+) =>
+  API.patch(
+    "/users/profile/update/",
+    data
+  );
+
 export const logoutUser = () =>
   API.post("/users/logout/");
 

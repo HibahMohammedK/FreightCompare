@@ -1,5 +1,5 @@
 from .models import User
-from .serializers import RegisterSerializer, UserProfileSerializer
+from .serializers import RegisterSerializer, UserProfileSerializer, UpdateProfileSerializer
 
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
@@ -340,6 +340,14 @@ class GoogleLoginView(APIView):
 # =========================
 class ProfileView(RetrieveAPIView):
     serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+    
+class UpdateProfileView(UpdateAPIView):
+
+    serializer_class = UpdateProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):

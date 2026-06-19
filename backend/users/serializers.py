@@ -42,6 +42,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
+class UpdateProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ["username"]
 
 class AdminUserListSerializer(serializers.ModelSerializer):
     class Meta:
