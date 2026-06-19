@@ -112,6 +112,25 @@ class CreateStaffSerializer(serializers.ModelSerializer):
 
         return user
 
+class ChangeEmailSerializer(serializers.Serializer):
+    new_email = serializers.EmailField()
+
+    def validate_new_email(self, value):
+
+        if User.objects.filter(
+            email=value
+        ).exists():
+
+            raise serializers.ValidationError(
+                "Email already exists."
+            )
+
+        return value
+
+
+class VerifyEmailChangeSerializer(serializers.Serializer):
+    verification_id = serializers.CharField()
+    otp = serializers.CharField()
 
 class ChangePasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField()

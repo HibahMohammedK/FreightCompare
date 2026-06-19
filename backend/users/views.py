@@ -27,7 +27,9 @@ from .serializers import (
     CreateStaffSerializer,
     ChangePasswordSerializer,
     ForgotPasswordSerializer,
-    ResetPasswordSerializer
+    ResetPasswordSerializer,
+    ChangeEmailSerializer,
+    VerifyEmailChangeSerializer
 )
 from .utils import verify_google_token
 
@@ -352,6 +354,123 @@ class UpdateProfileView(UpdateAPIView):
 
     def get_object(self):
         return self.request.user
+    
+class ChangeEmailView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        serializer = ChangeEmailSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        new_email = serializer.validated_data[
+            "new_email"
+        ]
+
+        otp = generate_otp()
+
+        verification_id = uuid.uuid4().hex
+
+        cache.set(
+            f"email_change:{verification_id}",
+            {
+                "user_id": str(request.user.id),
+                "new_email": new_email,
+                "otp_hash": hash_otp(otp),
+                "attempts": 0,
+            },
+            timeout=300
+        )
+
+        send_otp_email(
+            new_email,
+            otp
+        )
+
+        return Response({
+            "message": "OTP sent",
+            "verification_id": verification_id
+        })
+    
+class VerifyEmailChangeView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        serializer = VerifyEmailChangeSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        verification_id = serializer.validated_data[
+            "verification_id"
+        ]
+
+        otp = serializer.validated_data[
+            "otp"
+        ]
+
+        data = cache.get(
+            f"email_change:{verification_id}"
+        )
+
+        if not data:
+            return Response(
+                {
+                    "error": "OTP expired"
+                },
+                status=400
+            )
+
+        if data["attempts"] >= 5:
+            return Response(
+                {
+                    "error": "Too many attempts"
+                },
+                status=400
+            )
+
+        if hash_otp(otp) != data["otp_hash"]:
+
+            data["attempts"] += 1
+
+            cache.set(
+                f"email_change:{verification_id}",
+                data,
+                timeout=300
+            )
+
+            return Response(
+                {
+                    "error": "Invalid OTP"
+                },
+                status=400
+            )
+
+        request.user.email = data[
+            "new_email"
+        ]
+
+        request.user.save()
+
+        cache.delete(
+            f"email_change:{verification_id}"
+        )
+
+        return Response({
+            "message":
+            "Email updated successfully"
+        })
     
 # ========================================================================================================
 # ================  ADMIN VIEWS =============================

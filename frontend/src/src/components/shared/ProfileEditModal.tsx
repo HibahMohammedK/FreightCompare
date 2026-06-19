@@ -5,7 +5,12 @@ import { Input } from "./Input";
 import { Button } from "./Button";
 
 import { useAppSelector } from "../../hooks/redux";
-import { updateProfile } from "../../api/auth";
+
+import {
+  updateProfile,
+  requestEmailChange,
+  verifyEmailChange
+} from "../../api/auth";
 
 type Props = {
   isOpen: boolean;
@@ -24,6 +29,18 @@ export const ProfileEditModal: React.FC<Props> = ({
   const [username, setUsername] =
     useState("");
 
+  const [email, setEmail] =
+    useState("");
+
+  const [otp, setOtp] =
+    useState("");
+
+  const [verificationId, setVerificationId] =
+    useState("");
+
+  const [otpSent, setOtpSent] =
+    useState(false);
+
   const [loading, setLoading] =
     useState(false);
 
@@ -34,12 +51,14 @@ export const ProfileEditModal: React.FC<Props> = ({
 
     if (isOpen) {
 
-      setUsername(
-        user?.username || ""
-      );
+      setUsername(user?.username || "");
+      setEmail(user?.email || "");
+
+      setOtp("");
+      setOtpSent(false);
+      setVerificationId("");
 
       setMessage("");
-
     }
 
   }, [isOpen, user]);
@@ -49,9 +68,10 @@ export const ProfileEditModal: React.FC<Props> = ({
     try {
 
       setLoading(true);
+      setMessage("");
 
       await updateProfile({
-        username
+        username: username.trim()
       });
 
       setMessage(
@@ -59,14 +79,17 @@ export const ProfileEditModal: React.FC<Props> = ({
       );
 
       setTimeout(() => {
+
         onClose();
         window.location.reload();
+
       }, 1000);
 
     } catch (err: any) {
 
       const error =
         err?.response?.data?.username?.[0] ||
+        err?.response?.data?.error ||
         "Failed to update profile";
 
       setMessage(error);
@@ -75,6 +98,79 @@ export const ProfileEditModal: React.FC<Props> = ({
 
       setLoading(false);
 
+    }
+  };
+
+  const handleEmailChange = async () => {
+
+    if (email.trim() === user?.email) {
+
+      setMessage(
+        "Please enter a different email"
+      );
+
+      return;
+    }
+
+    try {
+
+      setMessage("");
+
+      const response =
+        await requestEmailChange({
+          new_email: email.trim()
+        });
+
+      setVerificationId(
+        response.data.verification_id
+      );
+
+      setOtpSent(true);
+
+      setMessage(
+        "OTP sent to your new email"
+      );
+
+    } catch (err: any) {
+
+      const error =
+        err?.response?.data?.new_email?.[0] ||
+        err?.response?.data?.error ||
+        "Failed to send OTP";
+
+      setMessage(error);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+
+    try {
+
+      setMessage("");
+
+      await verifyEmailChange({
+        verification_id: verificationId,
+        otp
+      });
+
+      setMessage(
+        "Email updated successfully"
+      );
+
+      setTimeout(() => {
+
+        onClose();
+        window.location.reload();
+
+      }, 1000);
+
+    } catch (err: any) {
+
+      const error =
+        err?.response?.data?.error ||
+        "Invalid OTP";
+
+      setMessage(error);
     }
   };
 
@@ -89,10 +185,18 @@ export const ProfileEditModal: React.FC<Props> = ({
       <div className="space-y-5">
 
         {message && (
-          <p className="text-sm text-primary">
+          <p
+            className={`text-sm ${
+              message.toLowerCase().includes("success")
+                ? "text-green-600"
+                : "text-red-500"
+            }`}
+          >
             {message}
           </p>
         )}
+
+        {/* Username */}
 
         <Input
           label="Username"
@@ -102,20 +206,58 @@ export const ProfileEditModal: React.FC<Props> = ({
           }
         />
 
-        <Input
-          label="Email"
-          value={user?.email || ""}
-          disabled
-        />
-
         <Button
           onClick={handleSave}
           disabled={loading}
         >
-          {loading
-            ? "Saving..."
-            : "Save Changes"}
+          {
+            loading
+              ? "Saving..."
+              : "Save Username"
+          }
         </Button>
+
+        <hr />
+
+        {/* Email */}
+
+        <Input
+          label="Email"
+          value={email}
+          onChange={(e) =>
+            setEmail(e.target.value)
+          }
+        />
+
+        <Button
+          type="button"
+          onClick={handleEmailChange}
+        >
+          Change Email
+        </Button>
+
+        {otpSent && (
+
+          <div className="space-y-4">
+
+            <Input
+              label="OTP"
+              value={otp}
+              onChange={(e) =>
+                setOtp(e.target.value)
+              }
+            />
+
+            <Button
+              type="button"
+              onClick={handleVerifyOTP}
+            >
+              Verify OTP
+            </Button>
+
+          </div>
+
+        )}
 
       </div>
 

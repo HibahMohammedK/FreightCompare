@@ -68,3 +68,4 @@ class PasswordResetToken(models.Model):
             not self.is_used and
             self.expires_at > timezone.now()
         )
+    
