@@ -9,15 +9,18 @@ import {
   ChevronDownIcon } from
 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
-import { logout } from '../../redux/authSlice';
+import { logout, updateUserStatus } from '../../redux/authSlice';
 import { NotificationBell } from '../shared/notification/NotificationBell';
 import { logoutUser } from '../../api/auth';
+import { updateMyStatus } from "../../api/staff";
+
 export const StaffLayout: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
-  const [status, setStatus] = useState<'online' | 'busy' | 'offline'>('online');
+
+  const status = user?.status || "offline";
   const handleLogout = async () => {
     try {
       await logoutUser();
@@ -57,6 +60,38 @@ export const StaffLayout: React.FC = () => {
       default:
         return 'bg-success';
     }
+  };
+  
+  const handleStatusChange = async (
+    newStatus:
+      "online" |
+      "busy" |
+      "offline"
+  ) => {
+
+    try {
+
+      await updateMyStatus(
+        newStatus
+      );
+
+      dispatch(
+        updateUserStatus(
+          newStatus
+        )
+      );
+
+      setIsStatusOpen(false);
+
+    } catch (err) {
+
+      console.error(
+        "Status update failed",
+        err
+      );
+
+    }
+
   };
   return (
     <div className="min-h-screen flex bg-bg-light">
@@ -128,7 +163,9 @@ export const StaffLayout: React.FC = () => {
 
             {/* Status Dropdown Button */}
             <button
-              onClick={() => setIsStatusOpen(!isStatusOpen)}
+              onClick={() =>
+                  setIsStatusOpen(!isStatusOpen)
+                }
               className="w-full mt-2 flex items-center justify-center gap-2 py-2 rounded-xl border border-border-light hover:bg-bg-light transition-colors text-sm text-text-medium"
             >
               Change Status
@@ -140,10 +177,9 @@ export const StaffLayout: React.FC = () => {
                 {(['online', 'busy', 'offline'] as const).map((s) => (
                   <button
                     key={s}
-                    onClick={() => {
-                      setStatus(s);
-                      setIsStatusOpen(false);
-                    }}
+                    onClick={() =>
+                      handleStatusChange(s)
+                    }
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-dark hover:bg-bg-light capitalize"
                   >
                     <div

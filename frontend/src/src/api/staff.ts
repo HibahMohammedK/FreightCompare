@@ -61,3 +61,16 @@ export const updateStaffStatus = (
   );
 
 };
+
+export const updateMyStatus = (
+  status: string
+) => {
+
+  return API.patch(
+    "/users/staff/status/",
+    {
+      status
+    }
+  );
+
+};

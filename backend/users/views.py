@@ -32,6 +32,7 @@ from .serializers import (
     VerifyEmailChangeSerializer
 )
 from .utils import verify_google_token
+from .exceptions import handle_exception
 
 # =========================
 # REGISTER
@@ -609,3 +610,53 @@ class UpdateStaffStatusView(APIView):
             "message": "Status updated",
             "status": user.status
         })
+
+
+# ===================================================================================
+# ======================== STAFF VIEWS ==================================
+# ===================================================================================
+class IsStaffRole(BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated
+            and request.user.role == "staff"
+        )
+
+class StaffUpdateOwnStatusView(APIView):
+    permission_classes = [
+        IsAuthenticated,
+        IsStaffRole
+    ]
+
+    def patch(self, request):
+
+        try:
+
+            status_value = request.data.get(
+                "status"
+            )
+
+            if status_value not in [
+                "online",
+                "busy",
+                "offline"
+            ]:
+                return Response(
+                    {"error": "Invalid status"},
+                    status=400
+                )
+
+            request.user.status = status_value
+            request.user.save()
+
+            return Response({
+                "message": "Status updated",
+                "status": request.user.status
+            })
+
+        except Exception as e:
+
+            return handle_exception(
+                e,
+                "Failed to update staff status"
+            )

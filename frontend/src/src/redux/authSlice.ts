@@ -5,6 +5,7 @@ interface User {
   email: string;
   username: string;
   role: "admin" | "staff" | "customer";
+  status?: "online" | "busy" | "offline";
   is_verified: boolean;
   is_staff: boolean;
   isPremium?: boolean;
@@ -62,6 +63,24 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+
+
+    // Staff's status change
+    updateUserStatus: (
+      state,
+      action: PayloadAction<
+        "online" |
+        "busy" |
+        "offline"
+      >
+    ) => {
+
+      if (state.user) {
+        state.user.status =
+          action.payload;
+      }
+
+    },
   },
 });
 
@@ -71,6 +90,7 @@ export const {
   loginStart,
   loginFailure,
   logout,
+  updateUserStatus
 } = authSlice.actions;
 
 export default authSlice.reducer;

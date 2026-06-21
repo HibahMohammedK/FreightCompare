@@ -37,6 +37,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "email",
             "username",
             "role",
+            "status",
             "is_verified",
             "is_staff",
             "created_at",

@@ -278,7 +278,7 @@ export const StaffManagementPage: React.FC = () => {
         )}
         {staff.length === 0 &&
         <div className="col-span-full p-8 text-center text-text-light bg-white rounded-2xl border border-border-light">
-            No staff members found matching your filters.
+            No staff members found.
           </div>
         }
       </div>

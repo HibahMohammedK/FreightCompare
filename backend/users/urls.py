@@ -11,6 +11,8 @@ from .views import (
 
     AdminUserListView,
     CreateStaffView,
+    StaffListView,
+    UpdateStaffStatusView,
     ToggleUserBlockView,
     ChangePasswordView,
 
@@ -19,8 +21,10 @@ from .views import (
     GoogleLoginView,
     ChangeEmailView,
     VerifyEmailChangeView,
-    StaffListView,
-    UpdateStaffStatusView
+   
+    
+    StaffUpdateOwnStatusView
+
 )
 
 urlpatterns = [
@@ -50,4 +54,6 @@ urlpatterns = [
     path("admin/staff/create/", CreateStaffView.as_view(), name='create_staff'),
     path("admin/staff/<uuid:user_id>/status/",UpdateStaffStatusView.as_view(),name="update_staff_status"),
     path("admin/users/<uuid:user_id>/block/", ToggleUserBlockView.as_view(), name = 'block_user'),
+
+    path("staff/status/", StaffUpdateOwnStatusView.as_view(), name="staff_update_status"),
 ]

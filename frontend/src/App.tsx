@@ -14,15 +14,15 @@ import { EmailSentPage } from './src/pages/auth/EmailSentPage';
 import { OTPVerificationPage } from './src/pages/auth/OTPVerificationPage';
 
 // User Pages
-import { HomePage } from './src/pages/user/HomePage';
-import { SearchResultsPage } from './src/pages/user/SearchResultsPage';
-import { ProfilePage } from './src/pages/user/ProfilePage';
-import { SavedPage } from './src/pages/user/SavedPage';
-import { ComparePage } from './src/pages/user/ComparePage';
-import { HistoryPage } from './src/pages/user/HistoryPage';
-import { PricingPage } from './src/pages/user/PricingPage';
-import { SupportPage } from './src/pages/user/SupportPage';
-import { UserChatPage } from './src/pages/user/UserChatPage';
+import { HomePage } from './src/pages/customer/HomePage';
+import { SearchResultsPage } from './src/pages/customer/SearchResultsPage';
+import { ProfilePage } from './src/pages/customer/ProfilePage';
+import { SavedPage } from './src/pages/customer/SavedPage';
+import { ComparePage } from './src/pages/customer/ComparePage';
+import { HistoryPage } from './src/pages/customer/HistoryPage';
+import { PricingPage } from './src/pages/customer/PricingPage';
+import { SupportPage } from './src/pages/customer/SupportPage';
+import { UserChatPage } from './src/pages/customer/UserChatPage';
 
 // Staff
 import { StaffLayout } from './src/components/staff/StaffLayout';
