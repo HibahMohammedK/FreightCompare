@@ -5,6 +5,7 @@ import notificationReducer from './notificationSlice';
 import ticketReducer from './ticketSlice';
 import chatReducer from './chatSlice';
 import subscriptionReducer from './subscriptionSlice';
+import staffReducer from "./staffSlice";
 
 const store = configureStore({
   reducer: {
@@ -13,7 +14,8 @@ const store = configureStore({
     notification: notificationReducer,
     ticket: ticketReducer,
     chat: chatReducer,
-    subscription: subscriptionReducer
+    subscription: subscriptionReducer,
+    staff: staffReducer
   }
 });
 

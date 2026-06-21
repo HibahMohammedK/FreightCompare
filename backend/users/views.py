@@ -484,7 +484,7 @@ class IsAdminRole(BasePermission):
         )
     
 class AdminUserPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 3
     page_size_query_param = "page_size"
     max_page_size = 100
 
@@ -495,13 +495,38 @@ class AdminUserListView(ListAPIView):
 
     def get_queryset(self):
 
-        queryset = User.objects.all().order_by("-created_at")
-
-        role = self.request.query_params.get("role")
+        queryset = User.objects.filter(role='customer').order_by("-created_at")
         search = self.request.query_params.get("search")
+ 
+        if search:
+            queryset = queryset.filter(
+                Q(username__icontains=search) |
+                Q(email__icontains=search)
+            )
 
-        if role and role != "all":
-            queryset = queryset.filter(role=role)
+        return queryset
+    
+class StaffListView(ListAPIView):
+    serializer_class = AdminUserListSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsAdminRole
+    ]
+    pagination_class = AdminUserPagination
+
+    def get_queryset(self):
+
+        queryset = User.objects.filter(
+            role="staff"
+        ).order_by("-created_at")
+
+        search = self.request.query_params.get("search")
+        status = self.request.query_params.get("status")
+
+        if status and status != "all":
+            queryset = queryset.filter(
+                status=status
+            )
 
         if search:
             queryset = queryset.filter(
@@ -542,4 +567,45 @@ class ToggleUserBlockView(APIView):
             "message": "User updated",
             "is_active": user.is_active
         })
-    
+
+class UpdateStaffStatusView(APIView):
+    permission_classes = [
+        IsAuthenticated,
+        IsAdminRole
+    ]
+
+    def patch(self, request, user_id):
+
+        try:
+            user = User.objects.get(
+                id=user_id,
+                role="staff"
+            )
+
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Staff not found"},
+                status=404
+            )
+
+        status_value = request.data.get(
+            "status"
+        )
+
+        if status_value not in [
+            "online",
+            "busy",
+            "offline"
+        ]:
+            return Response(
+                {"error": "Invalid status"},
+                status=400
+            )
+
+        user.status = status_value
+        user.save()
+
+        return Response({
+            "message": "Status updated",
+            "status": user.status
+        })

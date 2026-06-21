@@ -56,6 +56,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
             "email",
             "username",
             "role",
+            "status",
             "is_active",
             "is_verified",
             "created_at",

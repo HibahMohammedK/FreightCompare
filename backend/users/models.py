@@ -13,6 +13,12 @@ class User(AbstractUser):
         ('customer', 'Customer'),
     )
 
+    STATUS_CHOICES = (
+        ("online", "Online"),
+        ("busy", "Busy"),
+        ("offline", "Offline"),
+    )
+
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -27,6 +33,12 @@ class User(AbstractUser):
         max_length=20,
         choices=ROLE_CHOICES,
         default='customer'
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="offline"
     )
 
     is_verified = models.BooleanField(
