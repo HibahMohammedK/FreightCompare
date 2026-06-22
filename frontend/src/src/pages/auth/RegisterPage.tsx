@@ -16,7 +16,13 @@ export const RegisterPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null); // ✅ FIX
+  const [fieldErrors, setFieldErrors] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+    general: "",
+  });
 
   const navigate = useNavigate();
 
@@ -25,7 +31,14 @@ export const RegisterPage: React.FC = () => {
 
     if (loading) return;
 
-    setError(null); // clear old errors
+    // clear old errors
+    setFieldErrors({
+      username: "",
+      email: "",
+      password: "",
+      confirm_password: "",
+      general: "",
+    }); 
 
     try {
       setLoading(true);
@@ -45,29 +58,24 @@ export const RegisterPage: React.FC = () => {
       });
 
     } catch (err: any) {
+
       const errors = err.response?.data;
 
-      // ✅ Proper error mapping
-      if (errors) {
-        if (errors.password) {
-          setError(errors.password[0]);
-        } else if (errors.email) {
-          setError(errors.email[0]);
-        } else if (errors.username) {
-          setError(errors.username[0]);
-        } else if (errors.non_field_errors) {
-          setError(errors.non_field_errors[0]);
-        } else {
-          setError("Registration failed");
-        }
-      } else {
-        setError("Something went wrong");
-      }
+      setFieldErrors({
+        username: errors?.username?.[0] || "",
+        email: errors?.email?.[0] || "",
+        password: errors?.password?.[0] || "",
+        confirm_password: errors?.confirm_password?.[0] || "",
+        general:
+          errors?.non_field_errors?.[0] ||
+          "Registration failed",
+      });
 
-    } finally {
-      setLoading(false);
-    }
-  };
+
+        } finally {
+          setLoading(false);
+        }
+      };
 
   return (
     <AuthLayout>
@@ -91,6 +99,11 @@ export const RegisterPage: React.FC = () => {
           onChange={(e) => setUsername(e.target.value)}
           required
         />
+        {fieldErrors.username && (
+          <p className="text-red-500 text-sm mt-1">
+            {fieldErrors.username}
+          </p>
+        )}
 
         <Input
           label="Email address"
@@ -101,6 +114,12 @@ export const RegisterPage: React.FC = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+
+        {fieldErrors.email && (
+          <p className="text-red-500 text-sm mt-1">
+            {fieldErrors.email}
+          </p>
+        )}
 
         <div className="relative">
           <Input
@@ -113,9 +132,10 @@ export const RegisterPage: React.FC = () => {
             required
           />
 
-          {/* ✅ ERROR MESSAGE */}
-          {error && (
-            <p className="text-red-500 text-sm mt-1">{error}</p>
+          {fieldErrors.password && (
+            <p className="text-red-500 text-sm mt-1">
+              {fieldErrors.password}
+            </p>
           )}
 
           <button
@@ -136,6 +156,11 @@ export const RegisterPage: React.FC = () => {
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
+        {fieldErrors.confirm_password && (
+          <p className="text-red-500 text-sm mt-1">
+            {fieldErrors.confirm_password}
+          </p>
+        )}
 
         <Button type="submit" fullWidth disabled={loading}>
           {loading ? "Creating..." : "Create account"}

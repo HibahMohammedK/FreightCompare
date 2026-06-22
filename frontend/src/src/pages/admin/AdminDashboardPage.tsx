@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/shared/Card';
 import {
@@ -12,57 +12,77 @@ import {
   Building2Icon
  } from
 'lucide-react';
-import { useAppSelector } from '../../hooks/redux';
-import { mockAdminUsers, mockStaffMembers } from '../../utils/mockData';
+
+import { getDashboardMetrics } from '../../api/adminDashboard';
 export const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const tickets = useAppSelector((state) => state.ticket.tickets);
-  const conversations = useAppSelector((state) => state.chat.conversations);
-  const totalUsers = mockAdminUsers.filter((u) => u.role === 'user').length;
-  const premiumUsers = mockAdminUsers.filter(
-    (u) => u.role === 'user' && u.isPremium
-  ).length;
-  const activeStaff = mockStaffMembers.filter(
-    (s) => s.status !== 'offline'
-  ).length;
-  const openTickets = tickets.filter((t) => t.status === 'open').length;
-  const activeChats = conversations.filter((c) => c.status === 'active').length;
-  const metrics = [
-  {
-    label: 'Total Users',
-    value: totalUsers,
-    icon: <UsersIcon size={24} />,
-    color: 'text-primary',
-    bg: 'bg-primary-light'
-  },
-  {
-    label: 'Premium Users',
-    value: premiumUsers,
-    icon: <CreditCardIcon size={24} />,
-    color: 'text-warning',
-    bg: 'bg-warning-bg'
-  },
-  {
-    label: 'Active Staff',
-    value: activeStaff,
-    icon: <UserCogIcon size={24} />,
-    color: 'text-success',
-    bg: 'bg-success-bg'
-  },
-  {
-    label: 'Open Tickets',
-    value: openTickets,
-    icon: <TicketIcon size={24} />,
-    color: 'text-error',
-    bg: 'bg-error-bg'
-  },
-  {
-    label: 'Active Chats',
-    value: activeChats,
-    icon: <MessageSquareIcon size={24} />,
-    color: 'text-primary',
-    bg: 'bg-primary-light'
-  }];
+
+  const [metricsData, setMetricsData] =
+        useState({
+          total_users: 0,
+          premium_users: 0,
+          active_staff: 0,
+          open_tickets: 0,
+          active_chats: 0,
+        });
+  useEffect(() => {
+
+    const fetchMetrics = async () => {
+
+      try {
+
+        const res =
+          await getDashboardMetrics();
+
+        setMetricsData(res.data);
+
+      } catch (err) {
+
+        console.error(err);
+
+      }
+    };
+
+    fetchMetrics();
+
+  }, []);
+    const metrics = [
+    {
+      label: 'Total Users',
+      value: metricsData.total_users,
+      icon: <UsersIcon size={24} />,
+      color: 'text-primary',
+      bg: 'bg-primary-light'
+    },
+    {
+      label: 'Premium Users',
+      value: metricsData.premium_users,
+      icon: <CreditCardIcon size={24} />,
+      color: 'text-warning',
+      bg: 'bg-warning-bg'
+    },
+    {
+      label: 'Active Staff',
+      value: metricsData.active_staff,
+      icon: <UserCogIcon size={24} />,
+      color: 'text-success',
+      bg: 'bg-success-bg'
+    },
+    {
+      label: 'Open Tickets',
+      value: metricsData.open_tickets,
+      icon: <TicketIcon size={24} />,
+      color: 'text-error',
+      bg: 'bg-error-bg'
+    },
+    {
+      label: 'Active Chats',
+      value: metricsData.active_chats,
+      icon: <MessageSquareIcon size={24} />,
+      color: 'text-primary',
+      bg: 'bg-primary-light'
+    }
+  ];
 
   const quickLinks = [
   {

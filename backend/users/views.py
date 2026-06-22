@@ -476,7 +476,6 @@ class VerifyEmailChangeView(APIView):
 # ========================================================================================================
 # ================  ADMIN VIEWS =============================
 # ========================================================================================================
-
 class IsAdminRole(BasePermission):
     def has_permission(self, request, view):
         return (
@@ -484,6 +483,32 @@ class IsAdminRole(BasePermission):
             and request.user.role == "admin"
         )
     
+class AdminDashboardView(APIView):
+    permission_classes = [
+        IsAuthenticated,
+        IsAdminRole
+    ]
+
+    def get(self, request):
+
+        total_users = User.objects.filter(
+            role="customer"
+        ).count()
+
+        active_staff = User.objects.filter(
+            role="staff"
+        ).exclude(
+            status="offline"
+        ).count()
+
+        return Response({
+            "total_users": total_users,
+            "premium_users": 0,
+            "active_staff": active_staff,
+            "open_tickets": 0,
+            "active_chats": 0
+        })
+        
 class AdminUserPagination(PageNumberPagination):
     page_size = 3
     page_size_query_param = "page_size"

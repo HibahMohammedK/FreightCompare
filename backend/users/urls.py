@@ -9,6 +9,7 @@ from .views import (
     VerifyOTPView,
     ResendOTPView,
 
+    AdminDashboardView,
     AdminUserListView,
     CreateStaffView,
     StaffListView,
@@ -48,7 +49,7 @@ urlpatterns = [
     path("forgot-password/", ForgotPasswordView.as_view(), name="forgot_password"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset_password"),
     
-
+    path("admin/dashboard/", AdminDashboardView.as_view(), name ="admin_dashboard"),
     path("admin/users/", AdminUserListView.as_view(), name='admin_users'),
     path("admin/staff/",StaffListView.as_view(),name="staff_list"),
     path("admin/staff/create/", CreateStaffView.as_view(), name='create_staff'),
