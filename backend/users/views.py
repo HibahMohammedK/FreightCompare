@@ -297,7 +297,32 @@ class ResetPasswordView(APIView):
         return Response({
             "message": "Password reset successful"
         })
-    
+
+class ValidateResetTokenView(APIView):
+
+    permission_classes = []
+
+    def get(self, request):
+        token = request.query_params.get("token")
+
+        if not token:
+            return Response(
+                {"valid": False},
+                status=400
+            )
+
+        token_hash = hash_token(token)
+
+        try:
+            reset_obj = PasswordResetToken.objects.get(
+                token_hash=token_hash
+            )
+        except PasswordResetToken.DoesNotExist:
+            return Response({"valid": False})
+
+        return Response({
+            "valid": reset_obj.is_valid()
+        })
 
 class GoogleLoginView(APIView):
     def post(self, request):

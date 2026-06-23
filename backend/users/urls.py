@@ -16,6 +16,7 @@ from .views import (
     UpdateStaffStatusView,
     ToggleUserBlockView,
     ChangePasswordView,
+    ValidateResetTokenView,
 
     ForgotPasswordView,
     ResetPasswordView,
@@ -48,6 +49,7 @@ urlpatterns = [
     path("change-password/", ChangePasswordView.as_view(), name="change_password"),
     path("forgot-password/", ForgotPasswordView.as_view(), name="forgot_password"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset_password"),
+    path("reset-password/validate/", ValidateResetTokenView.as_view(), name="validate-reset-token"),
     
     path("admin/dashboard/", AdminDashboardView.as_view(), name ="admin_dashboard"),
     path("admin/users/", AdminUserListView.as_view(), name='admin_users'),

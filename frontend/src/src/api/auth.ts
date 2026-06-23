@@ -36,5 +36,16 @@ export const changePassword = (
 
 };
 
+export const validateResetToken = async (token: string) => {
+  const response = await API.get(
+    "/users/reset-password/validate/",
+    {
+      params: { token }
+    }
+  );
+
+  return response.data;
+};
+
 export const loginWithGoogle = (data: { token: string }) =>
   API.post("/users/google-login/", data);

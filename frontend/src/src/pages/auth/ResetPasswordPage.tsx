@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { AuthLayout } from "./AuthLayout";
 import { Input } from "../../components/shared/Input";
@@ -7,6 +7,7 @@ import { Card } from "../../components/shared/Card";
 import { LockIcon, EyeIcon, EyeOffIcon, ArrowLeftIcon } from "lucide-react";
 
 import API from "../../api/axios";
+import { validateResetToken } from "../../api/auth";
 
 export const ResetPasswordPage: React.FC = () => {
 
@@ -24,6 +25,30 @@ export const ResetPasswordPage: React.FC = () => {
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [checking, setChecking] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const response = await validateResetToken(token!);
+
+        setTokenValid(response.valid);
+      } catch {
+        setTokenValid(false);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    if (token) {
+      checkToken();
+    } else {
+      setChecking(false);
+      setTokenValid(false);
+    }
+  }, [token]); 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +94,41 @@ export const ResetPasswordPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  if (checking) {
+    return (
+      <AuthLayout showSidebar={false}>
+        <Card className="w-full max-w-[448px] mx-auto p-8">
+          <p>Checking reset link...</p>
+        </Card>
+      </AuthLayout>
+    );
+  }
+
+  if (!tokenValid) {
+    return (
+      <AuthLayout showSidebar={false}>
+        <Card className="w-full max-w-[448px] mx-auto p-8">
+
+          <h2 className="text-2xl font-bold mb-2">
+            Link Expired
+          </h2>
+
+          <p className="text-sm text-text-light mb-6">
+            This password reset link has expired or has already been used.
+          </p>
+
+          <Link
+            to="/forgot-password"
+            className="text-primary hover:underline"
+          >
+            Request New Reset Link
+          </Link>
+
+        </Card>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout showSidebar={false}>
