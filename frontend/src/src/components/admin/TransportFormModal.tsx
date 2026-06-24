@@ -45,15 +45,29 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
 }) => {
   const [values, setValues] = useState<TransportFormValues>(emptyValues);
   const [errors, setErrors] = useState<Partial<Record<keyof TransportFormValues, string>>>({});
-  const [companies, setCompanies] = useState<{ id: number; name: string }[]>([]);
+  const [companies, setCompanies] = useState<
+    {
+      id: number;
+      name: string;
+      is_active: boolean;
+    }[]
+  >([]);
 
   useEffect(() => {
   const fetchCompanies = async () => {
     try {
       const res = await getCompanies();
-      setCompanies(Array.isArray(res.data)
-      ? res.data
-      : res.data.results || []);
+      const companyData =
+      Array.isArray(res.data)
+        ? res.data
+        : res.data.results || [];
+
+      setCompanies(
+        companyData.filter(
+          (company: any) =>
+            company.is_active
+        )
+      );
     } catch (err) {
       console.error("Failed to fetch companies", err);
     }
