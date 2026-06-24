@@ -55,3 +55,13 @@ export const getCompaniesByUrl = (
 ) => {
  return API.get(url);
 };
+
+export const toggleCompanyStatus = (
+  id: number
+) => {
+
+  return API.patch(
+    `/companies/${id}/toggle_status/`
+  );
+
+};

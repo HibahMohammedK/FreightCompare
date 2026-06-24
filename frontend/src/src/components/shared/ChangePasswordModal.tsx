@@ -129,6 +129,8 @@ export const ChangePasswordModal: React.FC<Props> = ({
         confirm_password: ""
       });
 
+      onClose()
+
     } catch (err: any) {
 
       handleErrors(err);

@@ -10,7 +10,8 @@ import {
   createCompany,
   updateCompany,
   deleteCompany,
-  getCompaniesByUrl
+  getCompaniesByUrl,
+  toggleCompanyStatus
 } from "../../api/company";
 
 
@@ -19,6 +20,7 @@ interface Company {
   name: string;
   website?: string;
   created_at?: string;
+  is_active: boolean;
 }
 
 export const  CompanyManagementPage: React.FC = () => {
@@ -74,6 +76,7 @@ export const  CompanyManagementPage: React.FC = () => {
     }
 
     };
+
 useEffect(() => {
 
  const timer =
@@ -169,7 +172,7 @@ useEffect(() => {
   ) => {
 
     const confirmed = window.confirm(
-      "Delete this company?"
+      "Are you sure you want to permanently delete this company?"
     );
 
     if (!confirmed) return;
@@ -188,6 +191,27 @@ useEffect(() => {
       );
 
     }
+  };
+
+  const handleToggleStatus = async (
+    id: number
+  ) => {
+
+    try {
+
+      await toggleCompanyStatus(id);
+
+      fetchCompanies();
+
+    } catch (err) {
+
+      console.error(
+        "Status update failed",
+        err
+      );
+
+    }
+
   };
 
 
@@ -263,6 +287,10 @@ useEffect(() => {
                   Created
                 </th>
 
+                <th className="p-4 text-xs font-semibold uppercase">
+                  Status
+                </th>
+
                 <th className="p-4 text-xs font-semibold uppercase text-right">
                   Actions
                 </th>
@@ -310,6 +338,22 @@ useEffect(() => {
                     }
                   </td>
 
+                  <td className="p-4 text-sm text-text-medium">
+                      <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        company.is_active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {
+                        company.is_active
+                          ? "Active"
+                          : "Disabled"
+                      }
+                    </span>
+                  </td>
+
 
                   <td className="p-4 text-right space-x-2">
 
@@ -321,6 +365,22 @@ useEffect(() => {
                       }
                     >
                       Edit
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        handleToggleStatus(
+                          company.id
+                        )
+                      }
+                    >
+                      {
+                        company.is_active
+                          ? "Disable"
+                          : "Enable"
+                      }
                     </Button>
 
 
@@ -344,7 +404,7 @@ useEffect(() => {
               {companies.length === 0 && (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="p-8 text-center text-text-light"
                   >
                     No companies found.

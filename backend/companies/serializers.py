@@ -9,5 +9,6 @@ class CompanySerializer(serializers.ModelSerializer):
             "id",
             "name",
             "website",
-            "created_at"
+            "created_at",
+            "is_active"
             ]

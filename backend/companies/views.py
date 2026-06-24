@@ -4,6 +4,8 @@ from .models import Company
 from .serializers import CompanySerializer
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 
 
@@ -19,9 +21,7 @@ class IsAdminRole(BasePermission):
         )
     
     
-class CompanyPagination(
-    PageNumberPagination
-):
+class CompanyPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "page_size"
     max_page_size = 100
@@ -36,3 +36,26 @@ class CompanyViewSet(viewsets.ModelViewSet):
     filter_backends = [SearchFilter]
 
     search_fields = ["name"]
+
+    @action(
+        detail=True,
+        methods=["patch"]
+    )
+    
+    def toggle_status(
+        self,
+        request,
+        pk=None
+    ):
+        company = self.get_object()
+
+        company.is_active = (
+            not company.is_active
+        )
+
+        company.save()
+
+        return Response({
+            "message": "Status updated",
+            "is_active": company.is_active
+        })
