@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from "react";
 import { useAppDispatch } from "./src/hooks/redux";
-import { setAccessToken, setUser, logout } from "./src/redux/authSlice";
+import { setAccessToken, setUser, logout, setAuthLoading } from "./src/redux/authSlice";
 import API from "./src/api/axios";
 import { getProfile } from "./src/api/auth";
 
@@ -56,12 +56,34 @@ export function App() {
     const initAuth = async () => {
       try {
         const res = await API.post("/users/token/refresh/");
-        dispatch(setAccessToken(res.data.access));
 
-        const profile = await getProfile();
-        dispatch(setUser(profile.data));
+        dispatch(
+          setAccessToken(
+            res.data.access
+          )
+        );
+
+        const profile =
+          await getProfile();
+
+        dispatch(
+          setUser(
+            profile.data
+          )
+        );
+
       } catch {
+
         dispatch(logout());
+
+      } finally {
+
+        dispatch(
+          setAuthLoading(
+            false
+          )
+        );
+
       }
     };
 

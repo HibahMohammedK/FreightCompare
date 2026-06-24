@@ -24,7 +24,7 @@ const initialState: AuthState = {
   user: null,
   accessToken: null,
   isAuthenticated: false,
-  loading: false,
+  loading: true,
   error: null,
 };
 
@@ -64,6 +64,13 @@ const authSlice = createSlice({
       state.error = null;
     },
 
+    setAuthLoading: (
+      state,
+      action: PayloadAction<boolean>
+    ) => {
+      state.loading = action.payload;
+    },
+
 
     // Staff's status change
     updateUserStatus: (
@@ -90,6 +97,7 @@ export const {
   loginStart,
   loginFailure,
   logout,
+  setAuthLoading,
   updateUserStatus
 } = authSlice.actions;
 

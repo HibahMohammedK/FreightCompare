@@ -11,6 +11,7 @@ import {
   setUser,
   loginStart,
   loginFailure,
+  setAuthLoading,
 } from '../../redux/authSlice';
 
 import { loginUser, getProfile, loginWithGoogle  } from '../../api/auth';
@@ -69,6 +70,8 @@ export const LoginPage: React.FC = () => {
       const user = profileRes.data;
 
       dispatch(setUser(user));
+
+      dispatch(setAuthLoading(false));
 
       if (user.role === "admin") {
         navigate("/admin");

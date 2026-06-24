@@ -6,7 +6,15 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
-  const { accessToken, user } = useAppSelector((state) => state.auth);
+  const { accessToken, user, loading } = useAppSelector((state) => state.auth);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
+  }
 
   // 🔴 No token → block immediately
   if (!accessToken) {
