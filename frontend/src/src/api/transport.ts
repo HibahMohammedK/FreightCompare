@@ -19,3 +19,8 @@ export const updateTransport = (id: number, data: any) => {
 export const deleteTransport = (id: number) => {
   return API.delete(`/transports/${id}/`);
 };
+
+//GET Locations
+export const getLocations = () => {
+  return API.get("/transports/locations/");
+};

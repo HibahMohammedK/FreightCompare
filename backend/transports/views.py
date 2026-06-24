@@ -3,6 +3,8 @@ from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
 from .models import Transport
 from .serializers import TransportSerializer
 from .permissions import IsAdminUserCustom
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 
 class TransportViewSet(viewsets.ModelViewSet):
@@ -22,3 +24,23 @@ class TransportViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+class TransportLocationsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        locations = (
+            Transport.objects
+            .values_list("source", flat=True)
+            .union(
+                Transport.objects.values_list(
+                    "destination",
+                    flat=True
+                )
+            )
+        )
+
+        return Response({
+            "locations": sorted(locations)
+        })

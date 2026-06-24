@@ -22,6 +22,7 @@ import {
 import { useAppSelector } from '../../hooks/redux';
 import { getSavedTransports } from '../../api/saved';
 import { motion } from 'framer-motion';
+import { getLocations } from '../../api/transport';
 export const HomePage: React.FC = () => {
   const user = useAppSelector((state) => state.auth.user);
   const searchHistory = useAppSelector((state) => state.transport.searchHistory);
@@ -32,6 +33,12 @@ export const HomePage: React.FC = () => {
   );
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
+  const [locations, setLocations] = useState<string[]>([]);
+  const [showOriginSuggestions, setShowOriginSuggestions] =
+    useState(false);
+
+  const [showDestinationSuggestions, setShowDestinationSuggestions] =
+    useState(false);
   const [date, setDate] = useState('');
   
   const handleSearch = (e: React.FormEvent) => {
@@ -50,6 +57,15 @@ export const HomePage: React.FC = () => {
 
     navigate(`/search?${queryParams.toString()}`);
   };
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      const res = await getLocations();
+      setLocations(res.data.locations);
+    };
+
+    fetchLocations();
+  }, []);
 
   useEffect(() => {
     const fetchSaved = async () => {
@@ -74,6 +90,23 @@ export const HomePage: React.FC = () => {
 
     fetchSaved();
   }, []);
+
+  const filteredOrigins = locations
+    .filter(location =>
+      location
+        .toLowerCase()
+        .includes(origin.toLowerCase())
+    )
+    .slice(0, 5);
+
+  const filteredDestinations = locations
+    .filter(location =>
+      location
+        .toLowerCase()
+        .includes(destination.toLowerCase())
+    )
+    .slice(0, 5); 
+
   return (
     <div className="min-h-screen bg-bg-light flex flex-col">
       <UserNavbar />
@@ -135,7 +168,7 @@ export const HomePage: React.FC = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto w-full px-6 -mt-24 relative z-20 flex-1 pb-12">
         {/* Search Form */}
-        <Card className="mb-12 shadow-card border-border-light">
+        <Card className="mb-12 shadow-card border-border-light overflow-visible">
           {/* Transport Type Tabs */}
           <div className="flex p-1 bg-bg-light rounded-xl w-fit mb-6 border border-border-light">
             <button
@@ -162,31 +195,96 @@ export const HomePage: React.FC = () => {
             onSubmit={handleSearch}
             className="flex flex-col md:flex-row gap-4 items-end">
             
-            <div className="flex-1 w-full relative">
+           <div className="flex-1 w-full relative">
+
               <Input
                 label="Origin"
                 placeholder="City or port"
                 icon={<MapPinIcon size={18} />}
                 value={origin}
-                onChange={(e) => setOrigin(e.target.value)}
+                onChange={(e) => {
+                  setOrigin(e.target.value);
+                  setShowOriginSuggestions(true);
+                }}
+                onFocus={() =>
+                  setShowOriginSuggestions(true)
+                }
                 required
               />
-              
+
+              {showOriginSuggestions &&
+                origin &&
+                filteredOrigins.length > 0 && (
+
+                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-light rounded-xl shadow-lg z-[9999] max-h-60 overflow-y-auto">
+
+                    {filteredOrigins.map(location => (
+
+                      <button
+                        key={location}
+                        type="button"
+                        className="w-full text-left px-4 py-2 hover:bg-bg-light"
+                        onClick={() => {
+                          setOrigin(location);
+                          setShowOriginSuggestions(false);
+                        }}
+                      >
+                        {location}
+                      </button>
+
+                    ))}
+
+                  </div>
+
+              )}
+
             </div>
 
             <div className="hidden md:flex w-10 h-10 rounded-xl bg-bg-light border border-border-light items-center justify-center text-text-lighter shrink-0 mb-1">
               <ArrowRightIcon size={18} />
             </div>
 
-            <div className="flex-1 w-full">
+            <div className="flex-1 w-full relative">
               <Input
                 label="Destination"
                 placeholder="City or port"
                 icon={<MapPinIcon size={18} />}
                 value={destination}
-                onChange={(e) => setDestination(e.target.value)}
+                onChange={(e) => {
+                  setDestination(e.target.value);
+                  setShowDestinationSuggestions(true);
+                }}
+
+                onFocus={() =>
+                  setShowDestinationSuggestions(true)
+                }
                 required
               />
+              {showDestinationSuggestions &&
+                destination &&
+                filteredDestinations.length > 0 && (
+
+                  <div className="absolute z-50 w-full bg-white border border-border-light rounded-xl shadow-lg mt-1">
+
+                    {filteredDestinations.map(location => (
+
+                      <button
+                        key={location}
+                        type="button"
+                        className="w-full text-left px-4 py-2 hover:bg-bg-light"
+                        onClick={() => {
+                          setDestination(location);
+                          setShowDestinationSuggestions(false);
+                        }}
+                      >
+                        {location}
+                      </button>
+
+                    ))}
+
+                  </div>
+
+              )}
               
             </div>
 

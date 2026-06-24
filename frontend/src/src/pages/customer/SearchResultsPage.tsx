@@ -14,7 +14,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { setFilters } from '../../redux/transportSlice';
 
-import { getTransports } from '../../api/transport';
+import { getTransports, getLocations } from '../../api/transport';
 import { useLocation, useNavigate } from "react-router-dom";
 import { getSavedTransports, saveTransport, unsaveTransport } from "../../api/saved";
 
@@ -38,6 +38,34 @@ export const SearchResultsPage: React.FC = () => {
   const destination = params.get("destination") || "";
   const date = params.get("date") || "";
   const [savedMap, setSavedMap] = useState<Record<number, number>>({});
+
+  useEffect(() => {
+
+    const fetchLocations = async () => {
+
+      try {
+
+        const res =
+          await getLocations();
+
+        setLocations(
+          res.data.locations || []
+        );
+
+      } catch (err) {
+
+        console.error(
+          "Failed to load locations",
+          err
+        );
+
+      }
+
+    };
+
+    fetchLocations();
+
+  }, []);
   
 
   const fetchSaved = async () => {
@@ -85,6 +113,31 @@ export const SearchResultsPage: React.FC = () => {
   const [searchSource, setSearchSource] = useState(source);
   const [searchDestination, setSearchDestination] = useState(destination);
   const [searchDate, setSearchDate] = useState(date);
+  const [locations, setLocations] = useState<string[]>([]);
+
+  const [showSourceSuggestions, setShowSourceSuggestions] =
+    useState(false);
+
+  const [showDestinationSuggestions, setShowDestinationSuggestions] =
+    useState(false);
+
+  const filteredSources =
+    locations.filter(location =>
+      location
+        .toLowerCase()
+        .includes(
+          searchSource.toLowerCase()
+        )
+    );
+
+  const filteredDestinations =
+    locations.filter(location =>
+      location
+        .toLowerCase()
+        .includes(
+          searchDestination.toLowerCase()
+        )
+    );
 
   // 🔥 SEARCH ACTION
   const handleSearch = () => {
@@ -195,23 +248,119 @@ export const SearchResultsPage: React.FC = () => {
         <div className="max-w-7xl mx-auto flex items-center gap-4">
           <div className="flex-1 flex items-center bg-white border border-border-light rounded-xl p-1 shadow-sm">
 
-            <input
-              value={searchSource}
-              onChange={(e) => setSearchSource(e.target.value)}
-              placeholder="Source"
-              className="flex-1 px-3 text-sm outline-none"
-            />
+            <div className="flex-1 relative">
+
+              <input
+                value={searchSource}
+                onChange={(e) => {
+                  setSearchSource(
+                    e.target.value
+                  );
+                  setShowSourceSuggestions(
+                    true
+                  );
+                }}
+                onFocus={() =>
+                  setShowSourceSuggestions(
+                    true
+                  )
+                }
+                placeholder="Source"
+                className="w-full px-3 text-sm outline-none"
+              />
+
+              {showSourceSuggestions &&
+                searchSource &&
+                filteredSources.length > 0 && (
+
+                  <div className="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg z-[9999] max-h-48 overflow-y-auto">
+
+                    {filteredSources.map(
+                      location => (
+
+                        <button
+                          key={location}
+                          type="button"
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                          onClick={() => {
+                            setSearchSource(
+                              location
+                            );
+                            setShowSourceSuggestions(
+                              false
+                            );
+                          }}
+                        >
+                          {location}
+                        </button>
+
+                      )
+                    )}
+
+                  </div>
+
+              )}
+
+            </div>
 
             <div className="px-2 text-text-lighter">
               <ArrowRightIcon size={16} />
             </div>
 
-            <input
-              value={searchDestination}
-              onChange={(e) => setSearchDestination(e.target.value)}
-              placeholder="Destination"
-              className="flex-1 px-3 text-sm outline-none"
-            />
+            <div className="flex-1 relative">
+
+              <input
+                value={searchDestination}
+                onChange={(e) => {
+                  setSearchDestination(
+                    e.target.value
+                  );
+                  setShowDestinationSuggestions(
+                    true
+                  );
+                }}
+                onFocus={() =>
+                  setShowDestinationSuggestions(
+                    true
+                  )
+                }
+                placeholder="Destination"
+                className="w-full px-3 text-sm outline-none"
+              />
+
+              {showDestinationSuggestions &&
+                searchDestination &&
+                filteredDestinations.length > 0 && (
+
+                  <div className="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg z-[9999] max-h-48 overflow-y-auto">
+
+                    {filteredDestinations.map(
+                      location => (
+
+                        <button
+                          key={location}
+                          type="button"
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                          onClick={() => {
+                            setSearchDestination(
+                              location
+                            );
+                            setShowDestinationSuggestions(
+                              false
+                            );
+                          }}
+                        >
+                          {location}
+                        </button>
+
+                      )
+                    )}
+
+                  </div>
+
+              )}
+
+            </div>
 
             <input
               type="date"
