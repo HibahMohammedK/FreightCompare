@@ -5,7 +5,7 @@ import { Input } from '../../components/shared/Input';
 import { Button } from '../../components/shared/Button';
 import { MailIcon, LockIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
 
-import { useAppDispatch } from '../../hooks/redux';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import {
   setAccessToken,
   setUser,
@@ -22,7 +22,10 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  
+  const authError = useAppSelector(
+    (state) => state.auth.error
+  );
   const [loading, setLoading] = useState(false);
 
   const dispatch = useAppDispatch();
@@ -46,7 +49,7 @@ export const LoginPage: React.FC = () => {
       else navigate("/");
 
     } catch (err: any) {
-      setError("Google login failed");
+      dispatch(loginFailure("Google login failed"));
       console.error(err);
     }
   };
@@ -57,7 +60,7 @@ export const LoginPage: React.FC = () => {
     if (loading) return;
     if (!email.trim() || !password.trim()) return;
 
-    setError(null);
+    dispatch(loginFailure(""));
     setLoading(true);
     dispatch(loginStart());
 
@@ -84,13 +87,11 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       const data = err.response?.data;
 
-      if (data?.error) {
-        setError(data.error);
-      } else {
-        setError("Invalid email or password");
-      }
-
-      dispatch(loginFailure(data?.error || "Login failed"));
+      dispatch(
+        loginFailure(
+          data?.error || "Invalid email or password"
+        )
+      );
     } finally {
       setLoading(false);
     }
@@ -115,7 +116,7 @@ export const LoginPage: React.FC = () => {
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
-            setError(null);
+             dispatch(loginFailure(""));
           }}
           required
         />
@@ -141,7 +142,7 @@ export const LoginPage: React.FC = () => {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setError(null);
+                dispatch(loginFailure(""));
               }}
               required
             />
@@ -157,9 +158,9 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* ✅ Proper error placement */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg mt-2">
-            {error}
+        {authError && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
+            {authError}
           </div>
         )}
 
@@ -187,7 +188,9 @@ export const LoginPage: React.FC = () => {
       <div className="flex justify-center">
         <GoogleLogin
           onSuccess={handleGoogleLogin}
-          onError={() => setError("Google login failed")}
+          onError={() =>
+            dispatch(loginFailure("Google login failed"))
+          }
         />
       </div>
     </AuthLayout>
