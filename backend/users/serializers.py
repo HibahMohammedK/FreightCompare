@@ -12,7 +12,14 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'username', 'password', 'confirm_password']
+        fields = [ 
+            'email',
+            'username',
+            'first_name',
+            'last_name', 
+            'password', 
+            'confirm_password'
+            ]
 
     
     def validate(self, attrs):
@@ -50,6 +57,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "id",
             "email",
             "username",
+            "first_name",
+            "last_name",
             "role",
             "status",
             "is_verified",
@@ -61,7 +70,7 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["username"]
+        fields = ["username", "first_name", "last_name",]
 
 class AdminUserListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -69,6 +78,8 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "email",
+            "first_name",
+            "last_name",
             "username",
             "role",
             "status",
@@ -92,6 +103,8 @@ class CreateStaffSerializer(serializers.ModelSerializer):
         fields = [
             "email",
             "username",
+            "first_name",
+            "last_name",
             "password",
         ]
 
@@ -114,6 +127,14 @@ class CreateStaffSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             email=validated_data["email"],
             username=validated_data["username"],
+            first_name=validated_data.get(
+                "first_name",
+                ""
+            ),
+            last_name=validated_data.get(
+                "last_name",
+                ""
+            ),
             password=raw_password,
             role="staff",
             is_verified=True,

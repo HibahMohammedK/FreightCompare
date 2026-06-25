@@ -26,31 +26,22 @@ export const ProfileEditModal: React.FC<Props> = ({
     (state) => state.auth.user
   );
 
-  const [username, setUsername] =
-    useState("");
-
-  const [email, setEmail] =
-    useState("");
-
-  const [otp, setOtp] =
-    useState("");
-
-  const [verificationId, setVerificationId] =
-    useState("");
-
-  const [otpSent, setOtpSent] =
-    useState(false);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [message, setMessage] =
-    useState("");
+  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [verificationId, setVerificationId] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
 
     if (isOpen) {
 
+      setFirstName(user?.first_name || "");
+      setLastName(user?.last_name || "");
       setUsername(user?.username || "");
       setEmail(user?.email || "");
 
@@ -71,7 +62,9 @@ export const ProfileEditModal: React.FC<Props> = ({
       setMessage("");
 
       await updateProfile({
-        username: username.trim()
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        username: username.trim(),
       });
 
       setMessage(
@@ -196,6 +189,26 @@ export const ProfileEditModal: React.FC<Props> = ({
           </p>
         )}
 
+        <div className="grid grid-cols-2 gap-4">
+
+          <Input
+            label="First Name"
+            value={firstName}
+            onChange={(e) =>
+              setFirstName(e.target.value)
+            }
+          />
+
+          <Input
+            label="Last Name"
+            value={lastName}
+            onChange={(e) =>
+              setLastName(e.target.value)
+            }
+          />
+
+        </div>
+
         {/* Username */}
 
         <Input
@@ -213,7 +226,7 @@ export const ProfileEditModal: React.FC<Props> = ({
           {
             loading
               ? "Saving..."
-              : "Save Username"
+              : "Save Profile"
           }
         </Button>
 

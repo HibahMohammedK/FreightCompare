@@ -61,8 +61,10 @@ export const AdminProfilePage: React.FC = () => {
 
             <div className="flex items-center gap-2">
 
-              <h2 className="text-lg font-semibold text-text-dark">
-                {user?.username}
+              <h2 className="text-lg font-semibold">
+                  {user?.first_name || user?.last_name
+                    ? `${user.first_name} ${user.last_name}`
+                    : user?.username}
               </h2>
 
               <button
@@ -75,6 +77,10 @@ export const AdminProfilePage: React.FC = () => {
               </button>
 
             </div>
+
+            <p className="text-sm text-text-light">
+                @{user?.username}
+            </p>
 
             <p className="text-sm text-text-light">
               {user?.email}

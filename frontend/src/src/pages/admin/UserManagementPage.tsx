@@ -139,9 +139,18 @@ export const UserManagementPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div>
                         <p className="text-sm font-semibold text-text-dark">
-                          {user.username}
+                          {user.first_name || user.last_name
+                            ? `${user.first_name} ${user.last_name}`
+                            : user.username}
                         </p>
-                        <p className="text-xs text-text-light">{user.email}</p>
+
+                        <p className="text-xs text-text-medium">
+                          @{user.username}
+                        </p>
+
+                        <p className="text-xs text-text-light">
+                          {user.email}
+                        </p>
                         {!user.is_active && (
                         <span className="ml-2 text-xs text-error font-medium">
                           Blocked
@@ -151,7 +160,7 @@ export const UserManagementPage: React.FC = () => {
                     </div>
                   </td>
                   
-                  <td className="p-4">
+                  <td className="p-5">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         user.isPremium

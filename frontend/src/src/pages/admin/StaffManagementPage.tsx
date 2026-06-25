@@ -201,15 +201,28 @@ export const StaffManagementPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-bold text-lg">
-                    {member.username.charAt(0).toUpperCase()}
+                    {
+                      (member.first_name || member.username)
+                        .charAt(0)
+                        .toUpperCase()
+                    }
                   </div>
                   <div
                   className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${getStatusColor(member.status)}`} />
                 
                 </div>
                 <div>
-                  <h3 className="font-bold text-text-dark">{member.username}</h3>
-                  <p className="text-xs text-text-light">{member.email}</p>
+                  <h3 className="font-bold text-text-dark">
+                    {member.first_name || member.last_name
+                      ? `${member.first_name} ${member.last_name}`
+                      : member.username}
+                  </h3>
+                  <p className="text-xs text-text-light">
+                    @{member.username}
+                  </p>
+                  <p className="text-xs text-text-light">
+                    {member.email}
+                  </p>
                   {!member.is_active && (
                     <span className="text-xs font-medium text-error">
                       Blocked

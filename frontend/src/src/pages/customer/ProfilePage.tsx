@@ -29,6 +29,8 @@ export const ProfilePage = () => {
     setIsPasswordOpen
   ] = useState(false);
 
+  console.log(user);
+
   return (
 
     <div className="min-h-screen bg-bg-light flex flex-col">
@@ -64,7 +66,9 @@ export const ProfilePage = () => {
               <div className="flex items-center gap-2">
 
                 <h2 className="text-lg font-semibold">
-                  {user?.username}
+                  {user?.first_name || user?.last_name
+                    ? `${user.first_name} ${user.last_name}`
+                    : user?.username}
                 </h2>
 
                 <button
@@ -77,6 +81,10 @@ export const ProfilePage = () => {
                 </button>
 
               </div>
+
+              <p className="text-sm text-text-light">
+                @{user?.username}
+              </p>
 
               <p className="text-sm text-text-light">
                 {user?.email}

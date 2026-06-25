@@ -11,12 +11,16 @@ export const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const [username, setUsername] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({
+    first_name: "",
+    last_name: "",
     username: "",
     email: "",
     password: "",
@@ -33,6 +37,8 @@ export const RegisterPage: React.FC = () => {
 
     // clear old errors
     setFieldErrors({
+      first_name: '',
+      last_name: '',
       username: "",
       email: "",
       password: "",
@@ -44,6 +50,8 @@ export const RegisterPage: React.FC = () => {
       setLoading(true);
 
       const res = await registerUser({
+        first_name: firstName,
+        last_name: lastName,
         username,
         email,
         password,
@@ -62,6 +70,8 @@ export const RegisterPage: React.FC = () => {
       const errors = err.response?.data;
 
       setFieldErrors({
+        first_name: errors?.first_name?.[0] || "",
+        last_name: errors?.last_name?.[0] || "",
         username: errors?.username?.[0] || "",
         email: errors?.email?.[0] || "",
         password: errors?.password?.[0] || "",
@@ -90,13 +100,51 @@ export const RegisterPage: React.FC = () => {
 
       <form onSubmit={handleRegister} className="space-y-4">
 
+        <div className="grid grid-cols-2 gap-4">
+
+          <div>
+            <Input
+              label="First Name"
+              value={firstName}
+              icon={<UserIcon size={18} />}
+              onChange={(e) =>
+                setFirstName(e.target.value)
+              }
+            />
+
+            {fieldErrors.first_name && (
+              <p className="text-red-500 text-sm mt-1">
+                {fieldErrors.first_name}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Input
+              label="Last Name"
+              value={lastName}
+              icon={<UserIcon size={18} />}
+              onChange={(e) =>
+                setLastName(e.target.value)
+              }
+            />
+
+            {fieldErrors.last_name && (
+              <p className="text-red-500 text-sm mt-1">
+                {fieldErrors.last_name}
+              </p>
+            )}
+          </div>
+
+        </div>
+
         <Input
-          label="Full name"
-          type="text"
-          placeholder="John Doe"
-          icon={<UserIcon size={18} />}
+          label="Username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          icon={<UserIcon size={18} />}
+          onChange={(e) =>
+            setUsername(e.target.value)
+          }
           required
         />
         {fieldErrors.username && (

@@ -33,6 +33,8 @@ export const CreateStaffModal: React.FC<Props> = ({
     useState("");
 
   const [staffForm, setStaffForm] = useState({
+    first_name: "",
+    last_name: "",
     username: "",
     email: "",
     password: ""
@@ -56,6 +58,8 @@ export const CreateStaffModal: React.FC<Props> = ({
       );
 
       setStaffForm({
+        first_name: "",
+        last_name: "",
         username: "",
         email: "",
         password: ""
@@ -110,6 +114,32 @@ export const CreateStaffModal: React.FC<Props> = ({
             {message}
           </p>
         )}
+
+        <div className="grid grid-cols-2 gap-4">
+
+          <Input
+            label="First Name"
+            value={staffForm.first_name}
+            onChange={(e) =>
+              setStaffForm({
+                ...staffForm,
+                first_name: e.target.value
+              })
+            }
+          />
+
+          <Input
+            label="Last Name"
+            value={staffForm.last_name}
+            onChange={(e) =>
+              setStaffForm({
+                ...staffForm,
+                last_name: e.target.value
+              })
+            }
+          />
+
+        </div>
 
         <Input
           label="Username"
