@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { UserNavbar } from '../../components/shared/UserNavbar';
 import { Card } from '../../components/shared/Card';
@@ -8,23 +8,82 @@ import {
   ArrowRightIcon,
   ShipIcon,
   PlaneIcon,
-  SearchIcon } from
+  SearchIcon,
+  XIcon,
+ } from
 'lucide-react';
-import { useAppSelector } from '../../hooks/redux';
+import { getSearchHistory,deleteSearchHistory, clearSearchHistory } from "../../api/transport";
+
+
 export const HistoryPage: React.FC = () => {
-  const searchHistory = useAppSelector((state) => state.transport.searchHistory);
+  type SearchHistory = {
+    id: number;
+    source: string;
+    destination: string;
+    transport_type: "all" | "air" | "sea";
+    searched_at: string;
+  };
+  const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await getSearchHistory();
+        setSearchHistory(res.data);
+      } catch (err) {
+        console.error("Failed to load history", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, []);
+  
+
   // Group history by date
   const groupedHistory = searchHistory.reduce(
     (acc, curr) => {
-      if (!acc[curr.searchDate]) {
-        acc[curr.searchDate] = [];
+      const date = new Date(curr.searched_at).toLocaleDateString();
+
+      if (!acc[date]) {
+        acc[date] = [];
       }
-      acc[curr.searchDate].push(curr);
+
+      acc[date].push(curr);
+
       return acc;
     },
-    {} as Record<string, typeof searchHistory>
+    {} as Record<string, SearchHistory[]>
   );
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteSearchHistory(id);
+
+      setSearchHistory(prev =>
+        prev.filter(item => item.id !== id)
+      );
+    } catch (err) {
+      console.error("Failed to delete history", err);
+    }
+  };
+
+  const handleClearHistory = async () => {
+      await clearSearchHistory();
+      setSearchHistory([]);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-light flex items-center justify-center">
+        Loading search history...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-bg-light flex flex-col">
       <UserNavbar />
@@ -44,7 +103,36 @@ export const HistoryPage: React.FC = () => {
           </p>
         </div>
 
+        {searchHistory.length === 0 && (
+          <Card className="p-10 text-center">
+            <ClockIcon
+              size={36}
+              className="mx-auto mb-4 text-text-light"
+            />
+
+            <h3 className="text-lg font-semibold">
+              No search history yet
+            </h3>
+
+            <p className="text-sm text-text-light mt-2">
+              Your recent searches will appear here.
+            </p>
+          </Card>
+        )}
+
         <div className="space-y-8">
+          {searchHistory.length > 0 && (
+          <button
+            onClick={handleClearHistory}
+            className="
+              text-sm
+              font-medium
+              text-red-600
+              hover:text-red-700
+            "
+          >
+            Clear all
+          </button>)}
           {Object.entries(groupedHistory).map(([date, items]) =>
           <div key={date}>
               <h3 className="text-xs font-semibold text-text-light uppercase tracking-wider mb-4 ml-2">
@@ -56,9 +144,9 @@ export const HistoryPage: React.FC = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-5">
                         <div className="w-12 h-12 rounded-full bg-bg-light flex items-center justify-center text-text-medium shrink-0">
-                          {item.transportType === 'air' ?
+                          {item.transport_type === 'air' ?
                       <PlaneIcon size={20} /> :
-                      item.transportType === 'sea' ?
+                      item.transport_type === 'sea' ?
                       <ShipIcon size={20} /> :
 
                       <SearchIcon size={20} />
@@ -66,7 +154,7 @@ export const HistoryPage: React.FC = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-3 font-semibold text-text-dark mb-2">
-                            <span className="text-base">{item.origin}</span>
+                            <span className="text-base">{item.source}</span>
                             <ArrowRightIcon
                           size={16}
                           className="text-text-lighter" />
@@ -76,23 +164,47 @@ export const HistoryPage: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-text-light">
-                            <span>{item.date}</span>
                             <div className="w-1 h-1 rounded-full bg-border-dark" />
                             <span className="capitalize">
-                              {item.transportType}
+                              {item.transport_type}
                             </span>
                             <div className="w-1 h-1 rounded-full bg-border-dark" />
-                            <span>{item.time}</span>
+                            <span>
+                              {new Date(item.searched_at).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
                           </div>
                         </div>
                       </div>
-                      <Button
-                    variant="secondary"
-                    onClick={() => navigate('/search')}
-                    className="bg-primary-light text-primary-dark border-none hover:bg-primary-lighter w-full sm:w-auto">
-                    
-                        Search Again
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="secondary"
+                          onClick={() =>
+                            navigate(
+                              `/search?source=${encodeURIComponent(item.source)}&destination=${encodeURIComponent(item.destination)}&type=${item.transport_type}`
+                            )
+                          }
+                        >
+                          Search Again
+                        </Button>
+
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="
+                            p-2
+                            rounded-full
+                            text-text-light
+                            hover:bg-red-50
+                            hover:text-red-600
+                            transition-colors
+                          "
+                          title="Delete search"
+                        >
+                          <XIcon size={18} />
+                        </button>
+                      </div>
                     </div>
                   </Card>
               )}

@@ -22,7 +22,7 @@ import {
 import { useAppSelector } from '../../hooks/redux';
 import { getSavedTransports } from '../../api/saved';
 import { motion } from 'framer-motion';
-import { getLocations } from '../../api/transport';
+import { getLocations, saveSearchHistory } from '../../api/transport';
 export const HomePage: React.FC = () => {
   const user = useAppSelector((state) => state.auth.user);
   const searchHistory = useAppSelector((state) => state.transport.searchHistory);
@@ -41,21 +41,58 @@ export const HomePage: React.FC = () => {
     useState(false);
   const [date, setDate] = useState('');
   
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = async (
+      e: React.FormEvent
+    ) => {
 
-    const queryParams = new URLSearchParams();
+      e.preventDefault();
 
-    queryParams.set("source", origin.trim());
-    queryParams.set("destination", destination.trim());
+      const queryParams = new URLSearchParams();
+      
 
-    if (date) {
-      queryParams.set("date", date);  // ✅ optional
-    }
+      queryParams.set(
+        "source",
+        origin.trim()
+      );
 
-    queryParams.set("type", transportType);
+      queryParams.set(
+        "destination",
+        destination.trim()
+      );
 
-    navigate(`/search?${queryParams.toString()}`);
+      if (!origin.trim() || !destination.trim()) {
+          return;
+      }
+
+      if (date) {
+        queryParams.set("date", date);
+      }
+
+      queryParams.set(
+        "type",
+        transportType
+      );
+
+      try {
+
+        await saveSearchHistory({
+          source: origin.trim(),
+          destination: destination.trim(),
+          transport_type: transportType,
+        });
+
+      } catch (err: any) {
+        console.log(err.response?.data);
+
+        console.error(
+          "Failed to save search history",
+          err
+        );
+      }
+
+      navigate(
+        `/search?${queryParams.toString()}`
+    );
   };
 
   useEffect(() => {

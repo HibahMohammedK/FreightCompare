@@ -14,7 +14,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { setFilters } from '../../redux/transportSlice';
 
-import { getTransports, getLocations } from '../../api/transport';
+import { getTransports, getLocations, saveSearchHistory } from '../../api/transport';
 import { useLocation, useNavigate } from "react-router-dom";
 import { getSavedTransports, saveTransport, unsaveTransport } from "../../api/saved";
 
@@ -140,18 +140,35 @@ export const SearchResultsPage: React.FC = () => {
     );
 
   // 🔥 SEARCH ACTION
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const query = new URLSearchParams();
 
-    if (searchSource.trim()) query.set("source", searchSource.trim());
-    if (searchDestination.trim()) query.set("destination", searchDestination.trim());
-    if (searchDate) query.set("date", searchDate);
+    if (searchSource.trim()) {
+      query.set("source", searchSource.trim());
+    }
+
+    if (searchDestination.trim()) {
+      query.set("destination", searchDestination.trim());
+    }
+
+    if (searchDate) {
+      query.set("date", searchDate);
+    }
 
     query.set("type", "all");
 
+    try {
+      await saveSearchHistory({
+        source: searchSource.trim(),
+        destination: searchDestination.trim(),
+        transport_type: "all",
+      });
+    } catch (err) {
+      console.error("Failed to save search history", err);
+    }
+
     navigate(`/search?${query.toString()}`);
   };
-
   useEffect(() => {
     fetchSaved();
   }, []);

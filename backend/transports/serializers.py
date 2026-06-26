@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Transport
+from .models import Transport, SearchHistory
 from companies.models import Company
 from django.utils import timezone
 
@@ -97,3 +97,18 @@ class TransportSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
+class SearchHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SearchHistory
+        fields = [
+            "id",
+            "source",
+            "destination",
+            "transport_type",
+            "searched_at",
+        ]
+        read_only_fields = [
+            "id",
+            "searched_at",
+        ]
