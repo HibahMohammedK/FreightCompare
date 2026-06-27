@@ -12,8 +12,10 @@ import {
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import {
   toggleCompareItem,
-  clearCompareItems } from
-'../../redux/transportSlice';
+  clearCompareItems } from'../../redux/transportSlice';
+import { formatDuration } from '../../utils/formatters';
+
+
 export const ComparePage: React.FC = () => {
   const compareItems = useAppSelector((state) => state.transport.compareItems);
   const dispatch = useAppDispatch();
@@ -24,7 +26,7 @@ export const ComparePage: React.FC = () => {
   Math.min(...compareItems.map((c) => c.price)) :
   0;
   const shortestDuration = hasItems ?
-  Math.min(...compareItems.map((c) => c.durationDays)) :
+  Math.min(...compareItems.map((c) => c.duration)) :
   0;
   return (
     <div className="min-h-screen bg-bg-light flex flex-col">
@@ -76,22 +78,22 @@ export const ComparePage: React.FC = () => {
                   <th className="p-6 text-xs font-medium text-text-light w-48 border-b border-border-light">
                     Attribute
                   </th>
-                  {compareItems.map((carrier) =>
+                  {compareItems.map((transport) =>
                 <th
-                  key={carrier.id}
+                  key={transport.id}
                   className="p-6 border-b border-border-light text-center relative">
                   
                       <button
-                    onClick={() => dispatch(toggleCompareItem(carrier))}
+                    onClick={() => dispatch(toggleCompareItem(transport))}
                     className="absolute top-4 right-4 w-6 h-6 rounded bg-bg-light flex items-center justify-center text-text-lighter hover:text-text-dark hover:bg-gray-200 transition-colors">
                     
                         <XIcon size={14} />
                       </button>
                       <div className="w-10 h-10 mx-auto rounded-lg mb-3 flex items-center justify-center font-bold text-lg bg-bg-light text-text-dark">
-                        {carrier.logoInitial}
+                        {transport.company.charAt(0).toUpperCase()}
                       </div>
                       <div className="font-semibold text-text-dark text-sm">
-                        {carrier.name}
+                        {transport.company}
                       </div>
                     </th>
                 )}
@@ -102,12 +104,12 @@ export const ComparePage: React.FC = () => {
                   <td className="p-6 font-medium text-text-light border-b border-border-light">
                     Type
                   </td>
-                  {compareItems.map((carrier) =>
+                  {compareItems.map((transport) =>
                 <td
-                  key={carrier.id}
+                  key={transport.id}
                   className="p-6 border-b border-border-light text-center">
                   
-                      <Badge type={carrier.type} />
+                      <Badge type={transport.transport_type} />
                     </td>
                 )}
                 </tr>
@@ -115,11 +117,11 @@ export const ComparePage: React.FC = () => {
                   <td className="p-6 font-medium text-text-light border-b border-border-light">
                     Price
                   </td>
-                  {compareItems.map((carrier) => {
-                  const isBest = carrier.price === lowestPrice;
+                  {compareItems.map((transport) => {
+                  const isBest = transport.price === lowestPrice;
                   return (
                     <td
-                      key={carrier.id}
+                      key={transport.id}
                       className={`p-6 border-b border-border-light text-center`}>
                       
                         <div
@@ -131,7 +133,7 @@ export const ComparePage: React.FC = () => {
                           <span className="text-lg">
                             $
                             {new Intl.NumberFormat('en-US').format(
-                            carrier.price
+                            transport.price
                           )}
                           </span>
                         </div>
@@ -143,28 +145,43 @@ export const ComparePage: React.FC = () => {
                   <td className="p-6 font-medium text-text-light border-b border-border-light">
                     Duration
                   </td>
-                  {compareItems.map((carrier) => {
-                  const isBest = carrier.durationDays === shortestDuration;
+                  {compareItems.map((transport) => {
+                  const isBest = transport.duration === shortestDuration;
                   return (
                     <td
-                      key={carrier.id}
-                      className={`p-6 border-b border-border-light text-center ${isBest ? 'text-success-dark font-bold' : 'text-text-medium font-semibold'}`}>
-                      
-                        {carrier.durationDays} days
-                      </td>);
+                      key={transport.id}
+                      className="p-6 border-b border-border-light text-center"
+                    >
+                      <div
+                        className={`inline-flex items-center justify-center gap-2 ${
+                          isBest
+                            ? "text-success-dark font-bold"
+                            : "text-text-medium font-semibold"
+                        }`}
+                      >
+                        {isBest && (
+                          <TrophyIcon
+                            size={16}
+                            className="text-warning"
+                          />
+                        )}
 
+                        {formatDuration(transport.duration)}
+                      </div>
+                    </td>
+                    );
                 })}
                 </tr>
                 <tr>
                   <td className="p-6 font-medium text-text-light border-b border-border-light">
                     Departure
                   </td>
-                  {compareItems.map((carrier) =>
+                  {compareItems.map((transport) =>
                 <td
-                  key={carrier.id}
+                  key={transport.id}
                   className="p-6 border-b border-border-light text-center text-text-medium">
                   
-                      {new Date(carrier.departureDate).toLocaleDateString(
+                      {new Date(transport.departure_date).toLocaleDateString(
                     'en-US',
                     {
                       month: 'short',
@@ -179,19 +196,19 @@ export const ComparePage: React.FC = () => {
                   <td className="p-6 font-medium text-text-light border-b border-border-light">
                     Route
                   </td>
-                  {compareItems.map((carrier) =>
+                  {compareItems.map((transport) =>
                 <td
-                  key={carrier.id}
+                  key={transport.id}
                   className="p-6 border-b border-border-light text-center text-text-medium">
                   
-                      {carrier.origin} → {carrier.destination}
+                      {transport.source} → {transport.destination}
                     </td>
                 )}
                 </tr>
                 <tr>
                   <td className="p-6 font-medium text-text-light">Action</td>
-                  {compareItems.map((carrier) =>
-                <td key={carrier.id} className="p-6 text-center">
+                  {compareItems.map((transport) =>
+                <td key={transport.id} className="p-6 text-center">
                       <Button size="sm" className="w-full max-w-[140px]">
                         Book Now
                       </Button>

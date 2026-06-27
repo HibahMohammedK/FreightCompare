@@ -3,21 +3,22 @@ import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
 import { BellIcon } from 'lucide-react';
-import { Carrier } from '../../utils/mockData';
+import type { Transport } from "../../types/transport";
+
 interface PriceAlertModalProps {
   isOpen: boolean;
   onClose: () => void;
-  carrier: Carrier | null;
+  transport: Transport | null;
 }
 export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
   isOpen,
   onClose,
-  carrier
+  transport
 }) => {
   const [threshold, setThreshold] = useState('');
   const [enabled, setEnabled] = useState(true);
-  if (!carrier) return null;
-  const defaultThreshold = Math.floor(carrier.price * 0.9);
+  if (!transport) return null;
+  const defaultThreshold = Math.floor(transport.price * 0.9);
   return (
     <Modal
       isOpen={isOpen}
@@ -30,9 +31,9 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
           <BellIcon size={20} />
         </div>
         <div>
-          <h4 className="font-semibold text-text-dark">{carrier.name}</h4>
+          <h4 className="font-semibold text-text-dark">{transport.company}</h4>
           <p className="text-xs text-text-light">
-            {carrier.origin} → {carrier.destination}
+            {transport.source} → {transport.destination}
           </p>
         </div>
       </div>
@@ -42,7 +43,7 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
         <div className="flex items-baseline gap-1">
           <span className="text-xl font-bold text-text-dark">$</span>
           <span className="text-2xl font-bold text-text-dark">
-            {new Intl.NumberFormat('en-US').format(carrier.price)}
+            {new Intl.NumberFormat('en-US').format(transport.price)}
           </span>
         </div>
       </div>

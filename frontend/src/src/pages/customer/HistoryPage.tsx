@@ -13,25 +13,30 @@ import {
  } from
 'lucide-react';
 import { getSearchHistory,deleteSearchHistory, clearSearchHistory } from "../../api/transport";
-
+import { useAppDispatch, useAppSelector } from "../../hooks/redux";
+import {
+  setSearchHistory,
+  removeSearchHistory,
+  clearSearchHistory as clearSearchHistoryState,
+} from "../../redux/transportSlice";
+import type { SearchHistory } from "../../types/searchHistory";
 
 export const HistoryPage: React.FC = () => {
-  type SearchHistory = {
-    id: number;
-    source: string;
-    destination: string;
-    transport_type: "all" | "air" | "sea";
-    searched_at: string;
-  };
-  const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([]);
+  
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const dispatch = useAppDispatch();
+
+  const searchHistory = useAppSelector(
+    (state) => state.transport.searchHistory
+  );
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
         const res = await getSearchHistory();
-        setSearchHistory(res.data);
+        dispatch(setSearchHistory(res.data));
       } catch (err) {
         console.error("Failed to load history", err);
       } finally {
@@ -63,9 +68,7 @@ export const HistoryPage: React.FC = () => {
     try {
       await deleteSearchHistory(id);
 
-      setSearchHistory(prev =>
-        prev.filter(item => item.id !== id)
-      );
+      dispatch(removeSearchHistory(id));
     } catch (err) {
       console.error("Failed to delete history", err);
     }
@@ -73,7 +76,7 @@ export const HistoryPage: React.FC = () => {
 
   const handleClearHistory = async () => {
       await clearSearchHistory();
-      setSearchHistory([]);
+      dispatch(clearSearchHistoryState());
   };
 
   if (loading) {

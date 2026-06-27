@@ -4,39 +4,36 @@ import { TransportCard } from '../../components/shared/TransportCard';
 import { PriceAlertModal } from '../../components/shared/PriceAlertModal';
 import { BookmarkIcon } from 'lucide-react';
 import { getSavedTransports, unsaveTransport } from '../../api/saved';
+import { useAppDispatch,useAppSelector } from '../../hooks/redux';
+import type { Transport } from "../../types/transport";
+import {
+  setSavedRoutes,
+  removeSavedRoute,
+} from "../../redux/transportSlice";
 
-import { Carrier } from '../../utils/mockData';
 export const SavedPage: React.FC = () => {
-  const [savedRoutes, setSavedRoutes] = useState<any[]>([]);
+
+  const dispatch = useAppDispatch()
+  const savedRoutes = useAppSelector(
+    (state) => state.transport.savedRoutes
+  );
   const [loading, setLoading] = useState(true);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
-  const [selectedCarrier, setSelectedCarrier] = useState<Carrier | null>(null);
-  const handleTrack = (carrier: Carrier) => {
-    setSelectedCarrier(carrier);
+  const [selectedTransport, setSelectedTransport] = useState<Transport | null>(null);
+
+  const handleTrack = (transport: Transport) => {
+    setSelectedTransport(transport);
     setIsAlertModalOpen(true);
   };
 
   useEffect(() => {
     const fetchSaved = async () => {
       try {
+
         setLoading(true);
-
         const res = await getSavedTransports();
+        dispatch(setSavedRoutes(res.data));
 
-        const mapped = res.data.map((item: any) => ({
-          id: item.transport_details.id,
-          name: item.transport_details.company,
-          type: item.transport_details.transport_type,
-          price: Number(item.transport_details.price),
-          durationText: Math.ceil(item.transport_details.duration / 24),
-          departureDate: item.transport_details.departure_date,
-          origin: item.transport_details.source,
-          destination: item.transport_details.destination,
-
-          savedId: item.id // 🔥 IMPORTANT for delete
-        }));
-
-        setSavedRoutes(mapped);
       } catch (err) {
         console.error("Failed to fetch saved transports", err);
       } finally {
@@ -45,19 +42,20 @@ export const SavedPage: React.FC = () => {
     };
 
     fetchSaved();
-  }, []);
+  }, [dispatch]);
 
-  const handleUnsave = async (carrier: any) => {
+  const handleUnsave = async (transport: Transport) => {
     try {
-      await unsaveTransport(carrier.savedId);
+      if (!transport.saved_id) return;
 
-      setSavedRoutes((prev) =>
-        prev.filter((item) => item.savedId !== carrier.savedId)
-      );
+      await unsaveTransport(transport.saved_id);
+
+      dispatch(removeSavedRoute(transport.id));
     } catch (err) {
       console.error("Unsave failed", err);
     }
   };
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-bg-light flex flex-col">
@@ -92,15 +90,14 @@ export const SavedPage: React.FC = () => {
 
         {savedRoutes.length > 0 ?
         <div className="grid lg:grid-cols-2 gap-6">
-            {savedRoutes.map((carrier) =>
+            {savedRoutes.map((transport) =>
           <TransportCard
-            key={carrier.id}
-            carrier={carrier}
-            onTrack={() => handleTrack(carrier)}
+            key={transport.id}
+            transport={transport}
+            onTrack={() => handleTrack(transport)}
             isSaved={true} // always true here
-            onSaveToggle={() => handleUnsave(carrier)}
-             />
-            
+            onSaveToggle={() => handleUnsave(transport)}
+             />     
           )}
           </div> :
 
@@ -123,7 +120,7 @@ export const SavedPage: React.FC = () => {
       <PriceAlertModal
         isOpen={isAlertModalOpen}
         onClose={() => setIsAlertModalOpen(false)}
-        carrier={selectedCarrier} />
+        transport={selectedTransport} />
     </div>);
 
 };

@@ -4,6 +4,7 @@ import { TransportCard } from '../../components/shared/TransportCard';
 import { PriceAlertModal } from '../../components/shared/PriceAlertModal';
 import { Button } from '../../components/shared/Button';
 import {
+  ArrowLeftRightIcon,
   ArrowRightIcon,
   SearchIcon,
   FilterIcon,
@@ -12,24 +13,28 @@ import {
 } from 'lucide-react';
 
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
-import { setFilters } from '../../redux/transportSlice';
+import { setFilters, setSearchResults, removeSavedRoute, addSavedRoute } from '../../redux/transportSlice';
 
 import { getTransports, getLocations, saveSearchHistory } from '../../api/transport';
 import { useLocation, useNavigate } from "react-router-dom";
-import { getSavedTransports, saveTransport, unsaveTransport } from "../../api/saved";
-
+import { saveTransport, unsaveTransport } from "../../api/saved";
+import type { Transport } from '../../types/transport';
 export const SearchResultsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const { filters } = useAppSelector((state) => state.transport);
-
-  const [transports, setTransports] = useState<any[]>([]);
+  const searchResults = useAppSelector(
+    state => state.transport.searchResults
+  );
+  const savedRoutes = useAppSelector(
+    state => state.transport.savedRoutes
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
-  const [selectedCarrier, setSelectedCarrier] = useState<any | null>(null);
+  const [selectedTransport, setSelectedTransport] = useState<Transport | null>(null);
 
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -37,8 +42,7 @@ export const SearchResultsPage: React.FC = () => {
   const source = params.get("source") || "";
   const destination = params.get("destination") || "";
   const date = params.get("date") || "";
-  const [savedMap, setSavedMap] = useState<Record<number, number>>({});
-
+  
   useEffect(() => {
 
     const fetchLocations = async () => {
@@ -68,41 +72,25 @@ export const SearchResultsPage: React.FC = () => {
   }, []);
   
 
-  const fetchSaved = async () => {
+  const handleSaveToggle = async (transport: Transport) => {
     try {
-      const res = await getSavedTransports();
+      const saved = savedRoutes.find(
+        (route) => route.id === transport.id
+      );
 
-      const map: Record<number, number> = {};
+      if (saved) {
+        await unsaveTransport(saved.saved_id!);
 
-      res.data.forEach((item: any) => {
-        map[item.transport] = item.id; // 🔥 key = transport_id, value = saved_id
-      });
-
-      setSavedMap(map);
-    } catch (err) {
-      console.error("Failed to fetch saved", err);
-    }
-  };
-
-  const handleSaveToggle = async (transportId: number) => {
-    try {
-      if (savedMap[transportId]) {
-        // 🔴 UNSAVE
-        await unsaveTransport(savedMap[transportId]);
-
-        setSavedMap((prev) => {
-          const updated = { ...prev };
-          delete updated[transportId];
-          return updated;
-        });
+        dispatch(removeSavedRoute(transport.id));
       } else {
-        // 🟢 SAVE
-        const res = await saveTransport(transportId);
+        const res = await saveTransport(transport.id);
 
-        setSavedMap((prev) => ({
-          ...prev,
-          [transportId]: res.data.id,
-        }));
+        dispatch(
+          addSavedRoute({
+            ...transport,
+            saved_id: res.data.id,
+          })
+        );
       }
     } catch (err) {
       console.error("Save toggle failed", err);
@@ -169,9 +157,7 @@ export const SearchResultsPage: React.FC = () => {
 
     navigate(`/search?${query.toString()}`);
   };
-  useEffect(() => {
-    fetchSaved();
-  }, []);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -204,25 +190,15 @@ export const SearchResultsPage: React.FC = () => {
           data = data.filter((t: any) => t.departure_date >= today);
         }
 
-        // ✅ MAP DATA
-        const mapped = data.map((t: any) => ({
-          id: t.id,
-          name: t.company,
-          origin: t.source,
-          destination: t.destination,
-          type: t.transport_type,
-          price: Number(t.price),
-          duration: t.duration,
-
-          durationText: Math.ceil(t.duration / 24),
-            // t.duration < 24
-            //   ? `${t.duration} hrs`
-            //   : `${Math.ceil(t.duration / 24)} days`,
-
-          departureDate: t.departure_date,
-        }));
-
-        setTransports(mapped);
+       dispatch(
+          setSearchResults(
+            data.map((t: any) => ({
+              ...t,
+              price: Number(t.price),
+              duration: Number(t.duration),
+            }))
+          )
+        );
       } catch (err) {
         console.error(err);
         setError("Failed to load transports");
@@ -235,26 +211,30 @@ export const SearchResultsPage: React.FC = () => {
   }, [location.search]);
 
   // 🔍 FILTER + SORT
-  const filteredResults = transports
-    .filter((carrier) => {
-      if (filters.type !== 'all' && carrier.type !== filters.type) return false;
-      if (carrier.price > filters.maxPrice) return false;
-      if (carrier.duration > filters.maxDuration) return false;
+  const filteredResults = searchResults
+    .filter((transport) => {
+      if (filters.type !== 'all' && transport.transport_type !== filters.type) return false;
+      if (transport.price > filters.maxPrice) return false;
+      if (transport.duration > filters.maxDuration) return false;
       return true;
     })
     .sort((a, b) => {
       if (filters.sortBy === 'price') return a.price - b.price;
       if (filters.sortBy === 'duration') return a.duration - b.duration;
       return (
-        new Date(a.departureDate).getTime() -
-        new Date(b.departureDate).getTime()
+        new Date(a.departure_date).getTime() -
+        new Date(b.departure_date).getTime()
       );
     });
 
-  const handleTrack = (carrier: any) => {
-    setSelectedCarrier(carrier);
+  const handleTrack = (transport: any) => {
+    setSelectedTransport(transport);
     setIsAlertModalOpen(true);
   };
+
+  const compareItems = useAppSelector(
+    state => state.transport.compareItems
+  );
 
   return (
     <div className="min-h-screen bg-bg-light flex flex-col">
@@ -563,13 +543,15 @@ export const SearchResultsPage: React.FC = () => {
           {error && <p className="text-red-500">{error}</p>}
 
           {!loading && filteredResults.length > 0 ? (
-            filteredResults.map((carrier) => (
+            filteredResults.map((transport) => (
               <TransportCard
-                key={carrier.id}
-                carrier={carrier}
-                onTrack={() => handleTrack(carrier)}
-                isSaved={!!savedMap[carrier.id]}  
-                onSaveToggle={() => handleSaveToggle(carrier.id)}
+                  key={transport.id}
+                  transport={transport}
+                  isSaved={
+                    savedRoutes.some(route => route.id === transport.id)
+                  }
+                  onSaveToggle={() => handleSaveToggle(transport)}
+                  onTrack={() => handleTrack(transport)}
               />
             ))
           ) : (
@@ -587,10 +569,20 @@ export const SearchResultsPage: React.FC = () => {
         </div>
       </div>
 
+      {compareItems.length > 0 && (
+        <button
+          onClick={() => navigate("/compare")}
+          className="fixed bottom-6 right-6 z-50 bg-primary text-white px-5 py-3 rounded-full shadow-lg hover:bg-primary-dark transition flex items-center gap-2"
+        >
+          <ArrowLeftRightIcon size={18} />
+          Compare ({compareItems.length})
+        </button>
+      )}
+
       <PriceAlertModal
         isOpen={isAlertModalOpen}
         onClose={() => setIsAlertModalOpen(false)}
-        carrier={selectedCarrier}
+        transport={selectedTransport}
       />
     </div>
   );

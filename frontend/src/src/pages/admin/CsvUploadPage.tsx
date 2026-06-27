@@ -2,15 +2,19 @@ import React from 'react';
 import { FileSpreadsheetIcon } from 'lucide-react';
 import { Card } from '../../components/shared/Card';
 import { CsvUploadCard } from '../../components/admin/CsvUploadCard';
-import { useAppDispatch } from '../../hooks/redux';
-import { replaceAdminTransports } from '../../redux/transportSlice';
-import { AdminTransport } from '../../utils/mockData';
+// import { useAppDispatch } from '../../hooks/redux';
+// import { replaceAdminTransports } from '../../redux/transportSlice';
+// import { AdminTransport } from '../../utils/mockData';
 
 export const CsvUploadPage: React.FC = () => {
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
 
-  const handleUploadComplete = (records: AdminTransport[]) => {
-    dispatch(replaceAdminTransports(records));
+//   const handleUploadComplete = (records: AdminTransport[]) => {
+//     dispatch(replaceAdminTransports(records));
+//   };
+
+  const handleUploadComplete = () => {
+    console.log("CSV upload completed.");
   };
 
   return (

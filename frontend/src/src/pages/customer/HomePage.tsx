@@ -19,14 +19,22 @@ import {
   MessageSquareIcon,
   ShieldCheckIcon } from
 'lucide-react';
-import { useAppSelector } from '../../hooks/redux';
+import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { getSavedTransports } from '../../api/saved';
 import { motion } from 'framer-motion';
-import { getLocations, saveSearchHistory } from '../../api/transport';
+import { getLocations, saveSearchHistory, getSearchHistory } from '../../api/transport';
+import { setSearchHistory, setSavedRoutes } from "../../redux/transportSlice";
+
 export const HomePage: React.FC = () => {
   const user = useAppSelector((state) => state.auth.user);
-  const searchHistory = useAppSelector((state) => state.transport.searchHistory);
-  const [savedRoutes, setSavedRoutes] = useState<any[]>([]);
+  const dispatch = useAppDispatch();
+  
+  const searchHistory = useAppSelector(
+    (state) => state.transport.searchHistory
+  );
+  const savedRoutes = useAppSelector(
+    (state) => state.transport.savedRoutes
+  );
   const navigate = useNavigate();
   const [transportType, setTransportType] = useState<'all' | 'air' | 'sea'>(
     'all'
@@ -96,6 +104,19 @@ export const HomePage: React.FC = () => {
   };
 
   useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await getSearchHistory();
+        dispatch(setSearchHistory(res.data));
+      } catch (err) {
+        console.error("Failed to load search history", err);
+      }
+    };
+
+    fetchHistory();
+  }, []);
+
+  useEffect(() => {
     const fetchLocations = async () => {
       const res = await getLocations();
       setLocations(res.data.locations);
@@ -108,18 +129,7 @@ export const HomePage: React.FC = () => {
     const fetchSaved = async () => {
       try {
         const res = await getSavedTransports();
-
-        const mapped = res.data.map((item: any) => ({
-          id: item.transport_details.id,
-          name: item.transport_details.company,
-          type: item.transport_details.transport_type,
-          price: Number(item.transport_details.price),
-          origin: item.transport_details.source,
-          destination: item.transport_details.destination,
-          currency: "USD", // 🔥 fallback (your UI expects this)
-        }));
-
-        setSavedRoutes(mapped);
+        dispatch(setSavedRoutes(res.data));
       } catch (err) {
         console.error("Failed to fetch saved routes", err);
       }
@@ -368,14 +378,18 @@ export const HomePage: React.FC = () => {
               <Card
                 key={history.id}
                 className="p-4 hover:border-primary transition-colors cursor-pointer"
-                onClick={() => navigate('/search')}>
+                onClick={() =>
+                    navigate(
+                      `/search?source=${encodeURIComponent(history.source)}
+                  &destination=${encodeURIComponent(history.destination)}
+                  &type=${history.transport_type}`)}>
                 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-bg-light flex items-center justify-center text-text-darker">
-                        {history.transportType === 'air' ?
+                        {history.transport_type === 'air' ?
                       <PlaneIcon size={18} /> :
-                      history.transportType === 'sea' ?
+                      history.transport_type === 'sea' ?
                       <ShipIcon size={18} /> :
 
                       <SearchIcon size={18} />
@@ -383,7 +397,7 @@ export const HomePage: React.FC = () => {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 font-semibold text-sm text-text-dark mb-1">
-                          <span>{history.origin}</span>
+                          <span>{history.source}</span>
                           <ArrowRightIcon
                           size={14}
                           className="text-text-lighter" />
@@ -391,10 +405,10 @@ export const HomePage: React.FC = () => {
                           <span>{history.destination}</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-text-light">
-                          <span>{history.date}</span>
+                          <span>{new Date(history.searched_at).toLocaleDateString()}</span>
                           <span>•</span>
                           <span className="capitalize">
-                            {history.transportType}
+                            {history.transport_type}
                           </span>
                         </div>
                       </div>
@@ -430,9 +444,9 @@ export const HomePage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center ${route.type === 'air' ? 'bg-air-bg text-air-border' : 'bg-sea-bg text-sea-border'}`}>
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center ${route.transport_type === 'air' ? 'bg-air-bg text-air-border' : 'bg-sea-bg text-sea-border'}`}>
                       
-                          {route.type === 'air' ?
+                          {route.transport_type === 'air' ?
                       <PlaneIcon size={18} /> :
 
                       <ShipIcon size={18} />
@@ -440,10 +454,10 @@ export const HomePage: React.FC = () => {
                         </div>
                         <div>
                           <div className="font-semibold text-sm text-text-dark mb-1">
-                            {route.name}
+                            {route.company}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-text-light">
-                            <span>{route.origin}</span>
+                            <span>{route.source}</span>
                             <ArrowRightIcon size={12} />
                             <span>{route.destination}</span>
                           </div>
@@ -454,7 +468,7 @@ export const HomePage: React.FC = () => {
                           ${new Intl.NumberFormat('en-US').format(route.price)}
                         </div>
                         <div className="text-[10px] text-text-lighter uppercase">
-                          {route.currency}
+                          USD
                         </div>
                       </div>
                     </div>

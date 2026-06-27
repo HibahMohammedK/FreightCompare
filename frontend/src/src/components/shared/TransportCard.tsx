@@ -1,5 +1,5 @@
 import React from 'react';
-import { Carrier } from '../../utils/mockData';
+import type { Transport } from "../../types/transport";
 import {
   PlaneTakeoffIcon,
   ShipIcon,
@@ -13,8 +13,10 @@ import {
 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import {toggleCompareItem } from '../../redux/transportSlice';
+import { formatDuration } from '../../utils/formatters';
+
 interface TransportCardProps {
-  carrier: Carrier;
+  transport: Transport;
   onBook?: () => void;
   onTrack?: () => void;
   index?: number;
@@ -22,7 +24,7 @@ interface TransportCardProps {
   onSaveToggle?: () => void;
 }
 export const TransportCard: React.FC<TransportCardProps> = ({
-  carrier,
+  transport,
   onBook,
   onTrack,
   index = 0,
@@ -31,11 +33,12 @@ export const TransportCard: React.FC<TransportCardProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const compareItems = useAppSelector((state) => state.transport.compareItems);
-  const isComparing = compareItems.some((c) => c.id === carrier.id);
-  const isAir = carrier.type === 'air';
+  const isComparing = compareItems.some((c) => c.id === transport.id);
+  const isAir = transport.transport_type === 'air';
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US').format(price);
   };
+
   return (
     <article
       className="bg-white rounded-[28px] border border-slate-100 overflow-hidden shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]"
@@ -55,17 +58,17 @@ export const TransportCard: React.FC<TransportCardProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-3 mb-1">
                 <h3 className="text-[15px] font-bold text-slate-900 truncate">
-                  {carrier.name}
+                  {transport.company}
                 </h3>
                 <span
                   className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${isAir ? 'bg-sky-50 text-sky-700' : 'bg-teal-50 text-teal-700'}`}>
-                  {carrier.type}
+                  {transport.transport_type}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-500">
-                <span>{carrier.origin}</span>
+                <span>{transport.source}</span>
                 <ArrowRightIcon size={14} />
-                <span>{carrier.destination}</span>
+                <span>{transport.destination}</span>
               </div>
             </div>
           </div>
@@ -73,11 +76,11 @@ export const TransportCard: React.FC<TransportCardProps> = ({
             <div className="flex items-baseline justify-end gap-2">
               <span className="text-[17px] font-bold text-slate-900">$</span>
               <span className="text-[20px] font-bold text-slate-900">
-                {formatPrice(carrier.price)}
+                {formatPrice(transport.price)}
               </span>
             </div>
             <span className="mt-1 block text-[11px] text-slate-400 uppercase tracking-[0.18em]">
-              {carrier.currency}
+              USD
             </span>
           </div>
         </div>
@@ -86,13 +89,13 @@ export const TransportCard: React.FC<TransportCardProps> = ({
           <div className="flex items-center gap-2 text-slate-500">
             <ClockIcon size={18} className="text-slate-400" />
             <span className="font-semibold text-slate-700">
-              {carrier.durationText} days
+              {formatDuration(transport.duration)}
             </span>
           </div>
           <div className="flex items-center gap-2 text-slate-500">
             <CalendarIcon size={18} className="text-slate-400" />
             <span className="font-semibold text-slate-700">
-              {new Date(carrier.departureDate).toLocaleDateString('en-US', {
+              {new Date(transport.departure_date).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric'
@@ -104,7 +107,7 @@ export const TransportCard: React.FC<TransportCardProps> = ({
         <div className="flex flex-wrap items-center gap-3 mt-6">
           <button
             type="button"
-            onClick={() => dispatch(toggleCompareItem(carrier))}
+            onClick={() => dispatch(toggleCompareItem(transport))}
             className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-medium transition-colors ${isComparing ? 'border-primary/20 bg-primary-light text-primary-dark' : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
             <GitCompareArrowsIcon size={16} />
             {isComparing ? 'Comparing' : 'Compare'}
