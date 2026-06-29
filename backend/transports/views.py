@@ -1,3 +1,11 @@
+import csv
+import io
+
+from companies.models import Company
+from .csv_serializers import (
+    CsvUploadSerializer,
+    TransportCsvRowSerializer,
+)
 from rest_framework import viewsets, filters, status
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
 from .models import Transport, SearchHistory
@@ -6,6 +14,7 @@ from .permissions import IsAdminUserCustom
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
+from django.db import IntegrityError
 
 
 class TransportViewSet(viewsets.ModelViewSet):
@@ -125,3 +134,112 @@ class ClearSearchHistoryView(APIView):
         history = SearchHistory.objects.filter(user = request.user)
         history.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+ 
+
+class CsvUploadView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUserCustom]
+
+    def post(self, request):
+        file_serializer = CsvUploadSerializer(data=request.data)
+        file_serializer.is_valid(raise_exception=True)
+
+        csv_file = file_serializer.validated_data["file"]
+
+        try:
+            decoded_file = csv_file.read().decode("utf-8")
+            reader = csv.DictReader(io.StringIO(decoded_file))
+
+            expected_headers = {
+                "company",
+                "transport_type",
+                "source",
+                "destination",
+                "price",
+                "duration",
+                "departure_date",
+                "booking_url",
+            }
+
+            if reader.fieldnames is None:
+                return Response(
+                    {"detail": "CSV file is empty."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            uploaded_headers = set(reader.fieldnames)
+
+            if uploaded_headers != expected_headers:
+                return Response(
+                    {
+                        "detail": "Invalid CSV headers.",
+                        "expected": sorted(expected_headers),
+                        "received": reader.fieldnames,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        except (UnicodeDecodeError, csv.Error):
+            return Response(
+                {"detail": "Invalid CSV file."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        created = 0
+        skipped = 0
+
+        for index, row in enumerate(reader, start=2):
+
+            row_serializer = TransportCsvRowSerializer(data=row)
+
+            if not row_serializer.is_valid():
+                return Response(
+                    {
+                        "detail": f"Validation failed on row {index}.",
+                        "errors": row_serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            validated = row_serializer.validated_data
+
+            try:
+                company = Company.objects.get(id=validated["company"])
+            except Company.DoesNotExist:
+                return Response(
+                    {
+                        "detail": (
+                            f"Company with ID "
+                            f"{validated['company']} "
+                            f"does not exist (row {index})."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                Transport.objects.create(
+                    company=company,
+                    transport_type=validated["transport_type"],
+                    source=validated["source"],
+                    destination=validated["destination"],
+                    price=validated["price"],
+                    duration=validated["duration"],
+                    departure_date=validated["departure_date"],
+                    booking_url=validated["booking_url"],
+                    created_by=request.user,
+                )
+
+                created += 1
+
+            except IntegrityError:
+                skipped += 1
+
+        return Response(
+            {
+                "message": "CSV upload completed successfully.",
+                "created": created,
+                "skipped": skipped,
+                "reason": "Duplicate transport records were skipped.",
+            },
+            status=status.HTTP_201_CREATED,
+        )

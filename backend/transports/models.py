@@ -32,6 +32,20 @@ class Transport(models.Model):
     def __str__(self):
         return f"{self.source} → {self.destination}"
     
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "transport_type",
+                    "source",
+                    "destination",
+                    "departure_date",
+                ],
+                name="unique_transport_route",
+            )
+        ]
+    
 
 class SearchHistory(models.Model):
     SEARCH_TYPE_CHOICES = (

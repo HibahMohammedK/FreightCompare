@@ -9,7 +9,8 @@ import {
   MessageSquareIcon,
   ArrowRightIcon,
   PlaneTakeoffIcon,
-  Building2Icon
+  Building2Icon,
+  FileSpreadsheetIcon
  } from
 'lucide-react';
 
@@ -87,7 +88,7 @@ export const AdminDashboardPage: React.FC = () => {
   const quickLinks = [
   {
     title: 'Transports',
-    desc: 'Manage routes and bulk CSV uploads',
+    desc: 'Manage routes',
     path: '/admin/transports',
     icon: <PlaneTakeoffIcon size={20} />
   },
@@ -108,6 +109,12 @@ export const AdminDashboardPage: React.FC = () => {
     desc: 'Track premium plans',
     path: '/admin/subscriptions',
     icon: <CreditCardIcon size={20} />
+  },
+  {
+    title: 'CSV Upload',
+    desc: 'Bulk CSV uploads',
+    path: '/admin/csv-upload',
+    icon: <FileSpreadsheetIcon size={20} />
   },
   {
     title: 'Staff Status',

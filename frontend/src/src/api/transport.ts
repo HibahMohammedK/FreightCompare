@@ -60,3 +60,11 @@ export const clearSearchHistory = () => {
     "/transports/search-history/clear"
   );
 };
+
+export const uploadTransportCsv = (file: File) => {
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  return API.post("/transports/csv-upload/", formData);
+};
