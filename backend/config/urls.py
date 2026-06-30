@@ -23,4 +23,7 @@ urlpatterns = [
     path("api/transports/", include("transports.urls")),
     path("api/saved/", include("saved.urls")),
     path("api/companies/", include("companies.urls")),
+    path("api/companies/", include("companies.urls")),
+    path("api/subscription/", include("subscription.urls"))
 ]
+
