@@ -37,6 +37,10 @@ class Subscription(models.Model):
 
     expiry_date = models.DateTimeField()
 
+    cancel_at_period_end = models.BooleanField(
+        default=False
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)

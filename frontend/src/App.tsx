@@ -22,6 +22,8 @@ import { ComparePage } from './src/pages/customer/ComparePage';
 import { HistoryPage } from './src/pages/customer/HistoryPage';
 import { PricingPage } from './src/pages/customer/PricingPage';
 import { SupportPage } from './src/pages/customer/SupportPage';
+import { SubscriptionCancelPage } from './src/pages/customer/SubscriptionCancelPage';
+import { SubscriptionSuccessPage } from './src/pages/customer/SubscriptionSuccessPage';
 import { UserChatPage } from './src/pages/customer/UserChatPage';
 
 // Staff
@@ -111,6 +113,8 @@ export function App() {
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/subscription/success" element={<SubscriptionSuccessPage />}/>
+          <Route path="/subscription/cancel" element={<SubscriptionCancelPage />}/>
           <Route path="/support" element={<SupportPage />} />
           <Route path="/chat" element={<UserChatPage />} />
         </Route>

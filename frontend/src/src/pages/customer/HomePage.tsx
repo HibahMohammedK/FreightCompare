@@ -24,6 +24,7 @@ import { getSavedTransports } from '../../api/saved';
 import { motion } from 'framer-motion';
 import { getLocations, saveSearchHistory, getSearchHistory } from '../../api/transport';
 import { setSearchHistory, setSavedRoutes } from "../../redux/transportSlice";
+import { getCurrentSubscription } from '../../api/subscription';
 
 export const HomePage: React.FC = () => {
   const user = useAppSelector((state) => state.auth.user);
@@ -48,7 +49,39 @@ export const HomePage: React.FC = () => {
   const [showDestinationSuggestions, setShowDestinationSuggestions] =
     useState(false);
   const [date, setDate] = useState('');
+
+  const [subscription, setSubscription] = useState<{
+        status: string;
+        start_date?: string;
+        expiry_date?: string;
+        cancel_at_period_end?: boolean;
+      } | null>(null);
   
+  const isPremium = subscription?.status === "active";
+
+  
+  useEffect(()=>{
+      const fetchSubscription = async () => {
+
+        try {
+
+            const res =
+                await getCurrentSubscription();
+
+            setSubscription(
+                res.data
+            );
+
+        } catch (err) {
+
+            console.error(err);
+
+        }
+
+    };
+    fetchSubscription();
+  },[])
+          
   const handleSearch = async (
       e: React.FormEvent
     ) => {
@@ -499,19 +532,57 @@ export const HomePage: React.FC = () => {
                   Subscription
                 </h2>
                 <p className="text-sm text-text-light max-w-md">
-                  {user?.isPremium ?
-                  'Your premium access is active. Review benefits, billing, and plan details.' :
-                  'Unlock premium support, direct chat, and advanced tools from your account area.'}
+                  {!isPremium
+                    ? "Unlock premium support, direct chat, and advanced tools from your account area."
+                    : subscription?.cancel_at_period_end
+                      ? `Your subscription will remain active until ${
+                          subscription.expiry_date
+                            ? new Date(
+                                subscription.expiry_date
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : ""
+                        }.`
+                      : "Your premium access is active. Review your benefits, billing, and plan details."}
                 </p>
               </div>
-              <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${user?.isPremium ? 'bg-success-bg text-success-dark' : 'bg-bg-light text-text-medium'}`}>
+              <span
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                  isPremium
+                    ? subscription?.cancel_at_period_end
+                      ? "bg-warning-bg text-warning-dark"
+                      : "bg-success-bg text-success-dark"
+                    : "bg-bg-light text-text-medium"
+                }`}
+              >
                 <ShieldCheckIcon size={14} />
-                {user?.isPremium ? 'Premium Active' : 'Basic Plan'}
+
+                {!isPremium
+                  ? "Basic Plan"
+                  : subscription?.cancel_at_period_end
+                    ? `Premium Ends ${
+                        subscription.expiry_date
+                          ? new Date(
+                              subscription.expiry_date
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : ""
+                      }`
+                    : "Premium Active"}
               </span>
             </div>
-            <Button onClick={() => navigate('/pricing')}>
-              {user?.isPremium ? 'Manage Subscription' : 'View Plans'}
-            </Button>
+            <Button onClick={() => navigate("/pricing")}>
+            {!isPremium
+              ? "View Plans"
+              : subscription?.cancel_at_period_end
+                ? "Manage Cancellation"
+                : "Manage Subscription"}
+          </Button>
           </Card>
 
           <Card className="p-6 border-border-light">
@@ -524,16 +595,16 @@ export const HomePage: React.FC = () => {
                   Support Chat
                 </h2>
                 <p className="text-sm text-text-light max-w-md">
-                  {user?.isPremium ?
+                  {isPremium ?
                   'Open the live chat workspace and talk directly with a support agent.' :
                   'Live chat is part of Premium. You can still open the chat page and upgrade when you are ready.'}
                 </p>
               </div>
             </div>
             <Button
-              variant={user?.isPremium ? 'primary' : 'outline'}
+              variant={isPremium ? 'primary' : 'outline'}
               onClick={() => navigate('/chat')}>
-              {user?.isPremium ? 'Open Chat' : 'See Chat Access'}
+              {isPremium ? 'Open Chat' : 'See Chat Access'}
             </Button>
           </Card>
         </div>

@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from users.models import User
 from .models import Subscription
-from .serializers import CreateCheckoutSessionSerializer
+from .serializers import CreateCheckoutSessionSerializer, SubscriptionSerializer
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -80,6 +80,34 @@ class CreateCheckoutSessionView(APIView):
                     "detail": str(e)
                 },
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+class CurrentSubscriptionView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        try:
+
+            subscription = request.user.subscription
+
+            serializer = SubscriptionSerializer(
+                subscription
+            )
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK,
+            )
+
+        except Subscription.DoesNotExist:
+
+            return Response(
+                {
+                    "status": "free"
+                },
+                status=status.HTTP_200_OK,
             )
 
 
@@ -208,6 +236,86 @@ class StripeWebhookView(APIView):
             )
 
         except Exception as e:
+
+            return Response(
+                {
+                    "detail": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        
+
+class CancelSubscriptionView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        try:
+
+            subscription = request.user.subscription
+
+            if subscription.cancel_at_period_end:
+                return Response(
+                    {
+                        "message": (
+                            "Your subscription is already scheduled "
+                            "to be cancelled at the end of the current billing period."
+                        )
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+            stripe.Subscription.modify(
+
+                subscription.stripe_subscription_id,
+
+                cancel_at_period_end=True,
+
+            )
+
+            subscription.cancel_at_period_end = True
+
+            subscription.save(
+                update_fields=[
+                    "cancel_at_period_end",
+                ]
+            )
+
+            return Response(
+                {
+                    "message": (
+                        "Your subscription will be cancelled "
+                        "at the end of the current billing period."
+                    )
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Subscription.DoesNotExist:
+
+            return Response(
+                {
+                    "detail": "No active subscription found."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        except stripe.error.StripeError as e:
+
+            return Response(
+                {
+                    "detail": str(e)
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        except Exception as e:
+
+            print(
+                f"Cancel Subscription Error: {e}",
+                flush=True,
+            )
 
             return Response(
                 {
