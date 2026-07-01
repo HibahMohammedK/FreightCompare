@@ -2,19 +2,25 @@ import stripe
 
 from datetime import datetime
 
+from django.db.models import Q
 from django.conf import settings
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
 
 from users.models import User
 from .models import Subscription
-from .serializers import CreateCheckoutSessionSerializer, SubscriptionSerializer
+from .serializers import CreateCheckoutSessionSerializer, SubscriptionSerializer, AdminSubscriptionSerializer
+
+
+
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -323,3 +329,52 @@ class CancelSubscriptionView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        
+       
+class AdminSubscriptionPagination(PageNumberPagination):
+    page_size = 6
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+        
+class AdminSubscriptionListView(ListAPIView):
+
+    permission_classes = [IsAdminUser]
+    serializer_class = AdminSubscriptionSerializer
+    pagination_class = AdminSubscriptionPagination
+
+    def get_queryset(self):
+
+        queryset = (
+            Subscription.objects
+            .select_related("user")
+            .order_by("-created_at")
+        )
+
+        search = self.request.query_params.get("search")
+        plan = self.request.query_params.get("plan")
+        status = self.request.query_params.get("status")
+
+        if search:
+            queryset = queryset.filter(
+                Q(user__username__icontains=search)
+                |
+                Q(user__email__icontains=search)
+            )
+
+        if plan == "premium":
+            queryset = queryset.filter(
+                status="active"
+            )
+
+        elif plan == "basic":
+            queryset = queryset.exclude(
+                status="active"
+            )
+
+        if status and status != "all":
+            queryset = queryset.filter(
+                status=status
+            )
+
+        return queryset

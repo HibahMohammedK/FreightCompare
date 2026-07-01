@@ -163,12 +163,12 @@ export const UserManagementPage: React.FC = () => {
                   <td className="p-5">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.isPremium
+                        user.is_premium
                           ? 'bg-warning-bg text-warning border border-yellow-200'
                           : 'bg-bg-light text-text-medium border border-border-light'
                       }`}
                     >
-                      {user.isPremium ? 'Premium' : 'Free'}
+                      {user.is_premium ? 'Premium' : 'Free'}
                     </span>
                   </td>
 

@@ -3,6 +3,7 @@ from .models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
+from subscription.models import Subscription
 
 
 
@@ -73,6 +74,8 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         fields = ["username", "first_name", "last_name",]
 
 class AdminUserListSerializer(serializers.ModelSerializer):
+    is_premium = serializers.SerializerMethodField()
+        
     class Meta:
         model = User
         fields = [
@@ -86,7 +89,14 @@ class AdminUserListSerializer(serializers.ModelSerializer):
             "is_active",
             "is_verified",
             "created_at",
+            "is_premium"
         ]
+
+    def get_is_premium(self, obj):
+        try:
+            return obj.subscription.status == "active"
+        except Subscription.DoesNotExist:
+            return False
 
 
 from .utils import send_staff_credentials_email

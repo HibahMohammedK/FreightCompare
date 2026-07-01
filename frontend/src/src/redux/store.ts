@@ -4,7 +4,6 @@ import transportReducer from './transportSlice';
 import notificationReducer from './notificationSlice';
 import ticketReducer from './ticketSlice';
 import chatReducer from './chatSlice';
-import subscriptionReducer from './subscriptionSlice';
 import staffReducer from "./staffSlice";
 
 const store = configureStore({
@@ -14,7 +13,6 @@ const store = configureStore({
     notification: notificationReducer,
     ticket: ticketReducer,
     chat: chatReducer,
-    subscription: subscriptionReducer,
     staff: staffReducer
   }
 });

@@ -1,24 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/shared/Card';
 import { Input } from '../../components/shared/Input';
 import { SearchIcon } from 'lucide-react';
-import { useAppSelector } from '../../hooks/redux';
+import { Button } from '../../components/shared/Button';
 import { format } from 'date-fns';
+import { getAdminSubscriptions, getAdminSubscriptionsByUrl } from "../../api/subscription";
+
 export const SubscriptionManagementPage: React.FC = () => {
-  const subscriptions = useAppSelector(
-    (state) => state.subscription.subscriptions
-  );
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [planFilter, setPlanFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const filteredSubs = subscriptions.filter((s) => {
-    const matchesSearch = s.userName.
-    toLowerCase().
-    includes(search.toLowerCase());
-    const matchesPlan = planFilter === 'all' || s.plan === planFilter;
-    const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
-    return matchesSearch && matchesPlan && matchesStatus;
-  });
+  const [nextPage, setNextPage] = useState<string | null>(null);
+  const [prevPage, setPrevPage] = useState<string | null>(null);
+
+  const fetchSubscriptions = async (
+        url?: string
+    ) => {
+
+        try {
+            let res;
+
+            if (url) {
+                res = await getAdminSubscriptionsByUrl(
+                    url
+                );
+
+            } else {
+                res = await getAdminSubscriptions({
+                    search,
+                    plan: planFilter,
+                    status: statusFilter,
+                });
+            }
+            setSubscriptions(
+                res.data.results
+            );
+            setNextPage(
+                res.data.next
+            );
+            setPrevPage(
+                res.data.previous
+            );
+
+        } catch (err) {
+            console.error(err);
+
+        } finally {
+            setLoading(false);
+        }
+  };
+
+  useEffect(() => {
+      fetchSubscriptions();
+  }, [search, planFilter, statusFilter]);
+
+  if (loading) {
+      return (
+        <div className="flex-1 flex items-center justify-center">
+            Loading subscriptions...
+        </div>
+      );
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-8">
       <div className="mb-8">
@@ -47,7 +92,7 @@ export const SubscriptionManagementPage: React.FC = () => {
               className="w-full rounded-xl border border-border-light bg-white px-4 py-2.5 text-sm text-text-darker focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
               
               <option value="all">All Plans</option>
-              <option value="free">Free</option>
+              <option value="basic">Basic</option>
               <option value="premium">Premium</option>
             </select>
           </div>
@@ -89,16 +134,16 @@ export const SubscriptionManagementPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-light">
-              {filteredSubs.map((sub) =>
+              {subscriptions.map((sub) =>
               <tr
                 key={sub.id}
                 className="hover:bg-bg-light/50 transition-colors">
                 
                   <td className="p-4">
                     <p className="text-sm font-semibold text-text-dark">
-                      {sub.userName}
+                      {sub.user_name}
                     </p>
-                    <p className="text-xs text-text-light">ID: {sub.userId}</p>
+                    <p className="text-xs text-text-light">ID: {sub.user_id}</p>
                   </td>
                   <td className="p-4">
                     <span
@@ -108,11 +153,11 @@ export const SubscriptionManagementPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="p-4 text-sm text-text-medium">
-                    {format(new Date(sub.startDate), 'MMM d, yyyy')}
+                    {format(new Date(sub.start_date), 'MMM d, yyyy')}
                   </td>
                   <td className="p-4 text-sm text-text-medium">
-                    {sub.expiryDate ?
-                  format(new Date(sub.expiryDate), 'MMM d, yyyy') :
+                    {sub.expiry_date ?
+                  format(new Date(sub.expiry_date), 'MMM d, yyyy') :
                   '-'}
                   </td>
                   <td className="p-4">
@@ -124,7 +169,7 @@ export const SubscriptionManagementPage: React.FC = () => {
                   </td>
                 </tr>
               )}
-              {filteredSubs.length === 0 &&
+              {subscriptions.length === 0 &&
               <tr>
                   <td colSpan={5} className="p-8 text-center text-text-light">
                     No subscriptions found matching your filters.
@@ -133,6 +178,23 @@ export const SubscriptionManagementPage: React.FC = () => {
               }
             </tbody>
           </table>
+          <div className="flex justify-between p-4">
+            <Button
+                variant="outline"
+                disabled={!prevPage}
+                onClick={() => prevPage && fetchSubscriptions(prevPage)}
+            >
+                Previous
+            </Button>
+
+            <Button
+                variant="outline"
+                disabled={!nextPage}
+                onClick={() => nextPage && fetchSubscriptions(nextPage)}
+            >
+                Next
+            </Button>
+          </div>
         </div>
       </Card>
     </div>);
