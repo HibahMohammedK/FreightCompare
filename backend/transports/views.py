@@ -202,18 +202,18 @@ class CsvUploadView(APIView):
 
             validated = row_serializer.validated_data
 
-            try:
-                company = Company.objects.get(id=validated["company"])
-            except Company.DoesNotExist:
-                return Response(
-                    {
-                        "detail": (
-                            f"Company with ID "
-                            f"{validated['company']} "
-                            f"does not exist (row {index})."
-                        )
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
+            company_name = " ".join(
+                validated["company"].split()
+            )
+
+            company = Company.objects.filter(
+                name__iexact=company_name
+            ).first()
+
+            if not company:
+                company = Company.objects.create(
+                    name=company_name,
+                    is_active=True,
                 )
 
             try:

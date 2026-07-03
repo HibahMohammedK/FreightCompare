@@ -6,7 +6,7 @@ class CsvUploadSerializer(serializers.Serializer):
 
 
 class TransportCsvRowSerializer(serializers.Serializer):
-    company = serializers.IntegerField()
+    company = serializers.CharField(max_length=255)
     transport_type = serializers.ChoiceField(
         choices=["air", "sea"]
     )

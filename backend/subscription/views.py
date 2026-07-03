@@ -30,23 +30,17 @@ class CreateCheckoutSessionView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
         serializer = CreateCheckoutSessionSerializer(
             data=request.data
         )
-
         serializer.is_valid(
             raise_exception=True
         )
 
         try:
-
             checkout_session = stripe.checkout.Session.create(
-
                 payment_method_types=["card"],
-
                 mode="subscription",
-
                 line_items=[
                     {
                         "price": settings.STRIPE_PRICE_ID,
@@ -55,9 +49,7 @@ class CreateCheckoutSessionView(APIView):
                 ],
 
                 customer_email=request.user.email,
-
                 client_reference_id=str(request.user.id),
-
                 metadata={
                     "user_id": str(request.user.id),
                 },
@@ -80,7 +72,6 @@ class CreateCheckoutSessionView(APIView):
             )
 
         except stripe.error.StripeError as e:
-
             return Response(
                 {
                     "detail": str(e)
@@ -93,11 +84,8 @@ class CurrentSubscriptionView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
         try:
-
             subscription = request.user.subscription
-
             serializer = SubscriptionSerializer(
                 subscription
             )
@@ -124,9 +112,7 @@ class StripeWebhookView(APIView):
     permission_classes = []
 
     def post(self, request):
-
         payload = request.body
-
         sig_header = request.META.get(
             "HTTP_STRIPE_SIGNATURE"
         )
@@ -139,10 +125,7 @@ class StripeWebhookView(APIView):
                 secret=settings.STRIPE_WEBHOOK_SECRET,
             )
 
-           
-
             if event["type"] != "checkout.session.completed":
-
                 return Response(
                     {
                         "received": True
@@ -151,7 +134,6 @@ class StripeWebhookView(APIView):
                 )
 
             session = event["data"]["object"]
-
             user_id = session["client_reference_id"]
             subscription_id = session["subscription"]
 

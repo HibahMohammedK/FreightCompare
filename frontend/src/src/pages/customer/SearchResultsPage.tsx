@@ -456,9 +456,9 @@ export const SearchResultsPage: React.FC = () => {
                 />
 
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs text-text-light">$500</span>
+                  <span className="text-xs text-text-light">AED 500</span>
                   <span className="text-xs font-semibold text-text-dark">
-                    ${new Intl.NumberFormat('en-US').format(filters.maxPrice)}
+                    AED {new Intl.NumberFormat('en-US').format(filters.maxPrice)}
                   </span>
                 </div>
               </div>

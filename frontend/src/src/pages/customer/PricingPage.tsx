@@ -172,7 +172,7 @@ export const PricingPage: React.FC = () => {
           {/* Basic */}
           <Card className="p-8 border-2 border-transparent hover:border-border-medium transition-colors">
             <h3 className="text-xl font-bold text-text-dark mb-2">Basic</h3>
-            <div className="text-4xl font-bold mb-4">$0</div>
+            <div className="text-4xl font-bold mb-4">AED 0</div>
 
             <Button
               variant="outline"
@@ -193,7 +193,7 @@ export const PricingPage: React.FC = () => {
           {/* Premium */}
           <Card className="p-8 border-2 border-primary shadow-lg">
             <h3 className="text-xl font-bold text-primary mb-2">Premium</h3>
-            <div className="text-4xl font-bold mb-4">$20</div>
+            <div className="text-4xl font-bold mb-4">AED 20</div>
 
             <Button
               fullWidth

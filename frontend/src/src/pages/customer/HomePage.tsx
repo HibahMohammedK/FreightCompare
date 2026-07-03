@@ -501,7 +501,7 @@ export const HomePage: React.FC = () => {
                           ${new Intl.NumberFormat('en-US').format(route.price)}
                         </div>
                         <div className="text-[10px] text-text-lighter uppercase">
-                          USD
+                          AED
                         </div>
                       </div>
                     </div>

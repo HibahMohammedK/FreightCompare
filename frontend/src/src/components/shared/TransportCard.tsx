@@ -74,13 +74,13 @@ export const TransportCard: React.FC<TransportCardProps> = ({
           </div>
           <div className="text-right shrink-0">
             <div className="flex items-baseline justify-end gap-2">
-              <span className="text-[17px] font-bold text-slate-900">$</span>
+              <span className="text-[17px] font-bold text-slate-900">AED</span>
               <span className="text-[20px] font-bold text-slate-900">
                 {formatPrice(transport.price)}
               </span>
             </div>
             <span className="mt-1 block text-[11px] text-slate-400 uppercase tracking-[0.18em]">
-              USD
+              AED
             </span>
           </div>
         </div>
