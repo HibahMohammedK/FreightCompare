@@ -1,6 +1,7 @@
 from channels.routing import URLRouter
 
-websocket_urlpatterns = []
+from notifications.routing import websocket_urlpatterns
+
 
 application = URLRouter(
     websocket_urlpatterns
