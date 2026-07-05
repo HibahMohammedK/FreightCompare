@@ -5,6 +5,8 @@ import { setAccessToken, setUser, logout, setAuthLoading } from "./src/redux/aut
 import API from "./src/api/axios";
 import { getProfile } from "./src/api/auth";
 import { notificationSocket } from "./src/websocket/notificationSocket";
+import { getNotifications } from './src/api/notifications';
+import { setNotifications } from './src/redux/notificationSlice';
 
 // Auth Pages
 import { LoginPage } from './src/pages/auth/LoginPage';
@@ -76,6 +78,15 @@ export function App() {
         dispatch(
             setUser(
                 profile.data
+            )
+        );
+
+        const notificationRes =
+            await getNotifications();
+
+        dispatch(
+            setNotifications(
+                notificationRes.data
             )
         );
 

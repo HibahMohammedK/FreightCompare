@@ -5,6 +5,7 @@ from rest_framework import status
 
 from .models import Notification
 from .serializers import NotificationSerializer
+from django.shortcuts import get_object_or_404
 
 class NotificationListView(APIView):
 
@@ -35,18 +36,20 @@ class MarkNotificationReadView(APIView):
 
     def patch(self, request, pk):
 
-        notification = Notification.objects.get(
+        notification = get_object_or_404(
+            Notification,
             pk=pk,
             user=request.user,
         )
 
-        notification.is_read = True
+        if not notification.is_read:
+            notification.is_read = True
 
-        notification.save(
-            update_fields=[
-                "is_read",
-            ]
-        )
+            notification.save(
+                update_fields=[
+                    "is_read",
+                ]
+            )
 
         return Response(
             {
@@ -72,6 +75,44 @@ class MarkAllNotificationsReadView(APIView):
         return Response(
             {
                 "message": "All notifications marked as read."
+            },
+            status=status.HTTP_200_OK,
+        )
+
+class DeleteNotificationView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+
+        notification = get_object_or_404(
+            Notification,
+            pk=pk,
+            user=request.user,
+        )
+
+        notification.delete()
+
+        return Response(
+            {
+                "message": "Notification deleted."
+            },
+            status=status.HTTP_200_OK,
+        )
+    
+class ClearNotificationsView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+
+        Notification.objects.filter(
+            user=request.user
+        ).delete()
+
+        return Response(
+            {
+                "message": "Notifications cleared."
             },
             status=status.HTTP_200_OK,
         )

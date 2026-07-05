@@ -23,35 +23,25 @@ const notificationSlice = createSlice({
   name: 'notification',
   initialState,
   reducers: {
-    addNotification: (
-        state,
-        action: PayloadAction<Notification>
-    ) => {
-
+    addNotification: (state, action: PayloadAction<Notification>) => {
         state.notifications.unshift(
             action.payload
         );
 
         if (!action.payload.is_read) {
-
             state.unreadCount += 1;
-
         }
-
     },
-        setNotifications: (
-        state,
-        action: PayloadAction<Notification[]>
-    ) => {
 
+    setNotifications: (state, action: PayloadAction<Notification[]>) => {
         state.notifications = action.payload;
 
-        state.unreadCount = action.payload.filter(
-            (notification) => !notification.is_read
-        ).length;
-
+        state.unreadCount =
+            action.payload.filter(
+                n => !n.is_read
+            ).length;
     },
-    
+
     markAsRead: (state, action: PayloadAction<string>) => {
       const notification = state.notifications.find(
         (n) => n.id === action.payload
@@ -65,10 +55,34 @@ const notificationSlice = createSlice({
     markAllAsRead: (state) => {
       state.notifications.forEach((n) => n.is_read = true);
       state.unreadCount = 0;
-    }
+    },
+
+    removeNotification: (state, action: PayloadAction<string> ) => {
+        const notification =
+            state.notifications.find(
+                n => n.id === action.payload
+            );
+
+        if ( notification && !notification.is_read ) {
+            state.unreadCount = Math.max(
+                0,
+                state.unreadCount - 1
+            );
+        }
+
+        state.notifications =
+            state.notifications.filter(
+                n => n.id !== action.payload
+            );
+    },
+
+    clearNotifications: (state) => {
+        state.notifications = [];
+        state.unreadCount = 0;
+    },
   }
 });
 
-export const { addNotification, setNotifications, markAsRead, markAllAsRead } =
+export const { addNotification, setNotifications, markAsRead, markAllAsRead, removeNotification, clearNotifications } =
 notificationSlice.actions;
 export default notificationSlice.reducer;

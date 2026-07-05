@@ -48,7 +48,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         {/* Pointer */}
         <div className="absolute -top-2 right-5 w-3 h-3 bg-white border-l border-t border-border-light rotate-45"></div>
 
-        <NotificationList onItemClick={onClose} />
+        <NotificationList />
       </motion.div>
       }
     </AnimatePresence>);
