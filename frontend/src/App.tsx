@@ -4,6 +4,7 @@ import { useAppDispatch } from "./src/hooks/redux";
 import { setAccessToken, setUser, logout, setAuthLoading } from "./src/redux/authSlice";
 import API from "./src/api/axios";
 import { getProfile } from "./src/api/auth";
+import { notificationSocket } from "./src/websocket/notificationSocket";
 
 // Auth Pages
 import { LoginPage } from './src/pages/auth/LoginPage';
@@ -60,18 +61,22 @@ export function App() {
         const res = await API.post("/users/token/refresh/");
 
         dispatch(
-          setAccessToken(
+            setAccessToken(
+                res.data.access
+            )
+        );
+
+        notificationSocket.connect(
             res.data.access
-          )
         );
 
         const profile =
-          await getProfile();
+            await getProfile();
 
         dispatch(
-          setUser(
-            profile.data
-          )
+            setUser(
+                profile.data
+            )
         );
 
       } catch {

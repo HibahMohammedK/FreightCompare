@@ -14,6 +14,8 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { logoutUser } from '../../api/auth';
 import { logout } from '../../redux/authSlice';
 import { NotificationBell } from './notification/NotificationBell';
+import { notificationSocket } from '../../websocket/notificationSocket';
+
 export const UserNavbar: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -29,6 +31,8 @@ export const UserNavbar: React.FC = () => {
     } catch (err) {
       console.error("Logout failed", err);
     } finally {
+
+      notificationSocket.disconnect();
       dispatch(logout()); // clear redux state
       navigate('/login');
     }

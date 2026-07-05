@@ -16,6 +16,7 @@ import {
 
 import { loginUser, getProfile, loginWithGoogle  } from '../../api/auth';
 import { GoogleLogin } from "@react-oauth/google";
+import { notificationSocket } from '../../websocket/notificationSocket';
 
 
 export const LoginPage: React.FC = () => {
@@ -38,6 +39,10 @@ export const LoginPage: React.FC = () => {
       });
 
       dispatch(setAccessToken(res.data.access));
+
+      notificationSocket.connect(
+          res.data.access
+      );
 
       const profileRes = await getProfile();
       const user = profileRes.data;
@@ -68,6 +73,10 @@ export const LoginPage: React.FC = () => {
       const res = await loginUser({ email, password });
 
       dispatch(setAccessToken(res.data.access));
+
+      notificationSocket.connect(
+          res.data.access
+      );
 
       const profileRes = await getProfile();
       const user = profileRes.data;

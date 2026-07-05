@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
+    id: string;
+    title: string;
+    message: string;
+    type: string;
+    is_read: boolean;
+    created_at: string;
 }
 
 interface NotificationState {
@@ -22,26 +23,52 @@ const notificationSlice = createSlice({
   name: 'notification',
   initialState,
   reducers: {
-    addNotification: (state, action: PayloadAction<Notification>) => {
-      state.notifications.unshift(action.payload);
-      state.unreadCount += 1;
+    addNotification: (
+        state,
+        action: PayloadAction<Notification>
+    ) => {
+
+        state.notifications.unshift(
+            action.payload
+        );
+
+        if (!action.payload.is_read) {
+
+            state.unreadCount += 1;
+
+        }
+
     },
+        setNotifications: (
+        state,
+        action: PayloadAction<Notification[]>
+    ) => {
+
+        state.notifications = action.payload;
+
+        state.unreadCount = action.payload.filter(
+            (notification) => !notification.is_read
+        ).length;
+
+    },
+    
     markAsRead: (state, action: PayloadAction<string>) => {
       const notification = state.notifications.find(
         (n) => n.id === action.payload
       );
-      if (notification && !notification.read) {
-        notification.read = true;
+      if (notification && !notification.is_read) {
+        notification.is_read = true;
         state.unreadCount = Math.max(0, state.unreadCount - 1);
       }
     },
+
     markAllAsRead: (state) => {
-      state.notifications.forEach((n) => n.read = true);
+      state.notifications.forEach((n) => n.is_read = true);
       state.unreadCount = 0;
     }
   }
 });
 
-export const { addNotification, markAsRead, markAllAsRead } =
+export const { addNotification, setNotifications, markAsRead, markAllAsRead } =
 notificationSlice.actions;
 export default notificationSlice.reducer;

@@ -48,21 +48,21 @@ export const NotificationList: React.FC<NotificationListProps> = ({
           type="button"
           key={notification.id}
           onClick={() => {
-            if (!notification.read) {
+            if (!notification.is_read) {
               dispatch(markAsRead(notification.id));
             }
             if (onItemClick) onItemClick();
           }}
-          className={`group w-full p-4 border-b border-border-light text-left transition-colors hover:bg-bg-light flex gap-3 ${!notification.read ? 'bg-primary-light/30' : ''}`}>
+          className={`group w-full p-4 border-b border-border-light text-left transition-colors hover:bg-bg-light flex gap-3 ${!notification.is_read ? 'bg-blue-50' : ''}`}>
           
             <div className="mt-0.5 shrink-0">
               <div
-              className={`w-2 h-2 rounded-full ${!notification.read ? 'bg-primary' : 'bg-transparent'}`} />
+              className={`w-2 h-2 rounded-full ${!notification.is_read ? 'bg-primary' : 'bg-transparent'}`} />
             
             </div>
             <div className="flex-1 min-w-0">
               <h4
-              className={`text-sm transition-colors ${!notification.read ? 'font-semibold text-text-darker' : 'font-medium text-text-dark'} group-hover:text-primary`}>
+              className={`text-sm transition-colors ${!notification.is_read ? 'font-semibold text-text-darker' : 'font-medium text-text-dark'} group-hover:text-primary`}>
               
                 {notification.title}
               </h4>
@@ -70,7 +70,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                 {notification.message}
               </p>
               <span className="text-[10px] text-text-lighter mt-2 block">
-                {formatDistanceToNow(new Date(notification.createdAt), {
+                {formatDistanceToNow(new Date(notification.created_at), {
                 addSuffix: true
               })}
               </span>
