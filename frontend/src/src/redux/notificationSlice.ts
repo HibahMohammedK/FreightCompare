@@ -12,11 +12,13 @@ export interface Notification {
 interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
+  latestNotification: Notification | null;
 }
 
 const initialState: NotificationState = {
   notifications: [],
-  unreadCount: 0
+  unreadCount: 0,
+  latestNotification: null,
 };
 
 const notificationSlice = createSlice({
@@ -27,6 +29,8 @@ const notificationSlice = createSlice({
         state.notifications.unshift(
             action.payload
         );
+
+        state.latestNotification = action.payload;
 
         if (!action.payload.is_read) {
             state.unreadCount += 1;
@@ -80,9 +84,19 @@ const notificationSlice = createSlice({
         state.notifications = [];
         state.unreadCount = 0;
     },
+
+    hideLatestNotification: (state) => {
+        state.latestNotification = null;
+    },
   }
 });
 
-export const { addNotification, setNotifications, markAsRead, markAllAsRead, removeNotification, clearNotifications } =
-notificationSlice.actions;
+export const { addNotification,
+    setNotifications, 
+    markAsRead, 
+    markAllAsRead,
+    removeNotification,
+    clearNotifications,
+    hideLatestNotification, } = notificationSlice.actions;
+    
 export default notificationSlice.reducer;

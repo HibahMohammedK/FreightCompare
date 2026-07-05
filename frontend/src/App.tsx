@@ -7,6 +7,8 @@ import { getProfile } from "./src/api/auth";
 import { notificationSocket } from "./src/websocket/notificationSocket";
 import { getNotifications } from './src/api/notifications';
 import { setNotifications } from './src/redux/notificationSlice';
+import { NotificationToast } from "./src/components/shared/notification/NotificationToast";
+import { notificationAudio } from "./src/services/notificationAudio";
 
 // Auth Pages
 import { LoginPage } from './src/pages/auth/LoginPage';
@@ -108,8 +110,36 @@ export function App() {
     initAuth();
   }, [dispatch]);
 
+  useEffect(() => {
+
+      const unlockAudio = () => {
+
+          notificationAudio.unlock();
+
+      };
+
+      window.addEventListener(
+          "pointerdown",
+          unlockAudio,
+          {
+              once: true,
+          }
+      );
+
+      return () => {
+
+          window.removeEventListener(
+              "pointerdown",
+              unlockAudio,
+          );
+
+      };
+
+  }, []);
+
   return (
     <BrowserRouter>
+      <NotificationToast />
       <Routes>
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<LoginPage />} />
