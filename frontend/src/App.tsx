@@ -18,7 +18,7 @@ import { ResetPasswordPage } from './src/pages/auth/ResetPasswordPage';
 import { EmailSentPage } from './src/pages/auth/EmailSentPage';
 import { OTPVerificationPage } from './src/pages/auth/OTPVerificationPage';
 
-// User Pages
+// Customer Pages
 import { HomePage } from './src/pages/customer/HomePage';
 import { SearchResultsPage } from './src/pages/customer/SearchResultsPage';
 import { ProfilePage } from './src/pages/customer/ProfilePage';
@@ -30,6 +30,7 @@ import { SupportPage } from './src/pages/customer/SupportPage';
 import { SubscriptionCancelPage } from './src/pages/customer/SubscriptionCancelPage';
 import { SubscriptionSuccessPage } from './src/pages/customer/SubscriptionSuccessPage';
 import { UserChatPage } from './src/pages/customer/UserChatPage';
+import { PriceAlertsPage } from './src/pages/customer/PriceAlertsPage';
 
 // Staff
 import { StaffLayout } from './src/components/staff/StaffLayout';
@@ -159,6 +160,7 @@ export function App() {
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/price-alerts" element={<PriceAlertsPage />} />
           <Route path="/subscription/success" element={<SubscriptionSuccessPage />}/>
           <Route path="/subscription/cancel" element={<SubscriptionCancelPage />}/>
           <Route path="/support" element={<SupportPage />} />

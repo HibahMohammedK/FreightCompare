@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { Transport } from "../types/transport";
 import type { SearchHistory } from "../types/searchHistory";
+import type { PriceAlert } from "../types/priceAlert";
 
 interface TransportState {
   searchResults: Transport[];
@@ -16,6 +17,8 @@ interface TransportState {
   };
 
   loading: boolean;
+
+  priceAlerts: PriceAlert[];
 }
 
 const initialState: TransportState = {
@@ -32,6 +35,7 @@ const initialState: TransportState = {
   },
 
   loading: false,
+  priceAlerts: [],
 };
 
 const transportSlice = createSlice({
@@ -98,6 +102,48 @@ const transportSlice = createSlice({
         ...action.payload,
       };
     },
+
+    setPriceAlerts: (
+        state,
+        action: PayloadAction<PriceAlert[]>
+    ) => {
+
+        state.priceAlerts = action.payload;
+
+    },
+
+    removePriceAlert: (
+        state,
+        action: PayloadAction<number>
+    ) => {
+
+        state.priceAlerts =
+            state.priceAlerts.filter(
+                alert => alert.id !== action.payload
+            );
+
+    },
+
+    updatePriceAlert: (
+        state,
+        action: PayloadAction<PriceAlert>
+    ) => {
+
+        state.priceAlerts =
+            state.priceAlerts.map(
+                alert =>
+                    alert.id === action.payload.id
+                        ? action.payload
+                        : alert
+            );
+
+    },
+
+    clearPriceAlerts: (state) => {
+
+        state.priceAlerts = [];
+
+    },
   },
 });
 
@@ -113,6 +159,10 @@ export const {
   removeSavedRoute,
   clearSavedRoutes,
   setFilters,
+  setPriceAlerts,
+  removePriceAlert,
+  updatePriceAlert,
+  clearPriceAlerts,
 } = transportSlice.actions;
 
 export default transportSlice.reducer;

@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'saved',
     'subscription',
     'notifications',
+    'price_alerts',
 ]
 
 MIDDLEWARE = [

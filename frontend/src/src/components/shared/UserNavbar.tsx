@@ -8,7 +8,8 @@ import {
   CreditCardIcon,
   MessageSquareIcon,
   ShipIcon,
-  LogOutIcon } from
+  LogOutIcon,
+  BellIcon } from
 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { logoutUser } from '../../api/auth';
@@ -60,6 +61,11 @@ export const UserNavbar: React.FC = () => {
     badge: compareCount > 0 ? compareCount : undefined
   },
   {
+    name: 'Price Alerts',
+    path: '/price-alerts',
+    icon: <BellIcon size={16} />,
+  },
+  {
     name: 'Subscription',
     path: '/pricing',
     icon: <CreditCardIcon size={16} />
@@ -72,7 +78,7 @@ export const UserNavbar: React.FC = () => {
 
   return (
     <nav className="h-16 bg-white border-b border-border-light flex items-center px-6 sticky top-0 z-30">
-      <div className="flex items-center gap-12 w-full max-w-7xl mx-auto">
+      <div className="flex items-center gap-10 w-full max-w-7xl mx-auto">
         {/* Logo */}
         <NavLink to="/" className="flex items-center gap-2">
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white">

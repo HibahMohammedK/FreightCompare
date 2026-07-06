@@ -4,6 +4,7 @@ import { Button } from './Button';
 import { Input } from './Input';
 import { BellIcon } from 'lucide-react';
 import type { Transport } from "../../types/transport";
+import { createPriceAlert } from "../../api/priceAlerts";
 
 interface PriceAlertModalProps {
   isOpen: boolean;
@@ -15,10 +16,52 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
   onClose,
   transport
 }) => {
-  const [threshold, setThreshold] = useState('');
-  const [enabled, setEnabled] = useState(true);
+
+  const [targetPrice, setTargetPrice] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleCreatePriceAlert = async () => {
+
+      if (!transport || !targetPrice) {
+          return;
+      }
+
+      try {
+
+          setLoading(true);
+          setError("");
+
+          await createPriceAlert({
+              transport: transport.id,
+              source: transport.source,
+              destination: transport.destination,
+              departure_date: transport.departure_date,
+              transport_type: transport.transport_type,
+              target_price: Number(targetPrice),
+          });
+
+          setTargetPrice("");
+          onClose();
+
+      } catch (error: any) {
+
+          setError(
+              error.response?.data?.non_field_errors?.[0] ||
+              error.response?.data?.detail ||
+              "Failed to create price alert."
+          );
+
+      } finally {
+
+          setLoading(false);
+
+      }
+
+  };
+
   if (!transport) return null;
-  const defaultThreshold = Math.floor(transport.price * 0.9);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -31,17 +74,24 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
           <BellIcon size={20} />
         </div>
         <div>
-          <h4 className="font-semibold text-text-dark">{transport.company}</h4>
-          <p className="text-xs text-text-light">
-            {transport.source} → {transport.destination}
-          </p>
+            <h4 className="font-semibold text-text-dark">
+                {transport.company}
+            </h4>
+
+            <p className="text-xs text-text-light">
+                {transport.source} → {transport.destination}
+            </p>
+
+            <p className="text-xs text-text-lighter mt-1">
+                Departure: {transport.departure_date}
+            </p>
         </div>
       </div>
 
       <div className="bg-bg-light p-4 rounded-xl border border-border-light mb-6">
         <p className="text-xs text-text-light mb-1">Current price</p>
         <div className="flex items-baseline gap-1">
-          <span className="text-xl font-bold text-text-dark">$</span>
+          <span className="text-xl font-bold text-text-dark">AED</span>
           <span className="text-2xl font-bold text-text-dark">
             {new Intl.NumberFormat('en-US').format(transport.price)}
           </span>
@@ -54,38 +104,44 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
             Alert me when price drops below
           </label>
           <Input
-            type="number"
-            icon={<span className="text-text-medium font-medium">$</span>}
-            placeholder={defaultThreshold.toString()}
-            value={threshold}
-            onChange={(e) => setThreshold(e.target.value)} />
-          
-          <p className="text-xs text-text-lighter mt-2">
-            10% below current price
-          </p>
+              className='pl-14'
+              type="number"
+              icon={
+                  <span className="text-text-medium font-medium">
+                      AED
+                  </span>
+              }
+              placeholder={transport.price.toString()}
+              value={targetPrice}
+              onChange={(e) =>
+                  setTargetPrice(e.target.value)
+              }
+          />
+          {error && (
+              <p className="text-sm text-red-500 mt-2">
+                  {error}
+              </p>
+          )}
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-bg-light rounded-xl border border-border-light">
-          <span className="text-sm font-medium text-text-medium">
-            Enable notifications
-          </span>
-          <button
-            onClick={() => setEnabled(!enabled)}
-            className={`w-11 h-6 rounded-full transition-colors relative ${enabled ? 'bg-primary' : 'bg-border-dark'}`}>
-            
-            <div
-              className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
-            
-          </button>
-        </div>
-
+        
         <div className="flex gap-3 pt-2">
           <Button variant="secondary" fullWidth onClick={onClose}>
             Cancel
           </Button>
-          <Button fullWidth onClick={onClose}>
-            Set Alert
-          </Button>
+         <Button
+            fullWidth
+            onClick={handleCreatePriceAlert}
+            disabled={
+                loading ||
+                !targetPrice ||
+                Number(targetPrice) <= 0
+            }
+        >
+            {loading
+                ? "Creating..."
+                : "Create Price Alert"}
+        </Button>
         </div>
       </div>
     </Modal>);
