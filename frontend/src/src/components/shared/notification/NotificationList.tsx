@@ -5,6 +5,7 @@ import { markNotificationRead, markAllNotificationsRead, deleteNotification, cle
 import type { Notification } from "../../../redux/notificationSlice";
 import { BellIcon, CheckIcon, Trash2Icon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { NotificationTypeIcon } from './NotificationTypeIcon';
 
 interface NotificationListProps {
   maxItems?: number;
@@ -146,71 +147,147 @@ export const NotificationList: React.FC<NotificationListProps> = ({
       <div className="overflow-y-auto max-h-[400px]">
         {displayNotifications.map((notification) =>
         <button
-          type="button"
-          key={notification.id}
-          onClick={() =>
-              handleNotificationClick(
-                  notification
-              )
-          }
-          className={`group w-full p-4 border-b border-border-light text-left transition-colors hover:bg-bg-light flex gap-3 ${!notification.is_read ? 'bg-blue-50' : ''}`}>
-          
-            <div className="mt-0.5 shrink-0">
-              <div
-              className={`w-2 h-2 rounded-full ${!notification.is_read ? 'bg-primary' : 'bg-transparent'}`} />
-            
+            type="button"
+            key={notification.id}
+            onClick={() =>
+                handleNotificationClick(notification)
+            }
+            className={`
+                group
+                w-full
+                p-4
+                border-b
+                border-border-light
+                text-left
+                transition-colors
+                hover:bg-bg-light
+                flex
+                gap-3
+                ${
+                    !notification.is_read
+                        ? "bg-blue-50"
+                        : ""
+                }
+            `}
+        >
+
+            {/* Notification type icon */}
+            <div
+                className="
+                    w-9
+                    h-9
+                    rounded-full
+                    bg-primary-light
+                    text-primary
+                    flex
+                    items-center
+                    justify-center
+                    shrink-0
+                "
+            >
+                <NotificationTypeIcon
+                    type={notification.type}
+                    size={17}
+                />
             </div>
+
+            {/* Notification content */}
             <div className="flex-1 min-w-0">
 
-              {/* First row */}
-              <div className="flex items-start justify-between gap-2">
+                {/* Title row */}
+                <div className="flex items-start justify-between gap-2">
 
-                  <h4
-                      className={`text-sm transition-colors ${
-                          !notification.is_read
-                              ? "font-semibold text-text-darker"
-                              : "font-medium text-text-dark"
-                      } group-hover:text-primary`}
-                  >
-                      {notification.title}
-                  </h4>
+                    <div className="flex items-start gap-2 min-w-0">
 
-                  <button
-                      onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteNotification(notification.id);
-                      }}
-                      className="
-                          opacity-0
-                          group-hover:opacity-100
-                          transition-opacity
-                          text-text-light
-                          hover:text-red-500
-                          shrink-0
-                      "
-                  >
-                      <Trash2Icon size={15} />
-                  </button>
+                        {/* Unread indicator */}
+                        <div
+                            className={`
+                                w-2
+                                h-2
+                                mt-1.5
+                                rounded-full
+                                shrink-0
+                                ${
+                                    !notification.is_read
+                                        ? "bg-primary"
+                                        : "bg-transparent"
+                                }
+                            `}
+                        />
 
-              </div>
+                        <h4
+                            className={`
+                                text-sm
+                                transition-colors
+                                ${
+                                    !notification.is_read
+                                        ? "font-semibold text-text-darker"
+                                        : "font-medium text-text-dark"
+                                }
+                                group-hover:text-primary
+                            `}
+                        >
+                            {notification.title}
+                        </h4>
 
-              {/* Second row */}
-              <p className="text-xs text-text-medium mt-1 line-clamp-2 group-hover:text-text-dark">
-                  {notification.message}
-              </p>
+                    </div>
 
-              {/* Third row */}
-              <span className="text-[10px] text-text-lighter mt-2 block">
-                  {formatDistanceToNow(
-                      new Date(notification.created_at),
-                      {
-                          addSuffix: true,
-                      }
-                  )}
-              </span>
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
 
-          </div>
-          </button>
+                            handleDeleteNotification(
+                                notification.id
+                            );
+                        }}
+                        className="
+                            opacity-0
+                            group-hover:opacity-100
+                            transition-opacity
+                            text-text-light
+                            hover:text-red-500
+                            shrink-0
+                        "
+                    >
+                        <Trash2Icon size={15} />
+                    </button>
+
+                </div>
+
+                {/* Message */}
+                <p
+                    className="
+                        text-xs
+                        text-text-medium
+                        mt-1
+                        line-clamp-2
+                        group-hover:text-text-dark
+                    "
+                >
+                    {notification.message}
+                </p>
+
+                {/* Time */}
+                <span
+                    className="
+                        text-[10px]
+                        text-text-lighter
+                        mt-2
+                        block
+                    "
+                >
+                    {formatDistanceToNow(
+                        new Date(notification.created_at),
+                        {
+                            addSuffix: true,
+                        }
+                    )}
+                </span>
+
+            </div>
+
+        </button>
         )}
       </div>
 

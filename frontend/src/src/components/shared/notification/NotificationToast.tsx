@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { BellIcon } from "lucide-react";
+import { NotificationTypeIcon } from "./NotificationTypeIcon";
 import { notificationAudio } from "../../../services/notificationAudio";
 
 import {
@@ -91,9 +91,8 @@ export const NotificationToast: React.FC = () => {
                             items-center
                             justify-center
                         ">
-                            <BellIcon
-                                size={18}
-                                className="text-primary"
+                            <NotificationTypeIcon
+                                type={notification.type}
                             />
                         </div>
 
@@ -120,4 +119,3 @@ export const NotificationToast: React.FC = () => {
     );
 
 };
-
