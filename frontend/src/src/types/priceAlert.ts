@@ -5,7 +5,14 @@ export interface PriceAlert {
     destination: string;
     departure_date: string;
     transport_type: "air" | "sea";
-    target_price: string;
+
+    target_price: number;   
+
+    status: "active" | "triggered";
+
+    triggered_at: string | null;
+    triggered_price: number | null;
+
     is_active: boolean;
     created_at: string;
     updated_at: string;

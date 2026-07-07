@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from django.db import IntegrityError
+from price_alerts.utils import check_price_alerts
 
 
 class TransportViewSet(viewsets.ModelViewSet):
@@ -59,6 +60,13 @@ class TransportViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+    
+    def perform_update(self, serializer):
+        transport = serializer.save()
+
+        check_price_alerts(
+            transport
+        )
 
 class TransportLocationsView(APIView):
     permission_classes = [IsAuthenticated]

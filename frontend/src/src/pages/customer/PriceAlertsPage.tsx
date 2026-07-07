@@ -5,16 +5,14 @@ import React, {
 
 import { UserNavbar } from "../../components/shared/UserNavbar";
 import { Card } from "../../components/shared/Card";
-import { Button } from "../../components/shared/Button";
-import { EditPriceAlertModal } from "../../components/shared/EditPriceAlertModal";
+import { EditPriceAlertModal } from "../../components/shared/price-alerts/EditPriceAlertModal";
 import type { PriceAlert } from "../../types/priceAlert";
+import { PriceAlertStats } from "../../components/shared/price-alerts/PriceAlertStats";
+import { PriceAlertFilters } from "../../components/shared/price-alerts/PriceAlertFilters";
+import { PriceAlertCard } from "../../components/shared/price-alerts/PriceAlertCard";
 import {
     BellIcon,
-    PlaneIcon,
-    ShipIcon,
-    ArrowRightIcon,
     Trash2Icon,
-    PencilIcon,
 } from "lucide-react";
 
 import {
@@ -51,6 +49,24 @@ export const PriceAlertsPage = () => {
         useAppSelector(
             state => state.transport.priceAlerts
         );
+
+    const [filter, setFilter] = useState<
+            "all" | "active" | "triggered"
+        >("all");
+
+    const filteredAlerts = priceAlerts.filter((alert) => {
+
+        if (filter === "active") {
+            return alert.is_active;
+        }
+
+        if (filter === "triggered") {
+            return !alert.is_active;
+        }
+
+        return true;
+
+    });
 
     useEffect(() => {
 
@@ -163,7 +179,7 @@ export const PriceAlertsPage = () => {
         );
 
     }
-
+  
     return (
 
         <div className="min-h-screen bg-bg-light flex flex-col">
@@ -193,10 +209,26 @@ export const PriceAlertsPage = () => {
                     </div>
 
                     <p className="text-sm text-text-light">
-
                         Manage your active price alerts
-
                     </p>
+
+                    <PriceAlertStats
+                        total={priceAlerts.length}
+                        active={
+                            priceAlerts.filter(
+                                alert => alert.is_active
+                            ).length
+                        }
+                        triggered={
+                            priceAlerts.filter(
+                                alert => !alert.is_active
+                            ).length
+                        }
+                    />
+                    <PriceAlertFilters
+                        filter={filter}
+                        onChange={setFilter}
+                    />
 
                 </div>
 
@@ -255,125 +287,19 @@ export const PriceAlertsPage = () => {
 
                 <div className="space-y-4">
 
-                    {priceAlerts.map(
-                        alert => (
+                    {filteredAlerts.map((alert) => (
 
-                            <Card
-                                key={alert.id}
-                                className="p-5"
-                            >
+                        <PriceAlertCard
+                            key={alert.id}
+                            alert={alert}
+                            onEdit={(alert) => {
+                                setSelectedAlert(alert);
+                                setEditModalOpen(true);
+                            }}
+                            onDelete={handleDelete}
+                        />
 
-                                <div className="flex justify-between items-start">
-
-                                    <div className="flex gap-5">
-
-                                        <div className="w-12 h-12 rounded-full bg-bg-light flex items-center justify-center text-text-medium">
-
-                                            {alert.transport_type === "air"
-                                                ? <PlaneIcon size={20} />
-                                                : <ShipIcon size={20} />
-                                            }
-
-                                        </div>
-
-                                        <div>
-
-                                            <div className="flex items-center gap-3 font-semibold text-text-dark mb-2">
-
-                                                <span>
-                                                    {alert.source}
-                                                </span>
-
-                                                <ArrowRightIcon
-                                                    size={16}
-                                                />
-
-                                                <span>
-                                                    {alert.destination}
-                                                </span>
-
-                                            </div>
-
-                                            <p className="text-sm text-text-light">
-
-                                                Departure
-
-                                                {" • "}
-
-                                                {new Date(alert.departure_date).toLocaleDateString(
-                                                    "en-US",
-                                                    {
-                                                        month: "short",
-                                                        day: "numeric",
-                                                        year: "numeric",
-                                                    }
-                                                )}
-                                            </p>
-
-                                            <p className="text-sm text-text-light mt-1">
-
-                                                Target Price
-
-                                                {" • "}
-
-                                                <span className="font-semibold text-primary">
-
-                                                    AED {alert.target_price}
-
-                                                </span>
-
-                                            </p>
-
-                                            <p className="text-xs text-text-lighter mt-2">
-
-                                                Created
-
-                                                {" • "}
-
-                                                {new Date(
-                                                    alert.created_at
-                                                ).toLocaleString()}
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant="secondary"
-                                            onClick={() => {
-
-                                                setSelectedAlert(alert);
-
-                                                setEditModalOpen(true);
-
-                                            }}
-                                        >
-
-                                            <PencilIcon size={16} />
-
-                                        </Button>
-
-                                        <Button
-                                            variant="secondary"
-                                            onClick={() =>
-                                                handleDelete(alert.id)
-                                            }
-                                        >
-
-                                            <Trash2Icon size={16} />
-
-                                        </Button>
-
-                                    </div>
-
-                                </div>
-
-                            </Card>
-
-                        )
-                    )}
+                    ))}
 
                 </div>
 

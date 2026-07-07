@@ -1,7 +1,7 @@
 import React, { useState,useEffect } from 'react';
 import { UserNavbar } from '../../components/shared/UserNavbar';
 import { TransportCard } from '../../components/shared/TransportCard';
-import { PriceAlertModal } from '../../components/shared/PriceAlertModal';
+import { PriceAlertModal } from '../../components/shared/price-alerts/PriceAlertModal';
 import { BookmarkIcon } from 'lucide-react';
 import { getSavedTransports, unsaveTransport } from '../../api/saved';
 import { useAppDispatch,useAppSelector } from '../../hooks/redux';

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Modal } from './Modal';
-import { Button } from './Button';
-import { Input } from './Input';
+import { Modal } from '../Modal';
+import { Button } from '../Button';
+import { Input } from '../Input';
 import { BellIcon } from 'lucide-react';
-import type { Transport } from "../../types/transport";
-import { createPriceAlert } from "../../api/priceAlerts";
+import type { Transport } from "../../../types/transport";
+import { createPriceAlert } from "../../../api/priceAlerts";
 
 interface PriceAlertModalProps {
   isOpen: boolean;

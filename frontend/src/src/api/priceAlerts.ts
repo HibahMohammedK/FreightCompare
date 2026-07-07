@@ -1,18 +1,20 @@
 import API from "./axios";
+import type { PriceAlert } from "../types/priceAlert";
 
-export interface PriceAlertPayload {
-    transport: number;
-    source: string;
-    destination: string;
-    departure_date: string;
-    transport_type: string;
-    target_price: number;
-}
+export type PriceAlertPayload = Pick<
+    PriceAlert,
+    | "transport"
+    | "source"
+    | "destination"
+    | "departure_date"
+    | "transport_type"
+    | "target_price"
+>;
 
-export interface UpdatePriceAlertPayload {
-    target_price: number;
-}
-
+export type UpdatePriceAlertPayload = Pick<
+    PriceAlert,
+    "target_price"
+>;
 
 export const getPriceAlerts = () =>
     API.get("/price_alerts/");
@@ -41,10 +43,5 @@ export const deletePriceAlert = (
         `/price_alerts/${id}/`
     );
 
-export const clearPriceAlerts = () => {
-
-    return API.delete(
-        "/price_alerts/"
-    );
-
-};
+export const clearPriceAlerts = () =>
+    API.delete("/price_alerts/");

@@ -3,9 +3,9 @@ import React, {
     useState,
 } from "react";
 
-import { Modal } from "./Modal";
-import { Button } from "./Button";
-import { Input } from "./Input";
+import { Modal } from "../Modal";
+import { Button } from "../Button";
+import { Input } from "../Input";
 
 import {
     BellIcon,
@@ -13,19 +13,19 @@ import {
 
 import type {
     PriceAlert,
-} from "../../types/priceAlert";
+} from "../../../types/priceAlert";
 
 import {
     updatePriceAlert as updatePriceAlertApi,
-} from "../../api/priceAlerts";
+} from "../../../api/priceAlerts";
 
 import {
     useAppDispatch,
-} from "../../hooks/redux";
+} from "../../../hooks/redux";
 
 import {
     updatePriceAlert as updatePriceAlertState,
-} from "../../redux/transportSlice";
+} from "../../../redux/transportSlice";
 
 
 interface EditPriceAlertModalProps {

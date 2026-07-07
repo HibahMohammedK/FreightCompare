@@ -1,5 +1,7 @@
 import store from "../redux/store";
 import { addNotification } from "../redux/notificationSlice";
+import { getPriceAlerts } from "../api/priceAlerts";
+import { setPriceAlerts } from "../redux/transportSlice";
 
 class NotificationSocket {
 
@@ -30,7 +32,7 @@ class NotificationSocket {
             );
         };
 
-        this.socket.onmessage = (event) => {
+        this.socket.onmessage = async (event) => {
 
             const notification = JSON.parse(
                 event.data
@@ -41,10 +43,38 @@ class NotificationSocket {
                 notification
             );
 
-
             store.dispatch(
                 addNotification(notification)
             );
+
+            if (
+                notification.type === "price_alert"
+            ) {
+
+                try {
+
+                    const res =
+                        await getPriceAlerts();
+
+                    store.dispatch(
+                        setPriceAlerts(
+                            res.data
+                        )
+                    );
+                    console.log(
+                        store.getState().transport.priceAlerts
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "Failed to refresh price alerts",
+                        error
+                    );
+
+                }
+
+            }
 
         };
     }

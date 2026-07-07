@@ -18,12 +18,18 @@ class PriceAlertSerializer(serializers.ModelSerializer):
             "transport_type",
             "target_price",
             "is_active",
+            "status",
+            "triggered_at",
+            "triggered_price",
             "created_at",
             "updated_at",
         ]
 
         read_only_fields = [
             "id",
+            "status",
+            "triggered_at",
+            "triggered_price",
             "is_active",
             "created_at",
             "updated_at",

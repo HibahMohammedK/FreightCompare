@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserNavbar } from '../../components/shared/UserNavbar';
 import { TransportCard } from '../../components/shared/TransportCard';
-import { PriceAlertModal } from '../../components/shared/PriceAlertModal';
+import { PriceAlertModal } from '../../components/shared/price-alerts/PriceAlertModal';
 import { Button } from '../../components/shared/Button';
 import {
   ArrowLeftRightIcon,
