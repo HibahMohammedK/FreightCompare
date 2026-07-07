@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from django.db import IntegrityError
 from price_alerts.utils import check_price_alerts
+from .utils import check_route_matches
 
 
 class TransportViewSet(viewsets.ModelViewSet):
@@ -59,7 +60,10 @@ class TransportViewSet(viewsets.ModelViewSet):
     ordering_fields = ["price", "duration", "departure_date"]
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        transport = serializer.save(
+            created_by=self.request.user
+        )
+        check_route_matches(transport)
     
     def perform_update(self, serializer):
         transport = serializer.save()
@@ -225,7 +229,7 @@ class CsvUploadView(APIView):
                 )
 
             try:
-                Transport.objects.create(
+                transport = Transport.objects.create(
                     company=company,
                     transport_type=validated["transport_type"],
                     source=validated["source"],
@@ -236,6 +240,8 @@ class CsvUploadView(APIView):
                     booking_url=validated["booking_url"],
                     created_by=request.user,
                 )
+
+                check_route_matches(transport)
 
                 created += 1
 

@@ -11,12 +11,14 @@ def send_notification(
     title,
     message,
     notification_type=Notification.SYSTEM,
+    transport=None,
 ):
     notification = Notification.objects.create(
         user=user,
         title=title,
         message=message,
         type=notification_type,
+        transport=transport,
     )
 
     channel_layer = get_channel_layer()

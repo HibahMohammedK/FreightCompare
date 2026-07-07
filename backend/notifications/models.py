@@ -48,6 +48,14 @@ class Notification(models.Model):
         default=False,
     )
 
+    transport = models.ForeignKey(
+        "transports.Transport",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
     )
