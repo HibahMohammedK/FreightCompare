@@ -2,11 +2,14 @@ import React, { useEffect, useState } from "react";
 import { SparklesIcon, Loader2Icon } from "lucide-react";
 
 import { Modal } from "../shared/Modal";
-import { Input } from "../shared/Input";
+import CreatableSelect from "react-select/creatable";
+import Select from 'react-select';
 import { Button } from "../shared/Button";
 
 import { searchTransportAI } from "../../api/ai";
 import { AIRecommendation } from "../../types/ai";
+import { AIRPORTS, SEAPORTS } from "../../constants";
+
 
 interface Props {
   isOpen: boolean;
@@ -35,6 +38,16 @@ export const AITransportAssistantModal: React.FC<Props> = ({
   const [recommendations, setRecommendations] = useState<
     AIRecommendation[]
   >([]);
+
+  const locationOptions =
+    transportType === "air"
+        ? AIRPORTS
+        : SEAPORTS;
+
+  useEffect(() => {
+    setSource("");
+    setDestination("");
+    }, [transportType]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -79,35 +92,74 @@ export const AITransportAssistantModal: React.FC<Props> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-          <Input
-            label="Source"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            placeholder="Dubai"
-          />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-text-medium">
+                Origin Airport / Port
+            </label>
 
-          <Input
-            label="Destination"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            placeholder="London"
-          />
+            <CreatableSelect
+                options={locationOptions}
+                value={
+                source
+                    ? {
+                        label: source,
+                        value: source,
+                    }
+                    : null
+                }
+                onChange={(selected: any) => {
+                setSource(selected?.value || "");
+                }}
+                onCreateOption={(inputValue: string) => {
+                setSource(inputValue);
+                }}
+                placeholder="Select or type origin"
+            />
+            </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-text-medium">
+                Destination Airport / Port
+            </label>
+
+            <CreatableSelect
+                options={locationOptions}
+                value={
+                destination
+                    ? {
+                        label: destination,
+                        value: destination,
+                    }
+                    : null
+                }
+                onChange={(selected: any) => {
+                setDestination(selected?.value || "");
+                }}
+                onCreateOption={(inputValue: string) => {
+                setDestination(inputValue);
+                }}
+                placeholder="Select or type destination"
+            />
+            </div>
 
           <div>
             <label className="block mb-2 text-sm font-medium">
               Transport Type
             </label>
 
-            <select
-              value={transportType}
-              onChange={(e) =>
-                setTransportType(e.target.value as "air" | "sea")
-              }
-              className="w-full rounded-lg border px-3 py-2"
-            >
-              <option value="air">Air</option>
-              <option value="sea">Sea</option>
-            </select>
+            <Select
+                options={[
+                    { value: "air", label: "Air" },
+                    { value: "sea", label: "Sea" },
+                ]}
+                value={{
+                    value: transportType,
+                    label: transportType === "air" ? "Air" : "Sea",
+                }}
+                onChange={(option) =>
+                    setTransportType(option?.value as "air" | "sea")
+                }
+            />
           </div>
 
         </div>

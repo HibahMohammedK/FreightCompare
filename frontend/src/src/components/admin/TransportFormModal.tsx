@@ -7,6 +7,7 @@ import { getCompanies } from "../../api/company";
 import CreatableSelect from "react-select/creatable";
 import { AITransportAssistantModal } from "./AITransportAssistantModal";
 import { AIRecommendation } from "../../types/ai";
+import { AIRPORTS, SEAPORTS } from "../../constants";
 
 export interface TransportFormValues {
   company: string;
@@ -121,6 +122,12 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
     [initialValues]
   );
 
+  const locationOptions = useMemo(() => {
+    return values.transportType === "AIR"
+      ? AIRPORTS
+      : SEAPORTS;
+  }, [values.transportType]);
+
   const updateField = <K extends keyof TransportFormValues>(
     field: K,
     value: TransportFormValues[K]
@@ -180,6 +187,7 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
 
     setIsAIModalOpen(false);
   };
+  
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-3xl" headerAction={
@@ -196,129 +204,230 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
       <>
         <form className="space-y-6" onSubmit={handleSubmit}>
           {backendErrors?.non_field_errors && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {backendErrors.non_field_errors[0]}
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {backendErrors.non_field_errors[0]}
+            </div>
+          )}
+
+          <div className="space-y-8">
+
+            {/* ================= Transport Details ================= */}
+
+            <div className="rounded-2xl border border-border-light bg-bg-light p-5">
+              <h3 className="mb-5 text-xs font-semibold uppercase tracking-wider text-primary">
+                Transport Details
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-text-medium">
+                    Company
+                  </label>
+
+                  <CreatableSelect
+                    options={companies.map(c => ({
+                      label: c.name,
+                      value: c.name
+                    }))}
+                    value={
+                      values.company
+                        ? {
+                            label: values.company,
+                            value: values.company
+                          }
+                        : null
+                    }
+                    onChange={(selected: any) => {
+                      updateField("company", selected?.value || "");
+                    }}
+                    onCreateOption={(inputValue: string) => {
+                      updateField("company", inputValue);
+                    }}
+                    placeholder="Select or type company"
+                  />
+
+                  {errors.company && (
+                    <span className="text-xs text-red-500">
+                      {errors.company}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-text-medium">
+                    Transport Type
+                  </label>
+
+                  <select
+                    value={values.transportType}
+                    onChange={(e) =>
+                      updateField(
+                        "transportType",
+                        e.target.value as "AIR" | "SEA"
+                      )
+                    }
+                    className="w-full rounded-xl border border-border-light bg-white px-4 py-2.5 text-sm"
+                  >
+                    <option value="AIR">AIR</option>
+                    <option value="SEA">SEA</option>
+                  </select>
+                </div>
+
               </div>
-            )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-text-medium">
-                Company
-              </label>
+            {/* ================= Route ================= */}
 
-              
+            <div className="rounded-2xl border border-border-light bg-bg-light p-5">
+              <h3 className="mb-5 text-xs font-semibold uppercase tracking-wider text-primary">
+                Route
+              </h3>
 
-                <CreatableSelect
-                  options={companies.map(c => ({
-                    label: c.name,
-                    value: c.name
-                  }))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                  value={
-                    values.company
-                      ? { label: values.company, value: values.company }
-                      : null
-                  }
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-text-medium">
+                    Origin Airport / Port
+                  </label>
 
-                  onChange={(selected: any) => {
-                    updateField("company", selected?.value || "");
-                  }}
+                  <CreatableSelect
+                    options={locationOptions}
+                    value={
+                      values.source
+                        ? {
+                            label: values.source,
+                            value: values.source,
+                          }
+                        : null
+                    }
+                    onChange={(selected: any) => {
+                      updateField("source", selected?.value || "");
+                    }}
+                    onCreateOption={(inputValue) => {
+                      updateField("source", inputValue);
+                    }}
+                    placeholder="Select or type origin"
+                  />
 
-                  onCreateOption={(inputValue: string) => {
-                    updateField("company", inputValue);
-                  }}
+                  {errors.source && (
+                    <span className="text-xs text-red-500">
+                      {errors.source}
+                    </span>
+                  )}
+                </div>
 
-                  placeholder="Select or type company"
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-text-medium">
+                    Destination Airport / Port
+                  </label>
+
+                  <CreatableSelect
+                    options={locationOptions}
+                    value={
+                      values.destination
+                        ? {
+                            label: values.destination,
+                            value: values.destination,
+                          }
+                        : null
+                    }
+                    onChange={(selected: any) => {
+                      updateField("destination", selected?.value || "");
+                    }}
+                    onCreateOption={(inputValue) => {
+                      updateField("destination", inputValue);
+                    }}
+                    placeholder="Select or type destination"
+                  />
+
+                  {errors.destination && (
+                    <span className="text-xs text-red-500">
+                      {errors.destination}
+                    </span>
+                  )}
+                </div>
+
+              </div>
+            </div>
+
+            {/* ================= Transport Information ================= */}
+
+            <div className="rounded-2xl border border-border-light bg-bg-light p-5">
+              <h3 className="mb-5 text-xs font-semibold uppercase tracking-wider text-primary">
+                Transport Information
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <Input
+                  label="Price"
+                  type="number"
+                  value={values.price}
+                  onChange={(e) => updateField("price", e.target.value)}
+                  error={errors.price}
                 />
 
-                
-              {errors.company && (
-                <span className="text-xs text-red-500">{errors.company}</span>
-              )}
-            </div>
-            
+                <div className="flex flex-col">
+                  <Input
+                    label="Duration (hours)"
+                    type="number"
+                    placeholder="e.g. 48"
+                    value={values.duration}
+                    onChange={(e) =>
+                      updateField("duration", e.target.value)
+                    }
+                    error={errors.duration}
+                  />
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-text-medium">Transport Type</label>
-              <select
-                value={values.transportType}
-                onChange={(e) =>
-                  updateField('transportType', e.target.value as 'AIR' | 'SEA')
-                }
-                className="w-full rounded-xl border border-border-light bg-white px-4 py-2.5 text-sm"
-              >
-                <option value="AIR">AIR</option>
-                <option value="SEA">SEA</option>
-              </select>
-            </div>
+                  {!errors.duration && (
+                    <span className="text-xs text-text-lighter mt-1">
+                      e.g., 48 = 2 days
+                    </span>
+                  )}
+                </div>
 
-            <Input
-              label="Source"
-              value={values.source}
-              onChange={(e) => updateField('source', e.target.value)}
-              error={errors.source}
-            />
+                <Input
+                  label="Departure Date"
+                  type="date"
+                  value={values.departureDate}
+                  onChange={(e) =>
+                    updateField("departureDate", e.target.value)
+                  }
+                  error={errors.departureDate}
+                  icon={<CalendarIcon size={16} />}
+                />
 
-            <Input
-              label="Destination"
-              value={values.destination}
-              onChange={(e) => updateField('destination', e.target.value)}
-              error={errors.destination}
-            />
+                <Input
+                  label="Booking URL"
+                  type="url"
+                  value={values.bookingUrl}
+                  onChange={(e) =>
+                    updateField("bookingUrl", e.target.value)
+                  }
+                  error={errors.bookingUrl}
+                  icon={<LinkIcon size={16} />}
+                />
 
-            <Input
-              label="Price"
-              type="number"
-              value={values.price}
-              onChange={(e) => updateField('price', e.target.value)}
-              error={errors.price}
-            />
-
-            <div className="flex flex-col">
-              <Input
-                label="Duration (hours)"
-                type="number"
-                placeholder="e.g. 48"
-                value={values.duration}
-                onChange={(e) => updateField('duration', e.target.value)}
-                error={errors.duration}
-              />
-
-              {!errors.duration && (
-                <span className="text-xs text-text-lighter mt-1">
-                  e.g., 48 = 2 days
-                </span>
-              )}
+              </div>
             </div>
 
-            <Input
-              label="Departure Date"
-              type="date"
-              value={values.departureDate}
-              onChange={(e) => updateField('departureDate', e.target.value)}
-              error={errors.departureDate}
-              icon={<CalendarIcon size={16} />}
-            />
-
-            <Input
-              label="Booking URL"
-              type="url"
-              value={values.bookingUrl}
-              onChange={(e) => updateField('bookingUrl', e.target.value)}
-              error={errors.bookingUrl}
-              icon={<LinkIcon size={16} />}
-            />
           </div>
 
           <div className="flex justify-end gap-3 border-t pt-6">
-            <Button type="button" variant="secondary" onClick={onClose}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+            >
               Cancel
             </Button>
+
             <Button type="submit">
-              {initialValues ? 'Save Changes' : 'Add Transport'}
+              {initialValues ? "Save Changes" : "Add Transport"}
             </Button>
           </div>
+
         </form>
         <AITransportAssistantModal
           isOpen={isAIModalOpen}
