@@ -3,6 +3,7 @@ import { Card } from '../../components/shared/Card';
 import { Button } from '../../components/shared/Button';
 import { Input } from '../../components/shared/Input';
 import { SearchIcon } from 'lucide-react';
+import { ConfirmationDialog } from "../../components/shared/ConfirmationDialog";
 import {
   getAdminUsers,
   getUsersByUrl,
@@ -18,24 +19,29 @@ export const UserManagementPage: React.FC = () => {
  
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [prevPage, setPrevPage] = useState<string | null>(null);
+  const [userToToggle, setUserToToggle] = useState<any | null>(null);
 
-  const handleToggleBlock = async (id: string) => {
+  const handleToggleBlock = async () => {
+    if (!userToToggle) return;
     try {
-        await toggleBlockUser(id);
+      await toggleBlockUser(userToToggle.id);
 
-        setUsers(prev =>
-          prev.map(user =>
-              user.id === id
-              ? {
-                  ...user,
-                  is_active: !user.is_active
-                }
-              : user
-          )
-        );
+      setUsers(prev =>
+        prev.map(user =>
+          user.id === userToToggle.id
+            ? {
+                ...user,
+                is_active: !user.is_active,
+              }
+            : user
+        )
+      );
+
+      setUserToToggle(null);
 
     } catch (err) {
-        console.error("Block failed", err);
+      console.error("Block failed", err);
+
     }
   };
 
@@ -176,7 +182,7 @@ export const UserManagementPage: React.FC = () => {
                     <Button
                       variant={!user.is_active ? 'secondary' : 'danger'}
                       size="sm"
-                      onClick={() => handleToggleBlock(user.id)}
+                      onClick={() => setUserToToggle(user)}
                     >
                       {!user.is_active ? 'Unblock' : 'Block'}
                     </Button>
@@ -210,5 +216,30 @@ export const UserManagementPage: React.FC = () => {
           </div>
         </div>
       </Card>
+      <ConfirmationDialog
+        isOpen={!!userToToggle}
+        title={
+          userToToggle?.is_active
+            ? "Block User"
+            : "Unblock User"
+        }
+        message={
+          userToToggle?.is_active
+            ? `Are you sure you want to block "${userToToggle?.username}"?`
+            : `Are you sure you want to unblock "${userToToggle?.username}"?`
+        }
+        confirmText={
+          userToToggle?.is_active
+            ? "Block"
+            : "Unblock"
+        }
+        confirmVariant={
+          userToToggle?.is_active
+            ? "danger"
+            : "primary"
+        }
+        onClose={() => setUserToToggle(null)}
+        onConfirm={handleToggleBlock}
+      />
   </div>);
 };

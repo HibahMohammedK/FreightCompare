@@ -64,6 +64,35 @@ class TransportSerializer(serializers.ModelSerializer):
                 "Source and destination cannot be the same."
             )
 
+        company_name = data.get("company_name")
+        transport_type = data.get("transport_type")
+        departure_date = data.get("departure_date")
+
+        if company_name:
+            company = Company.objects.filter(
+                name__iexact=company_name
+            ).first()
+
+            if company:
+                queryset = Transport.objects.filter(
+                    company=company,
+                    transport_type=transport_type,
+                    source=source,
+                    destination=destination,
+                    departure_date=departure_date,
+                )
+
+                # Ignore current record while editing
+                if self.instance:
+                    queryset = queryset.exclude(pk=self.instance.pk)
+
+                if queryset.exists():
+                    raise serializers.ValidationError({
+                        "non_field_errors": [
+                            "A transport with the same company, transport type, source, destination and departure date already exists."
+                        ]
+                    })
+
         return data
 
     # 🔥 CREATE

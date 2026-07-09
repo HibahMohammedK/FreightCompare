@@ -10,6 +10,7 @@ import type { PriceAlert } from "../../types/priceAlert";
 import { PriceAlertStats } from "../../components/shared/price-alerts/PriceAlertStats";
 import { PriceAlertFilters } from "../../components/shared/price-alerts/PriceAlertFilters";
 import { PriceAlertCard } from "../../components/shared/price-alerts/PriceAlertCard";
+import { ConfirmationDialog } from "../../components/shared/ConfirmationDialog";
 import {
     BellIcon,
     Trash2Icon,
@@ -49,6 +50,12 @@ export const PriceAlertsPage = () => {
         useAppSelector(
             state => state.transport.priceAlerts
         );
+
+    const [alertToDelete, setAlertToDelete] =
+        useState<PriceAlert | null>(null);
+
+    const [clearAllOpen, setClearAllOpen] =
+        useState(false);
 
     const [filter, setFilter] = useState<
             "all" | "active" | "triggered"
@@ -102,29 +109,23 @@ export const PriceAlertsPage = () => {
 
     }, []);
 
-    const handleDelete = async (
-        id: number
-    ) => {
+    const handleDelete = async () => {
 
-        if (
-            !window.confirm(
-                "Delete this price alert?"
-            )
-        ) {
-            return;
-        }
+        if (!alertToDelete) return;
 
         try {
 
             await deletePriceAlert(
-                id
+                alertToDelete.id
             );
 
             dispatch(
                 removePriceAlert(
-                    id
+                    alertToDelete.id
                 )
             );
+
+            setAlertToDelete(null);
 
         } catch (error) {
 
@@ -139,14 +140,6 @@ export const PriceAlertsPage = () => {
 
     const handleClearAll = async () => {
 
-        if (
-            !window.confirm(
-                "Clear all price alerts?"
-            )
-        ) {
-            return;
-        }
-
         try {
 
             await clearPriceAlertsApi();
@@ -154,6 +147,8 @@ export const PriceAlertsPage = () => {
             dispatch(
                 clearPriceAlertsState()
             );
+
+            setClearAllOpen(false);
 
         } catch (error) {
 
@@ -262,7 +257,7 @@ export const PriceAlertsPage = () => {
                     <div className="flex justify-end mb-4">
 
                         <button
-                            onClick={handleClearAll}
+                            onClick={() => setClearAllOpen(true)}
                             className="
                                 flex
                                 items-center
@@ -296,7 +291,15 @@ export const PriceAlertsPage = () => {
                                 setSelectedAlert(alert);
                                 setEditModalOpen(true);
                             }}
-                            onDelete={handleDelete}
+                            onDelete={(id) => {
+                                const alert = priceAlerts.find(
+                                    a => a.id === id
+                                );
+
+                                if (alert) {
+                                    setAlertToDelete(alert);
+                                }
+                            }}
                         />
 
                     ))}
@@ -315,6 +318,26 @@ export const PriceAlertsPage = () => {
 
                 }}
                 priceAlert={selectedAlert}
+            />
+
+            <ConfirmationDialog
+                isOpen={!!alertToDelete}
+                title="Delete Price Alert"
+                message={`Are you sure you want to delete the alert from "${alertToDelete?.source}" to "${alertToDelete?.destination}"?`}
+                confirmText="Delete"
+                confirmVariant="danger"
+                onClose={() => setAlertToDelete(null)}
+                onConfirm={handleDelete}
+            />
+
+            <ConfirmationDialog
+                isOpen={clearAllOpen}
+                title="Clear All Price Alerts"
+                message="Are you sure you want to delete all price alerts? This action cannot be undone."
+                confirmText="Clear All"
+                confirmVariant="danger"
+                onClose={() => setClearAllOpen(false)}
+                onConfirm={handleClearAll}
             />
         </div>
 

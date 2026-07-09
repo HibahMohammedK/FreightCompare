@@ -7,13 +7,16 @@ interface ModalProps {
   title?: string;
   children: React.ReactNode;
   maxWidth?: string;
+  headerAction?: React.ReactNode;
 }
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
   title,
   children,
-  maxWidth = 'max-w-md'
+  maxWidth = 'max-w-md',
+  headerAction,
+  
 }) => {
   useEffect(() => {
     if (isOpen) {
@@ -66,12 +69,18 @@ export const Modal: React.FC<ModalProps> = ({
                   <h3 className="text-lg font-semibold text-text-dark">
                     {title}
                   </h3>
-                  <button
-                onClick={onClose}
-                className="p-1 text-text-lighter hover:text-text-medium transition-colors rounded-lg hover:bg-bg-light">
-                
-                    <XIcon size={20} />
-                  </button>
+                  <div className="flex items-center gap-3">
+
+                    {headerAction}
+
+                    <button
+                      onClick={onClose}
+                      className="p-1 text-text-lighter hover:text-text-medium transition-colors rounded-lg hover:bg-bg-light"
+                    >
+                      <XIcon size={20} />
+                    </button>
+
+                  </div>
                 </div>
             }
               <div className="p-6 overflow-y-auto">{children}</div>

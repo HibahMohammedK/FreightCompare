@@ -4,6 +4,7 @@ import { Button } from "../../components/shared/Button";
 import { Input } from "../../components/shared/Input";
 import { Modal } from "../../components/shared/Modal";
 import { SearchIcon, Building2Icon } from "lucide-react";
+import { ConfirmationDialog } from "../../components/shared/ConfirmationDialog";
 
 import {
   getCompanies,
@@ -36,10 +37,37 @@ export const  CompanyManagementPage: React.FC = () => {
   const [editingCompany, setEditingCompany] =
     useState<Company | null>(null);
 
+  const [errors, setErrors] = useState({
+    name: "",
+    website: "",
+  });
+
   const [form, setForm] = useState({
     name: "",
     website: ""
   });
+
+  const [toast, setToast] = useState<{
+    message: string;
+    type?: "success" | "error";
+  } | null>(null);
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success"
+  ) => {
+    setToast({ message, type });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
+
+  const [companyToDelete, setCompanyToDelete] =
+    useState<Company | null>(null);
+
+  const [companyToToggle, setCompanyToToggle] =
+    useState<Company | null>(null);
 
   const fetchCompanies = async (
     url?: string
@@ -106,6 +134,10 @@ useEffect(() => {
       name: "",
       website: ""
     });
+    setErrors({
+    name: "",
+    website: "",
+  });
 
     setShowModal(true);
   };
@@ -120,6 +152,10 @@ useEffect(() => {
     setForm({
       name: company.name || "",
       website: company.website || ""
+    });
+    setErrors({
+      name: "",
+      website: "",
     });
 
     setShowModal(true);
@@ -139,11 +175,13 @@ useEffect(() => {
         await updateCompany(
           editingCompany.id,
           form
-        );
+        );  
+        showToast("Company updated successfully.");
 
       } else {
 
         await createCompany(form);
+        showToast("Company created successfully.");
 
       }
 
@@ -156,63 +194,65 @@ useEffect(() => {
 
       fetchCompanies();
 
-    } catch (err) {
+    } catch (err: any) {
+      const backendErrors = err.response?.data;
 
-      console.error(
-        "Company save failed",
-        err
-      );
+      setErrors({
+        name: backendErrors?.name?.[0] || "",
+        website: backendErrors?.website?.[0] || "",
+      });
 
+      if (!backendErrors?.name && !backendErrors?.website) {
+        showToast(
+          "Failed to save company.",
+          "error"
+        );
+      }
     }
   };
 
 
-  const handleDelete = async (
-    id: number
-  ) => {
-
-    const confirmed = window.confirm(
-      "Are you sure you want to permanently delete this company?"
-    );
-
-    if (!confirmed) return;
+  const handleDelete = async () => {
+    if (!companyToDelete) return;
 
     try {
+      await deleteCompany(companyToDelete.id);
 
-      await deleteCompany(id);
+      showToast("Company deleted successfully.");
+
+      setCompanyToDelete(null);
 
       fetchCompanies();
-
     } catch (err) {
+      console.error(err);
 
-      console.error(
-        "Delete failed",
-        err
+      showToast(
+        "Failed to delete company.",
+        "error"
       );
-
     }
   };
 
-  const handleToggleStatus = async (
-    id: number
-  ) => {
+  const handleToggleStatus = async () => {
+    if (!companyToToggle) return;
 
     try {
+      await toggleCompanyStatus(companyToToggle.id);
 
-      await toggleCompanyStatus(id);
+      showToast("Company status updated.");
+
+      setCompanyToToggle(null);
 
       fetchCompanies();
-
     } catch (err) {
+      console.error(err);
 
-      console.error(
-        "Status update failed",
-        err
+      showToast(
+        "Failed to update company status.",
+        "error"
       );
-
     }
-
-  };
+  }
 
 
   if (loading) {
@@ -227,6 +267,19 @@ useEffect(() => {
 
   return (
     <div className="flex-1 overflow-y-auto p-8">
+
+      {toast && (
+        <div
+          className={`fixed top-5 right-5 z-50 rounded-lg px-4 py-3 text-white shadow-lg
+            ${
+              toast.type === "error"
+                ? "bg-red-500"
+                : "bg-green-600"
+            }`}
+        >
+          {toast.message}
+        </div>
+      )}
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-text-dark">
@@ -371,9 +424,7 @@ useEffect(() => {
                       size="sm"
                       variant="secondary"
                       onClick={() =>
-                        handleToggleStatus(
-                          company.id
-                        )
+                        setCompanyToToggle(company)
                       }
                     >
                       {
@@ -388,7 +439,7 @@ useEffect(() => {
                       size="sm"
                       variant="danger"
                       onClick={() =>
-                        handleDelete(company.id)
+                        setCompanyToDelete(company)
                       }
                     >
                       Delete
@@ -459,12 +510,18 @@ useEffect(() => {
           <Input
             label="Company Name"
             value={form.name}
-            onChange={(e) =>
+            onChange={(e) => {
               setForm({
                 ...form,
-                name: e.target.value
-              })
-            }
+                name: e.target.value,
+              });
+
+              setErrors((prev) => ({
+                ...prev,
+                name: "",
+              }));
+            }}
+            error={errors.name}
             required
           />
 
@@ -472,12 +529,19 @@ useEffect(() => {
           <Input
             label="Website"
             value={form.website}
-            onChange={(e) =>
+            onChange={(e) => {
               setForm({
                 ...form,
                 website: e.target.value
-              })
-            }
+              });
+
+              setErrors((prev) => ({
+                ...prev,
+                website: "",
+              }));
+              
+            }}
+            error={errors.website}
             placeholder="https://example.com"
           />
 
@@ -496,6 +560,42 @@ useEffect(() => {
         </form>
 
       </Modal>
+
+      <ConfirmationDialog
+        isOpen={!!companyToDelete}
+        title="Delete Company"
+        message={`Are you sure you want to permanently delete "${companyToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmVariant="danger"
+        onClose={() => setCompanyToDelete(null)}
+        onConfirm={handleDelete}
+      />
+
+      <ConfirmationDialog
+        isOpen={!!companyToToggle}
+        title={
+          companyToToggle?.is_active
+            ? "Disable Company"
+            : "Enable Company"
+        }
+        message={
+          companyToToggle?.is_active
+            ? `Are you sure you want to disable "${companyToToggle?.name}"?`
+            : `Are you sure you want to enable "${companyToToggle?.name}"?`
+        }
+        confirmText={
+          companyToToggle?.is_active
+            ? "Disable"
+            : "Enable"
+        }
+        confirmVariant={
+          companyToToggle?.is_active
+            ? "danger"
+            : "primary"
+        }
+        onClose={() => setCompanyToToggle(null)}
+        onConfirm={handleToggleStatus}
+      />
 
     </div>
   );

@@ -182,22 +182,22 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-3xl">
-      <>
-        <div className="flex justify-end mb-4">
-          <Button
+    <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-3xl" headerAction={
+        <Button
             type="button"
+            size="sm"
             variant="outline"
             icon={<SparklesIcon size={16} />}
             onClick={() => setIsAIModalOpen(true)}
-          >
+        >
             AI Assist
-          </Button>
-        </div>
+        </Button>
+    }>
+      <>
         <form className="space-y-6" onSubmit={handleSubmit}>
           {backendErrors?.non_field_errors && (
-              <div className="text-sm text-red-500">
-                {backendErrors.non_field_errors[0]}
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {backendErrors.non_field_errors[0]}
               </div>
             )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
