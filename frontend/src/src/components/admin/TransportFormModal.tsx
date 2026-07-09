@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarIcon, LinkIcon } from 'lucide-react';
+import { CalendarIcon, LinkIcon, SparklesIcon } from 'lucide-react';
 import { Modal } from '../shared/Modal';
 import { Button } from '../shared/Button';
 import { Input } from '../shared/Input';
 import { getCompanies } from "../../api/company";
 import CreatableSelect from "react-select/creatable";
+import { AITransportAssistantModal } from "./AITransportAssistantModal";
+import { AIRecommendation } from "../../types/ai";
 
 export interface TransportFormValues {
   company: string;
@@ -45,6 +47,7 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
 }) => {
   const [values, setValues] = useState<TransportFormValues>(emptyValues);
   const [errors, setErrors] = useState<Partial<Record<keyof TransportFormValues, string>>>({});
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [companies, setCompanies] = useState<
     {
       id: number;
@@ -158,134 +161,176 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
     onSubmit(values);
   };
 
+  const handleAIApply = (recommendation: AIRecommendation) => {
+    setValues((prev) => ({
+      ...prev,
+      company: recommendation.company ?? "",
+      source: prev.source,
+      destination: prev.destination,
+      transportType: prev.transportType,
+      price:
+      recommendation.price !== null
+        ? String(recommendation.price)
+        : "",
+      duration: recommendation.duration
+        ? String(recommendation.duration)
+        : prev.duration,
+      bookingUrl: recommendation.booking_url ?? "",
+    }));
+
+    setIsAIModalOpen(false);
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-3xl">
-      <form className="space-y-6" onSubmit={handleSubmit}>
-        {backendErrors?.non_field_errors && (
-            <div className="text-sm text-red-500">
-              {backendErrors.non_field_errors[0]}
-            </div>
-          )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <>
+        <div className="flex justify-end mb-4">
+          <Button
+            type="button"
+            variant="outline"
+            icon={<SparklesIcon size={16} />}
+            onClick={() => setIsAIModalOpen(true)}
+          >
+            AI Assist
+          </Button>
+        </div>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {backendErrors?.non_field_errors && (
+              <div className="text-sm text-red-500">
+                {backendErrors.non_field_errors[0]}
+              </div>
+            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-text-medium">
-              Company
-            </label>
-
-            
-
-              <CreatableSelect
-                options={companies.map(c => ({
-                  label: c.name,
-                  value: c.name
-                }))}
-
-                value={
-                  values.company
-                    ? { label: values.company, value: values.company }
-                    : null
-                }
-
-                onChange={(selected: any) => {
-                  updateField("company", selected?.value || "");
-                }}
-
-                onCreateOption={(inputValue: string) => {
-                  updateField("company", inputValue);
-                }}
-
-                placeholder="Select or type company"
-              />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-text-medium">
+                Company
+              </label>
 
               
-            {errors.company && (
-              <span className="text-xs text-red-500">{errors.company}</span>
-            )}
-          </div>
-          
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-text-medium">Transport Type</label>
-            <select
-              value={values.transportType}
-              onChange={(e) =>
-                updateField('transportType', e.target.value as 'AIR' | 'SEA')
-              }
-              className="w-full rounded-xl border border-border-light bg-white px-4 py-2.5 text-sm"
-            >
-              <option value="AIR">AIR</option>
-              <option value="SEA">SEA</option>
-            </select>
-          </div>
+                <CreatableSelect
+                  options={companies.map(c => ({
+                    label: c.name,
+                    value: c.name
+                  }))}
 
-          <Input
-            label="Source"
-            value={values.source}
-            onChange={(e) => updateField('source', e.target.value)}
-            error={errors.source}
-          />
+                  value={
+                    values.company
+                      ? { label: values.company, value: values.company }
+                      : null
+                  }
 
-          <Input
-            label="Destination"
-            value={values.destination}
-            onChange={(e) => updateField('destination', e.target.value)}
-            error={errors.destination}
-          />
+                  onChange={(selected: any) => {
+                    updateField("company", selected?.value || "");
+                  }}
 
-          <Input
-            label="Price"
-            type="number"
-            value={values.price}
-            onChange={(e) => updateField('price', e.target.value)}
-            error={errors.price}
-          />
+                  onCreateOption={(inputValue: string) => {
+                    updateField("company", inputValue);
+                  }}
 
-          <div className="flex flex-col">
+                  placeholder="Select or type company"
+                />
+
+                
+              {errors.company && (
+                <span className="text-xs text-red-500">{errors.company}</span>
+              )}
+            </div>
+            
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-text-medium">Transport Type</label>
+              <select
+                value={values.transportType}
+                onChange={(e) =>
+                  updateField('transportType', e.target.value as 'AIR' | 'SEA')
+                }
+                className="w-full rounded-xl border border-border-light bg-white px-4 py-2.5 text-sm"
+              >
+                <option value="AIR">AIR</option>
+                <option value="SEA">SEA</option>
+              </select>
+            </div>
+
             <Input
-              label="Duration (hours)"
-              type="number"
-              placeholder="e.g. 48"
-              value={values.duration}
-              onChange={(e) => updateField('duration', e.target.value)}
-              error={errors.duration}
+              label="Source"
+              value={values.source}
+              onChange={(e) => updateField('source', e.target.value)}
+              error={errors.source}
             />
 
-            {!errors.duration && (
-              <span className="text-xs text-text-lighter mt-1">
-                e.g., 48 = 2 days
-              </span>
-            )}
+            <Input
+              label="Destination"
+              value={values.destination}
+              onChange={(e) => updateField('destination', e.target.value)}
+              error={errors.destination}
+            />
+
+            <Input
+              label="Price"
+              type="number"
+              value={values.price}
+              onChange={(e) => updateField('price', e.target.value)}
+              error={errors.price}
+            />
+
+            <div className="flex flex-col">
+              <Input
+                label="Duration (hours)"
+                type="number"
+                placeholder="e.g. 48"
+                value={values.duration}
+                onChange={(e) => updateField('duration', e.target.value)}
+                error={errors.duration}
+              />
+
+              {!errors.duration && (
+                <span className="text-xs text-text-lighter mt-1">
+                  e.g., 48 = 2 days
+                </span>
+              )}
+            </div>
+
+            <Input
+              label="Departure Date"
+              type="date"
+              value={values.departureDate}
+              onChange={(e) => updateField('departureDate', e.target.value)}
+              error={errors.departureDate}
+              icon={<CalendarIcon size={16} />}
+            />
+
+            <Input
+              label="Booking URL"
+              type="url"
+              value={values.bookingUrl}
+              onChange={(e) => updateField('bookingUrl', e.target.value)}
+              error={errors.bookingUrl}
+              icon={<LinkIcon size={16} />}
+            />
           </div>
 
-          <Input
-            label="Departure Date"
-            type="date"
-            value={values.departureDate}
-            onChange={(e) => updateField('departureDate', e.target.value)}
-            error={errors.departureDate}
-            icon={<CalendarIcon size={16} />}
-          />
-
-          <Input
-            label="Booking URL"
-            type="url"
-            value={values.bookingUrl}
-            onChange={(e) => updateField('bookingUrl', e.target.value)}
-            error={errors.bookingUrl}
-            icon={<LinkIcon size={16} />}
-          />
-        </div>
-
-        <div className="flex justify-end gap-3 border-t pt-6">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {initialValues ? 'Save Changes' : 'Add Transport'}
-          </Button>
-        </div>
-      </form>
+          <div className="flex justify-end gap-3 border-t pt-6">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {initialValues ? 'Save Changes' : 'Add Transport'}
+            </Button>
+          </div>
+        </form>
+        <AITransportAssistantModal
+          isOpen={isAIModalOpen}
+          onClose={() => setIsAIModalOpen(false)}
+          onApply={handleAIApply}
+          initialSource={values.source}
+          initialDestination={values.destination}
+          initialTransportType={
+            values.transportType.toLowerCase() as "air" | "sea"
+          }
+        />
+      </>
     </Modal>
   );
 };

@@ -58,6 +58,7 @@ Web Search Results
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         temperature=0,
+        top_p=0.1,
         response_format={
             "type": "json_object",
         },
