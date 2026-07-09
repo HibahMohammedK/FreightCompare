@@ -19,6 +19,8 @@ STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY")
 STRIPE_PRICE_ID = config("STRIPE_PRICE_ID")
 STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET")
+TAVILY_API_KEY = config("TAVILY_API_KEY")
+GROQ_API_KEY = config("GROQ_API_KEY")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -56,6 +58,7 @@ INSTALLED_APPS = [
     'subscription',
     'notifications',
     'price_alerts',
+    'ai',
 ]
 
 MIDDLEWARE = [
