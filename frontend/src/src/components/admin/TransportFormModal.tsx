@@ -5,7 +5,7 @@ import { Button } from '../shared/Button';
 import { Input } from '../shared/Input';
 import { getCompanies } from "../../api/company";
 import CreatableSelect from "react-select/creatable";
-import { AITransportAssistantModal } from "./AITransportAssistantModal";
+import { AITransportAssistantModal } from "../shared/AITransportAssistantModal";
 import { AIRecommendation } from "../../types/ai";
 import { AIRPORTS, SEAPORTS } from "../../constants";
 

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { SparklesIcon, Loader2Icon } from "lucide-react";
 
-import { Modal } from "../shared/Modal";
+import { Modal } from "./Modal";
 import CreatableSelect from "react-select/creatable";
 import Select from 'react-select';
-import { Button } from "../shared/Button";
+import { Button } from "./Button";
 
 import { searchTransportAI } from "../../api/ai";
 import { AIRecommendation } from "../../types/ai";
@@ -14,11 +14,17 @@ import { AIRPORTS, SEAPORTS } from "../../constants";
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onApply: (recommendation: AIRecommendation) => void;
+  onApply: (
+      recommendation: AIRecommendation,
+      source: string,
+      destination: string,
+      transportType: "air" | "sea"
+  ) => void;
 
   initialSource?: string;
   initialDestination?: string;
   initialTransportType?: "air" | "sea";
+  actionLabel?: string
 }
 
 export const AITransportAssistantModal: React.FC<Props> = ({
@@ -28,6 +34,7 @@ export const AITransportAssistantModal: React.FC<Props> = ({
   initialSource,
   initialDestination,
   initialTransportType,
+  actionLabel = "Apply",
 }) => {
   const [source, setSource] = useState(initialSource ?? "");
   const [destination, setDestination] = useState(initialDestination ?? "");
@@ -221,15 +228,20 @@ export const AITransportAssistantModal: React.FC<Props> = ({
                   </div>
 
                   <Button
-                    size="sm"
-                    onClick={() => {
-                      onApply(item);
-                      onClose();
-                    }}
-                  >
-                    Apply
-                  </Button>
+                      size="sm"
+                      onClick={() => {
+                          onApply(
+                              item,
+                              source,
+                              destination,
+                              transportType
+                          );
 
+                          onClose();
+                      }}
+                  >
+                      {actionLabel}
+                  </Button>
                 </div>
               </div>
             ))}

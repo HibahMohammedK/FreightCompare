@@ -51,5 +51,5 @@ def search_transport_ai(data):
         source=data["source"],
         destination=data["destination"],
         transport_type=data["transport_type"],
-        search_results=tavily_response["results"],
+        search_results=filtered_results
     )

@@ -3,6 +3,7 @@ import { UserNavbar } from '../../components/shared/UserNavbar';
 import { TransportCard } from '../../components/shared/TransportCard';
 import { PriceAlertModal } from '../../components/shared/price-alerts/PriceAlertModal';
 import { Button } from '../../components/shared/Button';
+import { AIRecommendation } from "../../types/ai";
 import {
   ArrowLeftRightIcon,
   ArrowRightIcon,
@@ -19,6 +20,8 @@ import { getTransports, getLocations, saveSearchHistory } from '../../api/transp
 import { useLocation, useNavigate } from "react-router-dom";
 import { saveTransport, unsaveTransport } from "../../api/saved";
 import type { Transport } from '../../types/transport';
+import { AITransportAssistantModal } from '../../components/shared/AITransportAssistantModal';
+
 export const SearchResultsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -42,6 +45,10 @@ export const SearchResultsPage: React.FC = () => {
   const source = params.get("source") || "";
   const destination = params.get("destination") || "";
   const date = params.get("date") || "";
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [searchTransportType, setSearchTransportType] = useState<
+      "all" | "air" | "sea"
+  >("all");
   
   useEffect(() => {
 
@@ -127,35 +134,52 @@ export const SearchResultsPage: React.FC = () => {
         )
     );
 
-  // 🔥 SEARCH ACTION
-  const handleSearch = async () => {
+ const handleSearch = async (
+    source = searchSource,
+    destination = searchDestination,
+    transportType = searchTransportType,
+    date = searchDate
+  ) => {
     const query = new URLSearchParams();
 
-    if (searchSource.trim()) {
-      query.set("source", searchSource.trim());
+    if (source.trim()) {
+      query.set("source", source.trim());
     }
 
-    if (searchDestination.trim()) {
-      query.set("destination", searchDestination.trim());
+    if (destination.trim()) {
+      query.set("destination", destination.trim());
     }
 
-    if (searchDate) {
-      query.set("date", searchDate);
+    if (date) {
+      query.set("date", date);
     }
 
-    query.set("type", "all");
+    query.set("type", transportType);
 
     try {
       await saveSearchHistory({
-        source: searchSource.trim(),
-        destination: searchDestination.trim(),
-        transport_type: "all",
+        source: source.trim(),
+        destination: destination.trim(),
+        transport_type: transportType,
       });
     } catch (err) {
       console.error("Failed to save search history", err);
     }
 
     navigate(`/search?${query.toString()}`);
+  };
+
+  const handleAISearch = (
+    recommendation: AIRecommendation,
+    source: string,
+    destination: string,
+    transportType: "air" | "sea"
+  ) => {
+    setSearchSource(source);
+    setSearchDestination(destination);
+    setSearchTransportType(transportType);
+
+    handleSearch(source, destination, transportType);
   };
 
 
@@ -366,8 +390,16 @@ export const SearchResultsPage: React.FC = () => {
               className="px-3 text-sm border-l"
             />
 
-            <Button size="sm" className="ml-2" onClick={handleSearch}>
+            <Button size="sm" className="ml-2" onClick={()=> handleSearch}>
               <SearchIcon size={16} />
+            </Button>
+            <Button
+                size="sm"
+                variant="outline"
+                className="ml-2"
+                onClick={() => setIsAIModalOpen(true)}
+            >
+                ✨ Ask AI
             </Button>
 
           </div>
@@ -583,6 +615,19 @@ export const SearchResultsPage: React.FC = () => {
         isOpen={isAlertModalOpen}
         onClose={() => setIsAlertModalOpen(false)}
         transport={selectedTransport}
+      />
+      <AITransportAssistantModal
+          isOpen={isAIModalOpen}
+          onClose={() => setIsAIModalOpen(false)}
+          initialSource={searchSource}
+          initialDestination={searchDestination}
+          initialTransportType={
+              searchTransportType === "all"
+                  ? "air"
+                  : searchTransportType
+          }
+          actionLabel="Search Routes"
+          onApply={handleAISearch}
       />
     </div>
   );
