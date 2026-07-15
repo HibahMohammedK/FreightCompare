@@ -18,7 +18,8 @@ from rest_framework.pagination import PageNumberPagination
 from users.models import User
 from .models import Subscription
 from .serializers import CreateCheckoutSessionSerializer, SubscriptionSerializer, AdminSubscriptionSerializer
-
+from notifications.utils import send_notification
+from notifications.models import Notification
 
 
 
@@ -180,6 +181,16 @@ class StripeWebhookView(APIView):
 
             )
 
+            send_notification(
+                user=user,
+                title="Premium Subscription Activated",
+                message=(
+                    "Your Premium subscription has been activated successfully. "
+                    "You now have access to unlimited price alerts, AI assistant, and premium features."
+                ),
+                notification_type=Notification.SUBSCRIPTION,
+            )
+
             return Response(
                 {
                     "message": "Subscription activated successfully."
@@ -270,6 +281,19 @@ class CancelSubscriptionView(APIView):
                 ]
             )
 
+            send_notification(
+                    user=request.user,
+                    title="Subscription Cancellation Scheduled",
+                    message=(
+                        "Your Premium subscription has been scheduled for cancellation. "
+                        f"You will continue to enjoy Premium features until "
+                        f"{subscription.expiry_date.strftime('%d %b %Y')}."
+                    ),
+                    notification_type=Notification.SUBSCRIPTION,
+            )
+                
+
+
             return Response(
                 {
                     "message": (
@@ -299,11 +323,6 @@ class CancelSubscriptionView(APIView):
             )
 
         except Exception as e:
-
-            print(
-                f"Cancel Subscription Error: {e}",
-                flush=True,
-            )
 
             return Response(
                 {

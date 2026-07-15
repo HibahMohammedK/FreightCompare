@@ -6,6 +6,7 @@ from rest_framework import status
 from .models import PriceAlert
 from .serializers import PriceAlertSerializer
 from django.shortcuts import get_object_or_404
+from subscription.models import Subscription
 
 
 class PriceAlertListCreateView(APIView):
@@ -34,21 +35,44 @@ class PriceAlertListCreateView(APIView):
             data=request.data,
         )
 
-        if serializer.is_valid():
+        try:
+            subscription = request.user.subscription
+            is_premium = subscription.status == "active"
 
-            serializer.save(
+        except Subscription.DoesNotExist:
+            is_premium = False
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        if not is_premium:
+
+            active_alerts = PriceAlert.objects.filter(
                 user=request.user,
-            )
+                is_active=True,
+            ).count()
 
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED,
-            )
+            if active_alerts >= 1:
+                return Response(
+                    {
+                        "detail": (
+                            "Basic users can create only one active price alert. "
+                            "Upgrade to Premium for unlimited alerts."
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        serializer.save(
+            user=request.user,
+        )
 
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
+            serializer.data,
+            status=status.HTTP_201_CREATED,
         )
+
     
     def delete(self, request):
 
