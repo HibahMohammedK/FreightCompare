@@ -218,3 +218,6 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "users.validators.StrongPasswordValidator",
     },
 ]
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

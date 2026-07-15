@@ -9,6 +9,7 @@ interface User {
   role: "admin" | "staff" | "customer";
   status?: "online" | "busy" | "offline";
   is_verified: boolean;
+  profile_image?: string;
   is_staff: boolean;
   isPremium?: boolean;
   created_at: string;

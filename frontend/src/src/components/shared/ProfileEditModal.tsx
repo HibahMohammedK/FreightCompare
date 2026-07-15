@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { Input } from "./Input";
 import { Button } from "./Button";
+import { Trash2Icon } from "lucide-react";
 
 import { useAppSelector } from "../../hooks/redux";
 
@@ -11,6 +12,7 @@ import {
   requestEmailChange,
   verifyEmailChange
 } from "../../api/auth";
+import { ConfirmationDialog } from "./ConfirmationDialog";
 
 type Props = {
   isOpen: boolean;
@@ -29,12 +31,18 @@ export const ProfileEditModal: React.FC<Props> = ({
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [profileImage, setProfileImage] =
+    useState<File | null>(null);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [verificationId, setVerificationId] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [isDeleteImageModalOpen, setIsDeleteImageModalOpen] = 
+    useState(false);
+  const [deletingImage, setDeletingImage] =
+    useState(false);
 
   useEffect(() => {
 
@@ -50,6 +58,7 @@ export const ProfileEditModal: React.FC<Props> = ({
       setVerificationId("");
 
       setMessage("");
+      setProfileImage(null);
     }
 
   }, [isOpen, user]);
@@ -61,11 +70,31 @@ export const ProfileEditModal: React.FC<Props> = ({
       setLoading(true);
       setMessage("");
 
-      await updateProfile({
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        username: username.trim(),
-      });
+      const formData = new FormData();
+
+      formData.append(
+          "first_name",
+          firstName.trim()
+      );
+
+      formData.append(
+          "last_name",
+          lastName.trim()
+      );
+
+      formData.append(
+          "username",
+          username.trim()
+      );
+
+      if (profileImage) {
+          formData.append(
+              "profile_image",
+              profileImage
+          );
+      }
+
+      await updateProfile(formData);
 
       setMessage(
         "Profile updated successfully"
@@ -167,113 +196,262 @@ export const ProfileEditModal: React.FC<Props> = ({
     }
   };
 
+  const handleDeleteProfileImage = async () => {
+
+      try {
+
+          setDeletingImage(true);
+
+          const formData = new FormData();
+
+          formData.append(
+              "remove_profile_image",
+              "true"
+          );
+
+          await updateProfile(formData);
+
+          setProfileImage(null);
+
+          setIsDeleteImageModalOpen(false);
+
+          window.location.reload();
+
+      } catch (err: any) {
+
+          setMessage(
+              "Failed to delete profile image."
+          );
+
+      } finally {
+
+          setDeletingImage(false);
+
+      }
+
+  };
+
   return (
+    <>
 
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Edit Profile"
-    >
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Edit Profile"
+      >
 
-      <div className="space-y-5">
+        <div className="space-y-5">
 
-        {message && (
-          <p
-            className={`text-sm ${
-              message.toLowerCase().includes("success")
-                ? "text-green-600"
-                : "text-red-500"
-            }`}
+          {message && (
+            <p
+              className={`text-sm ${
+                message.toLowerCase().includes("success")
+                  ? "text-green-600"
+                  : "text-red-500"
+              }`}
+            >
+              {message}
+            </p>
+          )}
+
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative w-24 h-24">
+                <div
+                    className="
+                        w-full
+                        h-full
+                        rounded-full
+                        bg-bg-light
+                        border-2
+                        border-dashed
+                        border-border-medium
+                        flex
+                        items-center
+                        justify-center
+                        overflow-hidden
+                    "
+                >
+
+                    {(profileImage || user?.profile_image) ? (
+
+                        <img
+                            src={
+                                profileImage
+                                    ? URL.createObjectURL(profileImage)
+                                    : user!.profile_image!
+                            }
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                        />
+
+                    ) : (
+
+                        <span className="text-3xl font-bold text-primary">
+                            {user?.username?.charAt(0).toUpperCase()}
+                        </span>
+
+                    )}
+
+                </div>
+
+                {(profileImage || user?.profile_image) && (
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setIsDeleteImageModalOpen(true)
+                        }
+                        className="
+                            absolute
+                            bottom-0
+                            right-0
+                            w-8
+                            h-8
+                            rounded-full
+                            bg-red-250
+                            text-white
+                            flex
+                            items-center
+                            justify-center
+                            shadow-md
+                            transition-colors
+                            hover:bg-red-500
+                        "
+                    >
+                        <Trash2Icon size={16} />
+                    </button>
+
+                )}
+
+            </div>
+              <label
+                  className="
+                      cursor-pointer
+                      rounded-lg
+                      border
+                      border-border-medium
+                      px-4
+                      py-2
+                      text-sm
+                      hover:bg-bg-light
+                  "
+              >
+                  Choose Profile Image
+
+                  <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) =>
+                          setProfileImage(
+                              e.target.files?.[0] ?? null
+                          )
+                      }
+                  />
+              </label>
+
+              <p className="text-xs text-text-light">
+                  JPG, PNG or WEBP
+              </p>
+                    <div className="grid grid-cols-2 gap-4">
+
+              <Input
+                  label="First Name"
+                  value={firstName}
+                  onChange={(e) =>
+                      setFirstName(e.target.value)
+                  }
+              />
+
+              <Input
+                  label="Last Name"
+                  value={lastName}
+                  onChange={(e) =>
+                      setLastName(e.target.value)
+                  }
+              />
+
+          </div>
+          </div>
+
+          {/* Username */}
+
+          <Input
+            label="Username"
+            value={username}
+            onChange={(e) =>
+              setUsername(e.target.value)
+            }
+          />
+
+          <Button
+            onClick={handleSave}
+            disabled={loading}
           >
-            {message}
-          </p>
-        )}
+            {
+              loading
+                ? "Saving..."
+                : "Save Profile"
+            }
+          </Button>
 
-        <div className="grid grid-cols-2 gap-4">
+          <hr />
+
+          {/* Email */}
 
           <Input
-            label="First Name"
-            value={firstName}
+            label="Email"
+            value={email}
             onChange={(e) =>
-              setFirstName(e.target.value)
+              setEmail(e.target.value)
             }
           />
 
-          <Input
-            label="Last Name"
-            value={lastName}
-            onChange={(e) =>
-              setLastName(e.target.value)
-            }
-          />
+          <Button
+            type="button"
+            onClick={handleEmailChange}
+          >
+            Change Email
+          </Button>
+
+          {otpSent && (
+
+            <div className="space-y-4">
+
+              <Input
+                label="OTP"
+                value={otp}
+                onChange={(e) =>
+                  setOtp(e.target.value)
+                }
+              />
+
+              <Button
+                type="button"
+                onClick={handleVerifyOTP}
+              >
+                Verify OTP
+              </Button>
+
+            </div>
+
+          )}
 
         </div>
 
-        {/* Username */}
-
-        <Input
-          label="Username"
-          value={username}
-          onChange={(e) =>
-            setUsername(e.target.value)
-          }
-        />
-
-        <Button
-          onClick={handleSave}
-          disabled={loading}
-        >
-          {
-            loading
-              ? "Saving..."
-              : "Save Profile"
-          }
-        </Button>
-
-        <hr />
-
-        {/* Email */}
-
-        <Input
-          label="Email"
-          value={email}
-          onChange={(e) =>
-            setEmail(e.target.value)
-          }
-        />
-
-        <Button
-          type="button"
-          onClick={handleEmailChange}
-        >
-          Change Email
-        </Button>
-
-        {otpSent && (
-
-          <div className="space-y-4">
-
-            <Input
-              label="OTP"
-              value={otp}
-              onChange={(e) =>
-                setOtp(e.target.value)
-              }
-            />
-
-            <Button
-              type="button"
-              onClick={handleVerifyOTP}
-            >
-              Verify OTP
-            </Button>
-
-          </div>
-
-        )}
-
-      </div>
-
-    </Modal>
+      </Modal>
+      <ConfirmationDialog
+      isOpen={isDeleteImageModalOpen}
+      title="Delete Profile Picture"
+      message="Are you sure you want to remove your profile picture?"
+      confirmText="Delete"
+      confirmVariant="danger"
+      loading={deletingImage}
+      onClose={() =>
+          setIsDeleteImageModalOpen(false)
+      }
+      onConfirm={handleDeleteProfileImage}
+  />
+</>
   );
 };

@@ -63,15 +63,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "role",
             "status",
             "is_verified",
+            "profile_image",
             "is_staff",
             "created_at",
         ]
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
 
+    remove_profile_image = serializers.BooleanField(
+        write_only=True,
+        required=False,
+    )
+
     class Meta:
         model = User
-        fields = ["username", "first_name", "last_name",]
+        fields = ["username", "first_name", "last_name", "profile_image", "remove_profile_image"]
 
 class AdminUserListSerializer(serializers.ModelSerializer):
     is_premium = serializers.SerializerMethodField()

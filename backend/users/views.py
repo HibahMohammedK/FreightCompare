@@ -381,6 +381,23 @@ class UpdateProfileView(UpdateAPIView):
     def get_object(self):
         return self.request.user
     
+    def perform_update(self, serializer):
+
+        user = serializer.instance
+
+        if serializer.validated_data.get(
+            "remove_profile_image"
+        ):
+
+            if user.profile_image:
+                user.profile_image.delete(
+                    save=False
+                )
+
+            user.profile_image = None
+
+        serializer.save()
+    
 class ChangeEmailView(APIView):
 
     permission_classes = [IsAuthenticated]

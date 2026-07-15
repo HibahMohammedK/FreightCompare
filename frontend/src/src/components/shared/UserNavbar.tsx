@@ -125,8 +125,26 @@ export const UserNavbar: React.FC = () => {
               transition-colors
               "
             >
-            <div className="w-8 h-8 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold text-xs">
+            {/* <div className="w-8 h-8 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold text-xs">
               {user?.username?.charAt(0).toUpperCase() || 'U'}
+            </div> */}
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-primary-light flex items-center justify-center">
+              {user?.profile_image ? (
+
+                  <img
+                      src={user.profile_image}
+                      alt={user.username}
+                      className="w-full h-full object-cover"
+                  />
+
+              ) : (
+
+                  <span  className="font-semibold text-xs text-primary-darker">
+                      {user?.username?.charAt(0).toUpperCase()}
+                  </span>
+
+              )}
+
             </div>
             <span className="text-sm font-medium text-text-medium">
               {user?.username}

@@ -9,7 +9,7 @@ export const registerUser = (data: any) =>
 export const getProfile = () =>
   API.get("/users/profile/");
 
-export const updateProfile = (data: { username?: string; first_name?: string; last_name?: string;}) =>
+export const updateProfile = (data: FormData) =>
   API.patch("/users/profile/update/",data);
 
 export const requestEmailChange = (data: { new_email: string }) =>
