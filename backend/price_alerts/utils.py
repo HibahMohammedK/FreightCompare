@@ -39,4 +39,5 @@ def check_price_alerts(
                     f"is now available for AED {transport.price}."
                 ),
                 notification_type="price_alert",
+                transport=transport,
             )

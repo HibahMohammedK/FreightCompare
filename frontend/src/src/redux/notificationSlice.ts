@@ -7,7 +7,11 @@ export interface Notification {
     type: string;
     is_read: boolean;
     created_at: string;
-}
+    transport_id?: number;
+    source?: string;
+    destination?: string;
+    transport_type?: string;
+    }
 
 interface NotificationState {
   notifications: Notification[];

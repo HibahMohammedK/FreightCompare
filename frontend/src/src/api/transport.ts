@@ -6,6 +6,7 @@ export const getTransports = (params?: {
   destination?: string;
   transport_type?: string;
   departure_date?: string;
+  transport?: number;
 }) => {
   return API.get("/transports/", {
     params,

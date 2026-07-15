@@ -29,6 +29,10 @@ class TransportViewSet(viewsets.ModelViewSet):
         destination = self.request.query_params.get("destination")
         transport_type = self.request.query_params.get("transport_type")
         departure_date = self.request.query_params.get("departure_date")
+        transport_id = self.request.query_params.get("transport")
+
+        if transport_id:
+            queryset = queryset.filter(id=transport_id)
 
         if source:
             queryset = queryset.filter(source__iexact=source)

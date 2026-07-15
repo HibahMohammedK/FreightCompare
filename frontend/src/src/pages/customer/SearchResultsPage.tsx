@@ -45,10 +45,12 @@ export const SearchResultsPage: React.FC = () => {
   const source = params.get("source") || "";
   const destination = params.get("destination") || "";
   const date = params.get("date") || "";
+  const transportType = params.get("type") || "all";
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
-  const [searchTransportType, setSearchTransportType] = useState<
-      "all" | "air" | "sea"
-  >("all");
+  const [searchTransportType, setSearchTransportType] =
+    useState<"all" | "air" | "sea">(
+        transportType as "all" | "air" | "sea"
+    );
   
   useEffect(() => {
 
@@ -203,6 +205,13 @@ export const SearchResultsPage: React.FC = () => {
           data = data.filter((t: any) =>
             t.destination.toLowerCase().includes(destination.toLowerCase())
           );
+        }
+
+        if (transportType !== "all") {
+            data = data.filter(
+                (t: any) =>
+                    t.transport_type === transportType
+            );
         }
 
         // 🔥 DATE LOGIC (YOUR REQUIREMENT)
@@ -390,7 +399,7 @@ export const SearchResultsPage: React.FC = () => {
               className="px-3 text-sm border-l"
             />
 
-            <Button size="sm" className="ml-2" onClick={()=> handleSearch}>
+            <Button size="sm" className="ml-2" onClick={()=> handleSearch()}>
               <SearchIcon size={16} />
             </Button>
             <Button

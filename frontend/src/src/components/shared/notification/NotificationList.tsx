@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../hooks/redux';
 import { markAsRead, markAllAsRead, removeNotification, clearNotifications } from '../../../redux/notificationSlice';
 import { markNotificationRead, markAllNotificationsRead, deleteNotification, clearNotifications as clearNotificationsApi, } from '../../../api/notifications';
@@ -18,6 +19,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
   const notifications = useAppSelector(
     (state) => state.notification.notifications
   );
+  const navigate = useNavigate();
   const displayNotifications = maxItems ?
   notifications.slice(0, maxItems) :
   notifications;
@@ -55,15 +57,51 @@ export const NotificationList: React.FC<NotificationListProps> = ({
   };
 
   const handleNotificationClick = async (
-      notification: Notification
-  ) => {
+        notification: Notification
+    ) => {
 
-      if (!notification.is_read) {
-          await handleMarkAsRead(
-              notification.id
-          );
-      }
-  };
+        if (!notification.is_read) {
+            await handleMarkAsRead(notification.id);
+        }
+        console.log(notification);
+
+        switch (notification.type) {
+
+            case "price_alert":
+                console.log(
+                    notification.source,
+                    notification.destination,
+                    notification.transport_type
+                );
+                
+            case "route_match":
+
+                if (
+                    notification.source &&
+                    notification.destination &&
+                    notification.transport_type
+                ) {
+
+                    navigate(
+                        `/search?source=${encodeURIComponent(notification.source)}&destination=${encodeURIComponent(notification.destination)}&type=${notification.transport_type}`
+                    );
+
+                }
+
+                break;
+
+            case "subscription":
+                navigate("/pricing");
+                break;
+
+            case "chat":
+                navigate("/chat");
+                break;
+
+            default:
+                break;
+        }
+    };
 
   const handleMarkAllAsRead = async () => {
 

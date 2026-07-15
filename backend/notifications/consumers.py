@@ -39,14 +39,6 @@ class NotificationConsumer(
             )
 
 
-    async def receive(
-        self,
-        text_data,
-    ):
-
-        await self.send(
-            text_data=text_data,
-        )
 
     async def send_notification(
         self,
@@ -61,6 +53,10 @@ class NotificationConsumer(
                     "type": event["notification_type"],
                     "created_at": event["created_at"],
                     "is_read": event["is_read"],
+                    "transport_id": event["transport_id"],
+                    "source": event["source"],
+                    "destination": event["destination"],
+                    "transport_type": event["transport_type"],
                 }
             )
         )

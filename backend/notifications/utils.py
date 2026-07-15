@@ -35,6 +35,28 @@ def send_notification(
             "notification_type": notification.type,
             "created_at": notification.created_at.isoformat(),
             "is_read": notification.is_read,
+            "transport_id": (
+                str(notification.transport.id)
+                if notification.transport
+                else None
+            ),
+            "source": (
+                notification.transport.source
+                if notification.transport
+                else None
+            ),
+
+            "destination": (
+                notification.transport.destination
+                if notification.transport
+                else None
+            ),
+
+            "transport_type": (
+                notification.transport.transport_type
+                if notification.transport
+                else None
+            ),
         },
     )
 
