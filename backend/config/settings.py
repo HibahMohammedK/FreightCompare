@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'notifications',
     'price_alerts',
     'ai',
+    'tickets',
 ]
 
 MIDDLEWARE = [
