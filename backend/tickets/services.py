@@ -130,3 +130,28 @@ class TicketAssignmentService:
         next_index = (current_index + 1) % len(candidates)
 
         return candidates[next_index]
+
+    @classmethod
+    def assign_to_staff(cls, ticket, staff):
+        """
+        Manually assign or reassign a ticket to a staff member.
+        """
+
+        ticket.assigned_staff = staff
+
+        if ticket.assigned_at is None:
+            ticket.assigned_at = timezone.now()
+
+        if ticket.status == "open":
+            ticket.status = "assigned"
+
+        ticket.save(
+            update_fields=[
+                "assigned_staff",
+                "assigned_at",
+                "status",
+                "updated_at",
+            ]
+        )
+
+        return ticket

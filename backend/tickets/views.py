@@ -1,4 +1,6 @@
-from rest_framework import generics
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 
@@ -7,13 +9,14 @@ from .serializers import (
     TicketCreateSerializer,
     TicketDetailSerializer,
     TicketListSerializer,
-    TicketStatusSerializer
+    TicketStatusSerializer,
+    TicketAssignSerializer
 )
 from .services import TicketAssignmentService
-from .permissions import CanViewTicket, IsCustomer, CanUpdateTicket
+from .permissions import CanViewTicket, IsCustomer, CanUpdateTicket, IsAdmin
 
 
-class TicketCreateAPIView(generics.CreateAPIView):
+class TicketCreateAPIView(CreateAPIView):
     """
     Create a new support ticket.
     """
@@ -30,7 +33,7 @@ class TicketCreateAPIView(generics.CreateAPIView):
 
 
 
-class TicketListAPIView(generics.ListAPIView):
+class TicketListAPIView(ListAPIView):
     """
     List tickets based on user role.
     """
@@ -60,7 +63,7 @@ class TicketListAPIView(generics.ListAPIView):
 
 
 
-class TicketDetailAPIView(generics.RetrieveAPIView):
+class TicketDetailAPIView(RetrieveAPIView):
     """
     Retrieve a single ticket.
     """
@@ -80,7 +83,7 @@ class TicketDetailAPIView(generics.RetrieveAPIView):
     
 
 
-class TicketStatusAPIView(generics.UpdateAPIView):
+class TicketStatusAPIView(UpdateAPIView):
     """
     Update ticket status.
     """
@@ -118,4 +121,38 @@ class TicketStatusAPIView(generics.UpdateAPIView):
                 "resolved_at",
                 "closed_at",
             ]
+        )
+
+class TicketAssignAPIView(UpdateAPIView):
+    """
+    Assign or reassign a ticket to a staff member.
+    Only administrators can perform this action.
+    """
+
+    queryset = Ticket.objects.select_related(
+        "customer",
+        "assigned_staff",
+    )
+    serializer_class = TicketAssignSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsAdmin,
+    ]
+
+    def update(self, request, *args, **kwargs):
+        ticket = self.get_object()
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        staff = serializer.validated_data["assigned_staff"]
+
+        ticket = TicketAssignmentService.assign_to_staff(
+            ticket=ticket,
+            staff=staff,
+        )
+
+        return Response(
+            TicketDetailSerializer(ticket).data,
+            status=status.HTTP_200_OK,
         )

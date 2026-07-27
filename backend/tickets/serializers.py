@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import Ticket
-
+from users.models import User
 
 class TicketCreateSerializer(serializers.ModelSerializer):
     """
@@ -151,3 +151,20 @@ class TicketStatusSerializer(serializers.ModelSerializer):
         fields = (
             "status",
         )
+
+
+class TicketAssignSerializer(serializers.Serializer):
+    assigned_staff = serializers.UUIDField()
+
+    def validate_assigned_staff(self, value):
+        try:
+            staff = User.objects.get(
+                id=value,
+                role="staff",
+            )
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                "Selected user is not a staff member."
+            )
+
+        return staff
