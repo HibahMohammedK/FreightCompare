@@ -17,21 +17,23 @@ from .permissions import CanViewTicket, IsCustomer, CanUpdateTicket, IsAdmin
 
 
 class TicketCreateAPIView(CreateAPIView):
-    """
-    Create a new support ticket.
-    """
-
     serializer_class = TicketCreateSerializer
     permission_classes = [IsAuthenticated, IsCustomer]
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         ticket = serializer.save(
-            customer=self.request.user,
+            customer=request.user,
         )
 
         TicketAssignmentService.assign(ticket)
 
-
+        return Response(
+            TicketListSerializer(ticket).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 class TicketListAPIView(ListAPIView):
     """

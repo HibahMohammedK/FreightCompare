@@ -1,119 +1,364 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Ticket, TicketMessage, mockTickets } from '../utils/mockData';
+import {
+  createSlice,
+  createAsyncThunk,
+  PayloadAction,
+} from "@reduxjs/toolkit";
+import {
+  getTickets,
+  getTicket,
+  createTicket,
+  updateTicketStatus,
+  assignTicket,
+} from "../api/ticket";
 
-type Role = 'user' | 'staff' | 'admin';
+import type {
+  TicketList,
+  TicketDetail,
+  CreateTicketRequest,
+  UpdateTicketStatusRequest,
+  AssignTicketRequest,
+} from "../types/ticket";
 
 interface TicketState {
-  tickets: Ticket[];
-  activeTicketId: string | null; // ✅ better than storing full object
-  loading: boolean;
-  filter: {
-    status: string;
-    priority: string;
+  tickets: TicketList[];
+  selectedTicket: TicketDetail | null;
+
+  loading: {
+    fetchTickets: boolean;
+    fetchTicket: boolean;
+    createTicket: boolean;
+    updateStatus: boolean;
+    assignTicket: boolean;
   };
+
+  error: string | null;
 }
 
 const initialState: TicketState = {
-  tickets: mockTickets,
-  activeTicketId: null,
-  loading: false,
-  filter: {
-    status: 'all',
-    priority: 'all'
-  }
+  tickets: [],
+  selectedTicket: null,
+
+  loading: {
+    fetchTickets: false,
+    fetchTicket: false,
+    createTicket: false,
+    updateStatus: false,
+    assignTicket: false,
+  },
+
+  error: null,
 };
 
-const ticketSlice = createSlice({
-  name: 'ticket',
-  initialState,
-  reducers: {
-    setTickets: (state, action: PayloadAction<Ticket[]>) => {
-      state.tickets = action.payload;
-    },
+/* ============================================================
+   FETCH ALL TICKETS
+============================================================ */
 
-    setActiveTicket: (state, action: PayloadAction<string | null>) => {
-      state.activeTicketId = action.payload;
-    },
-
-    createTicket: (state, action: PayloadAction<Ticket>) => {
-      state.tickets.unshift(action.payload);
-      state.activeTicketId = action.payload.id;
-    },
-
-    updateTicketStatus: (
-      state,
-      action: PayloadAction<{ id: string; status: Ticket['status'] }>
-    ) => {
-      const ticket = state.tickets.find(t => t.id === action.payload.id);
-      if (!ticket) return;
-
-      ticket.status = action.payload.status;
-      ticket.updatedAt = new Date().toISOString();
-    },
-
-    // 🔥 IMPORTANT: Role-based message control
-    addTicketMessage: (
-      state,
-      action: PayloadAction<{
-        ticketId: string;
-        message: TicketMessage;
-        role: Role;
-      }>
-    ) => {
-      const { ticketId, message, role } = action.payload;
-
-      // ❌ Admin cannot send messages
-      if (role === 'admin') return;
-
-      const ticket = state.tickets.find(t => t.id === ticketId);
-      if (!ticket) return;
-
-      ticket.messages.push(message);
-      ticket.updatedAt = new Date().toISOString();
-
-      // 🔥 Auto lifecycle update
-      if (role === 'staff' && ticket.status === 'open') {
-        ticket.status = 'in-progress';
-      }
-    },
-
-    assignTicket: (
-      state,
-      action: PayloadAction<{ ticketId: string; staffId: string }>
-    ) => {
-      const ticket = state.tickets.find(t => t.id === action.payload.ticketId);
-      if (!ticket) return;
-
-      ticket.assignedTo = action.payload.staffId;
-      ticket.updatedAt = new Date().toISOString();
-    },
-
-    closeTicket: (state, action: PayloadAction<string>) => {
-      const ticket = state.tickets.find(t => t.id === action.payload);
-      if (!ticket) return;
-
-      ticket.status = 'closed';
-      ticket.updatedAt = new Date().toISOString();
-    },
-
-    setTicketFilter: (
-      state,
-      action: PayloadAction<Partial<TicketState['filter']>>
-    ) => {
-      state.filter = { ...state.filter, ...action.payload };
+export const fetchTickets = createAsyncThunk<
+  TicketList[],
+  void,
+  { rejectValue: string }
+>(
+  "ticket/fetchTickets",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await getTickets();
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.detail ??
+          "Failed to fetch tickets."
+      );
     }
   }
+);
+
+/* ============================================================
+   FETCH SINGLE TICKET
+============================================================ */
+
+export const fetchTicket = createAsyncThunk<
+  TicketDetail,
+  string,
+  { rejectValue: string }
+>(
+  "ticket/fetchTicket",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await getTicket(id);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.detail ??
+          "Failed to fetch ticket."
+      );
+    }
+  }
+);
+
+/* ============================================================
+   CREATE TICKET
+============================================================ */
+
+export const createNewTicket = createAsyncThunk<
+  TicketList,
+  CreateTicketRequest,
+  { rejectValue: string }
+>(
+  "ticket/createTicket",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await createTicket(data);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.detail ??
+          "Failed to create ticket."
+      );
+    }
+  }
+);
+
+/* ============================================================
+   UPDATE STATUS
+============================================================ */
+
+export const updateTicket = createAsyncThunk<
+  TicketDetail,
+  {
+    id: string;
+    data: UpdateTicketStatusRequest;
+  },
+  { rejectValue: string }
+>(
+  "ticket/updateStatus",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response =
+        await updateTicketStatus(id, data);
+
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.detail ??
+          "Failed to update ticket."
+      );
+    }
+  }
+);
+
+/* ============================================================
+   ASSIGN STAFF
+============================================================ */
+
+export const assignTicketToStaff =
+  createAsyncThunk<
+    TicketDetail,
+    {
+      id: string;
+      data: AssignTicketRequest;
+    },
+    { rejectValue: string }
+  >(
+    "ticket/assignTicket",
+    async (
+      { id, data },
+      { rejectWithValue }
+    ) => {
+      try {
+        const response =
+          await assignTicket(id, data);
+
+        return response.data;
+      } catch (error: any) {
+        return rejectWithValue(
+          error.response?.data?.detail ??
+            "Failed to assign ticket."
+        );
+      }
+    }
+  );
+  const ticketSlice = createSlice({
+  name: "ticket",
+  initialState,
+  reducers: {
+    clearSelectedTicket: (state) => {
+      state.selectedTicket = null;
+    },
+
+    clearTicketError: (state) => {
+      state.error = null;
+    },
+  },
+
+  extraReducers: (builder) => {
+    builder
+
+      /* ============================================================
+         FETCH TICKETS
+      ============================================================ */
+
+      .addCase(fetchTickets.pending, (state) => {
+        state.loading.fetchTickets = true;
+        state.error = null;
+      })
+
+      .addCase(
+        fetchTickets.fulfilled,
+        (state, action: PayloadAction<TicketList[]>) => {
+          state.loading.fetchTickets = false;
+          state.tickets = action.payload;
+        }
+      )
+
+      .addCase(fetchTickets.rejected, (state, action) => {
+        state.loading.fetchTickets = false;
+        state.error =
+          action.payload ?? "Failed to fetch tickets.";
+      })
+
+      /* ============================================================
+         FETCH SINGLE TICKET
+      ============================================================ */
+
+      .addCase(fetchTicket.pending, (state) => {
+        state.loading.fetchTicket = true;
+        state.error = null;
+      })
+
+      .addCase(
+        fetchTicket.fulfilled,
+        (state, action: PayloadAction<TicketDetail>) => {
+          state.loading.fetchTicket = false;
+          state.selectedTicket = action.payload;
+        }
+      )
+
+      .addCase(fetchTicket.rejected, (state, action) => {
+        state.loading.fetchTicket = false;
+        state.error =
+          action.payload ?? "Failed to fetch ticket.";
+      })
+
+      /* ============================================================
+         CREATE TICKET
+      ============================================================ */
+
+      .addCase(createNewTicket.pending, (state) => {
+        state.loading.createTicket = true;
+        state.error = null;
+      })
+
+      .addCase(
+        createNewTicket.fulfilled,
+        (state, action: PayloadAction<TicketList>) => {
+          state.loading.createTicket = false;
+
+          // Immediately show the new ticket
+          state.tickets.unshift(action.payload);
+        }
+      )
+
+      .addCase(createNewTicket.rejected, (state, action) => {
+        state.loading.createTicket = false;
+        state.error =
+          action.payload ?? "Failed to create ticket.";
+      })
+
+      /* ============================================================
+         UPDATE STATUS
+      ============================================================ */
+
+      .addCase(updateTicket.pending, (state) => {
+        state.loading.updateStatus = true;
+        state.error = null;
+      })
+
+      .addCase(
+        updateTicket.fulfilled,
+        (state, action: PayloadAction<TicketDetail>) => {
+          state.loading.updateStatus = false;
+
+          if (
+            state.selectedTicket &&
+            state.selectedTicket.id === action.payload.id
+          ) {
+            state.selectedTicket = action.payload;
+          }
+
+          const index = state.tickets.findIndex(
+            (ticket) => ticket.id === action.payload.id
+          );
+
+          if (index !== -1) {
+            state.tickets[index].status =
+              action.payload.status;
+
+            state.tickets[index].assigned_staff_name =
+              action.payload.assigned_staff_name;
+
+            state.tickets[index].assigned_staff_email =
+              action.payload.assigned_staff_email;
+          }
+        }
+      )
+
+      .addCase(updateTicket.rejected, (state, action) => {
+        state.loading.updateStatus = false;
+        state.error =
+          action.payload ??
+          "Failed to update ticket status.";
+      })
+
+      /* ============================================================
+         ASSIGN STAFF
+      ============================================================ */
+
+      .addCase(assignTicketToStaff.pending, (state) => {
+        state.loading.assignTicket = true;
+        state.error = null;
+      })
+
+      .addCase(
+        assignTicketToStaff.fulfilled,
+        (state, action: PayloadAction<TicketDetail>) => {
+          state.loading.assignTicket = false;
+
+          if (
+            state.selectedTicket &&
+            state.selectedTicket.id === action.payload.id
+          ) {
+            state.selectedTicket = action.payload;
+          }
+
+          const index = state.tickets.findIndex(
+            (ticket) => ticket.id === action.payload.id
+          );
+
+          if (index !== -1) {
+            state.tickets[index].status =
+              action.payload.status;
+
+            state.tickets[index].assigned_staff_name =
+              action.payload.assigned_staff_name;
+
+            state.tickets[index].assigned_staff_email =
+              action.payload.assigned_staff_email;
+          }
+        }
+      )
+
+      .addCase(assignTicketToStaff.rejected, (state, action) => {
+        state.loading.assignTicket = false;
+        state.error =
+          action.payload ??
+          "Failed to assign ticket.";
+      });
+  },
 });
 
 export const {
-  setTickets,
-  setActiveTicket,
-  createTicket,
-  updateTicketStatus,
-  addTicketMessage,
-  setTicketFilter,
-  assignTicket,
-  closeTicket
+  clearSelectedTicket,
+  clearTicketError,
 } = ticketSlice.actions;
 
 export default ticketSlice.reducer;

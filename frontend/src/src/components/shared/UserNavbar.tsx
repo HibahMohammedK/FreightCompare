@@ -71,8 +71,8 @@ export const UserNavbar: React.FC = () => {
     icon: <CreditCardIcon size={16} />
   },
   {
-    name: 'Chat',
-    path: '/chat',
+    name: 'Support',
+    path: '/support',
     icon: <MessageSquareIcon size={16} />
   }];
 
