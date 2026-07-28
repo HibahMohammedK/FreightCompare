@@ -30,14 +30,13 @@ import { SupportPage } from './src/pages/customer/SupportPage';
 import { SubscriptionCancelPage } from './src/pages/customer/SubscriptionCancelPage';
 import { SubscriptionSuccessPage } from './src/pages/customer/SubscriptionSuccessPage';
 import { CustomerSupportPage } from './src/pages/customer/CustomerSupportPage';
-import { CustomerTicketDetailPage } from './src/pages/customer/CustomerTicketDetailPage';
 import { UserChatPage } from './src/pages/customer/UserChatPage';
 import { PriceAlertsPage } from './src/pages/customer/PriceAlertsPage';
 
 // Staff
 import { StaffLayout } from './src/components/staff/StaffLayout';
 import { StaffDashboardPage } from './src/pages/staff/StaffDashboardPage';
-// import { StaffTicketsPage } from './src/pages/staff/StaffTicketsPage';
+import { StaffTicketsPage } from './src/pages/staff/StaffTicketsPage';
 import { StaffChatPage } from './src/pages/staff/StaffChatPage';
 import { StaffProfilePage } from './src/pages/staff/StaffProfilePage';
 
@@ -47,7 +46,7 @@ import { AdminDashboardPage } from './src/pages/admin/AdminDashboardPage';
 import { UserManagementPage } from './src/pages/admin/UserManagementPage';
 import { SubscriptionManagementPage } from './src/pages/admin/SubscriptionManagementPage';
 import { StaffManagementPage } from './src/pages/admin/StaffManagementPage';
-// import { TicketMonitoringPage } from './src/pages/admin/TicketMonitoringPage';
+import { TicketMonitoringPage } from './src/pages/admin/TicketMonitoringPage';
 import { ChatMonitoringPage } from './src/pages/admin/ChatMonitoringPage';
 import { TransportManagementPage } from './src/pages/admin/TransportManagementPage';
 import { CompanyManagementPage } from './src/pages/admin/CompanyManagementPage';
@@ -166,7 +165,6 @@ export function App() {
           <Route path="/subscription/success" element={<SubscriptionSuccessPage />}/>
           <Route path="/subscription/cancel" element={<SubscriptionCancelPage />}/>
           <Route path="/support" element={<CustomerSupportPage />} />
-          <Route  path="/support/:id" element={<CustomerTicketDetailPage />}/>
           <Route path="/chat" element={<UserChatPage />} />
         </Route>
 
@@ -180,7 +178,7 @@ export function App() {
             <Route path="companies" element={<CompanyManagementPage />} />
             <Route path="csv-upload" element={<CsvUploadPage />} />
             <Route path="staff" element={<StaffManagementPage />} />
-            {/* <Route path="tickets" element={<TicketMonitoringPage />} /> */}
+            <Route path="tickets" element={<TicketMonitoringPage />} />
             <Route path="chats" element={<ChatMonitoringPage />} />
           </Route>
         </Route>
@@ -189,7 +187,7 @@ export function App() {
           <Route path="/staff" element={<StaffLayout />}>
             <Route path="/staff/profile" element={<StaffProfilePage />} />
             <Route index element={<StaffDashboardPage />} />
-            {/* <Route path="tickets" element={<StaffTicketsPage />} /> */}
+            <Route path="tickets" element={<StaffTicketsPage />} />
             <Route path="chat" element={<StaffChatPage />} />
           </Route>
         </Route>

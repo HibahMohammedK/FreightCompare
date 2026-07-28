@@ -37,10 +37,14 @@ export interface CreateTicketRequest {
 export interface TicketList {
   id: string;
   ticket_number: string;
+
   subject: string;
   category: TicketCategory;
   priority: TicketPriority;
   status: TicketStatus;
+
+  customer_name: string;
+  customer_email: string;
 
   assigned_staff_name: string | null;
   assigned_staff_email: string | null;

@@ -43,6 +43,9 @@ class TicketListSerializer(serializers.ModelSerializer):
     Serializer used when listing tickets.
     """
 
+    customer_name = serializers.SerializerMethodField()
+    customer_email = serializers.SerializerMethodField()
+
     assigned_staff_name = serializers.SerializerMethodField()
     assigned_staff_email = serializers.SerializerMethodField()
 
@@ -55,10 +58,20 @@ class TicketListSerializer(serializers.ModelSerializer):
             "category",
             "priority",
             "status",
+            "customer_name",
+            "customer_email",
             "assigned_staff_name",
             "assigned_staff_email",
             "created_at",
         )
+
+    def get_customer_name(self, obj):
+        full_name = obj.customer.get_full_name().strip()
+
+        return full_name or obj.customer.username
+
+    def get_customer_email(self, obj):
+        return obj.customer.email
 
     def get_assigned_staff_name(self, obj):
         if not obj.assigned_staff:
@@ -67,7 +80,6 @@ class TicketListSerializer(serializers.ModelSerializer):
         full_name = obj.assigned_staff.get_full_name().strip()
 
         return full_name or obj.assigned_staff.username
-
 
     def get_assigned_staff_email(self, obj):
         if obj.assigned_staff:
