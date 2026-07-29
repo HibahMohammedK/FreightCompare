@@ -5,6 +5,8 @@ import { updateTicket } from "../../../redux/ticketSlice";
 import { Button } from '../Button';
 import { format } from 'date-fns';
 import { SendIcon, UserIcon, ShieldIcon, CheckCircleIcon } from 'lucide-react';
+import { toast } from "sonner";
+
 
 interface TicketDetailsProps {
   ticket: TicketDetail | null;
@@ -58,6 +60,27 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
   //   setReply('');
   // };
   const isClosed = ticket.status === 'closed' || ticket.status === 'resolved';
+
+
+
+  const handleCloseTicket = async () => {
+  if (!ticket) return;
+
+  try {
+    await dispatch(
+      updateTicket({
+        id: ticket.id,
+        data: {
+          status: "closed",
+        },
+      })
+    ).unwrap();
+
+    toast.success("Ticket closed successfully.");
+  } catch (error) {
+    toast.error("Failed to close ticket.");
+  }
+};
   return (
     <div className="flex-1 flex flex-col bg-bg-light min-w-0">
       {/* Header */}
@@ -74,23 +97,16 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
             </div>
             <p className="text-sm text-text-medium">{ticket.description}</p>
           </div>
-          {role === 'staff' && !isClosed && 
-          (<Button
-            variant="outline"
-            size="sm"
-            onClick={() => dispatch(
-                        updateTicket({
-                            id: ticket.id,
-                            data: {
-                                status: "closed",
-                            },
-                        })
-                    )}
-            icon={<CheckCircleIcon size={16} />}>
-            
+          {(role === "staff" || role === "admin") && !isClosed && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCloseTicket}
+              icon={<CheckCircleIcon size={16} />}
+            >
               Close Ticket
-            </Button>)
-          }
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center gap-6 text-sm">

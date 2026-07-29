@@ -32,7 +32,7 @@ export const TicketMonitoringPage: React.FC = () => {
 
       const matchesSearch =
           (ticket.subject ?? "").toLowerCase().includes(query) ||
-          (ticket.ticket_number ?? "").toLowerCase().includes(query);
+          (ticket.ticket_number ?? "").toLowerCase().includes(query)||
           (ticket.customer_name ?? "").toLowerCase().includes(query);
 
       return matchesFilter && matchesSearch;

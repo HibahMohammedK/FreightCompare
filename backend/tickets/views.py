@@ -84,7 +84,6 @@ class TicketDetailAPIView(RetrieveAPIView):
         )
     
 
-
 class TicketStatusAPIView(UpdateAPIView):
     """
     Update ticket status.
@@ -125,6 +124,26 @@ class TicketStatusAPIView(UpdateAPIView):
             ]
         )
 
+    def update(self, request, *args, **kwargs):
+        ticket = self.get_object()
+
+        serializer = self.get_serializer(
+            ticket,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_update(serializer)
+
+        # Refresh in case perform_update modified fields
+        ticket.refresh_from_db()
+
+        return Response(
+            TicketDetailSerializer(ticket).data,
+            status=status.HTTP_200_OK,
+        )
+    
 class TicketAssignAPIView(UpdateAPIView):
     """
     Assign or reassign a ticket to a staff member.
