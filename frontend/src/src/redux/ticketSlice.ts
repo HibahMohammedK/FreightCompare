@@ -98,11 +98,18 @@ export const fetchTicket = createAsyncThunk<
 /* ============================================================
    CREATE TICKET
 ============================================================ */
+export interface TicketValidationErrors {
+  subject?: string[];
+  description?: string[];
+  category?: string[];
+  priority?: string[];
+  detail?: string;
+}
 
 export const createNewTicket = createAsyncThunk<
   TicketList,
   CreateTicketRequest,
-  { rejectValue: string }
+  { rejectValue: TicketValidationErrors }
 >(
   "ticket/createTicket",
   async (data, { rejectWithValue }) => {
@@ -111,8 +118,9 @@ export const createNewTicket = createAsyncThunk<
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.detail ??
-          "Failed to create ticket."
+        error.response?.data ?? {
+          detail: "Failed to create ticket.",
+        }
       );
     }
   }
@@ -240,12 +248,11 @@ export const assignTicketToStaff =
       })
 
       /* ============================================================
-         CREATE TICKET
+          CREATE TICKET
       ============================================================ */
 
       .addCase(createNewTicket.pending, (state) => {
         state.loading.createTicket = true;
-        state.error = null;
       })
 
       .addCase(
@@ -253,16 +260,17 @@ export const assignTicketToStaff =
         (state, action: PayloadAction<TicketList>) => {
           state.loading.createTicket = false;
 
-          // Immediately show the new ticket
           state.tickets.unshift(action.payload);
+
+          state.selectedTicket = null;
         }
       )
 
-      .addCase(createNewTicket.rejected, (state, action) => {
+      .addCase(createNewTicket.rejected, (state) => {
         state.loading.createTicket = false;
-        state.error =
-          action.payload ?? "Failed to create ticket.";
       })
+
+
 
       /* ============================================================
          UPDATE STATUS

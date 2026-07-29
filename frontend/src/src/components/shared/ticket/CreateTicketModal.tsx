@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Modal } from "../Modal";
 import { Button } from "../Button";
 import { TicketForm } from "./TicketForm";
+import { toast } from "sonner";
 
 import { useAppDispatch} from "../../../hooks/redux";
-
-import { createNewTicket } from "../../../redux/ticketSlice";
-
+import {
+  createNewTicket,
+  fetchTicket,
+} from "../../../redux/ticketSlice";
 import { CreateTicketRequest } from "../../../types/ticket";
 
 interface Option {
@@ -101,25 +103,41 @@ export const CreateTicketModal: React.FC<Props> = ({
     };
 
     try {
-      const result = await dispatch(createNewTicket(payload));
+      const ticket = await dispatch(
+        createNewTicket(payload)
+      ).unwrap();
 
-      if (createNewTicket.fulfilled.match(result)) {
-        // Reset form
-        setFormData({
-          subject: "",
-          category: null,
-          priority: null,
-          description: "",
+      // Open the newly created ticket immediately
+      dispatch(fetchTicket(ticket.id));
+
+      toast.success("Support ticket created successfully.");
+
+      setFormData({
+        subject: "",
+        category: null,
+        priority: null,
+        description: "",
+      });
+
+      setErrors({});
+
+      onClose();
+    } catch (error: any) {
+      if (
+        error.subject ||
+        error.description ||
+        error.category ||
+        error.priority
+      ) {
+        setErrors({
+          subject: error.subject?.[0] ?? "",
+          category: error.category?.[0] ?? "",
+          priority: error.priority?.[0] ?? "",
+          description: error.description?.[0] ?? "",
         });
-
-        setErrors({});
-
-        onClose();
-      } else if (createNewTicket.rejected.match(result)) {
-        console.error(result.payload);
+      } else {
+        toast.error(error.detail ?? "Failed to create support ticket.");
       }
-    } catch (error) {
-      console.error("Failed to create ticket:", error);
     } finally {
       setLoading(false);
     }
@@ -141,6 +159,7 @@ export const CreateTicketModal: React.FC<Props> = ({
         <Button
           variant="outline"
           onClick={onClose}
+          disabled={loading}
         >
           Cancel
         </Button>

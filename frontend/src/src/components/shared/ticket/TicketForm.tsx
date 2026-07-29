@@ -30,8 +30,9 @@ const categoryOptions: Option[] = [
   { value: "payment", label: "Payment" },
   { value: "subscription", label: "Subscription" },
   { value: "technical", label: "Technical" },
-  { value: "account", label: "Account" },
-  { value: "other", label: "Other" },
+  { value: "company", label: "Company" },
+  { value: "ai", label: "AI Assistant" },
+  { value: "general", label: "General" },
 ];
 
 const priorityOptions: Option[] = [
@@ -101,7 +102,7 @@ export const TicketForm: React.FC<TicketFormProps> = ({
         </label>
 
         <textarea
-          rows={6}
+          rows={3}
           className="
             w-full rounded-xl border border-border-light
             bg-white px-4 py-3 text-sm text-text-darker
@@ -110,7 +111,9 @@ export const TicketForm: React.FC<TicketFormProps> = ({
             focus:ring-1
             focus:ring-primary
             focus:outline-none
-            resize-none
+            resize-y
+            min-h-[80px]
+            max-h-[350px]
           "
           placeholder="Describe your issue in detail..."
           value={formData.description}

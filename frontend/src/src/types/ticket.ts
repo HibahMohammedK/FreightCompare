@@ -1,10 +1,11 @@
 export type TicketCategory =
   | "transport"
-  | "payment"
   | "subscription"
+  | "payment"
   | "technical"
-  | "account"
-  | "other";
+  | "ai"
+  | "company"
+  | "general";
 
 export type TicketPriority =
   | "low"
