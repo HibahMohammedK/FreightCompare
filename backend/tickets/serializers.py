@@ -173,10 +173,11 @@ class TicketAssignSerializer(serializers.Serializer):
             staff = User.objects.get(
                 id=value,
                 role="staff",
+                is_active=True,
             )
         except User.DoesNotExist:
             raise serializers.ValidationError(
-                "Selected user is not a staff member."
+                "Selected staff member does not exist."
             )
 
         return staff

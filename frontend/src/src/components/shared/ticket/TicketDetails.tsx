@@ -6,6 +6,7 @@ import { Button } from '../Button';
 import { format } from 'date-fns';
 import { SendIcon, UserIcon, ShieldIcon, CheckCircleIcon } from 'lucide-react';
 import { toast } from "sonner";
+import { AssignTicketModal } from "./AssignTicketModal";
 
 
 interface TicketDetailsProps {
@@ -19,6 +20,7 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
   const [reply, setReply] = useState('');
+  const [showAssignModal, setShowAssignModal] = useState(false);
   // const messagesEndRef = useRef<HTMLDivElement>(null);
   // useEffect(() => {
   //   messagesEndRef.current?.scrollIntoView({
@@ -98,14 +100,30 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
             <p className="text-sm text-text-medium">{ticket.description}</p>
           </div>
           {(role === "staff" || role === "admin") && !isClosed && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCloseTicket}
-              icon={<CheckCircleIcon size={16} />}
-            >
-              Close Ticket
-            </Button>
+            <div className="flex gap-2">
+
+              {role === "admin" && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowAssignModal(true)}
+                >
+                  {ticket.assigned_staff
+                    ? "Reassign"
+                    : "Assign"}
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCloseTicket}
+                icon={<CheckCircleIcon size={16} />}
+              >
+                Close Ticket
+              </Button>
+
+            </div>
           )}
         </div>
 
@@ -199,6 +217,13 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
           </form>
         )}
       </div> */}
+
+      <AssignTicketModal
+          isOpen={showAssignModal}
+          onClose={() => setShowAssignModal(false)}
+          ticket={ticket}
+          currentStaff={ticket.assigned_staff_name}
+      />
     </div>);
 
 };
