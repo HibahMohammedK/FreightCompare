@@ -22,6 +22,9 @@ from rest_framework.permissions import BasePermission
 from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView
 from rest_framework.pagination import PageNumberPagination
 
+from realtime.broadcaster import SupportBroadcaster
+from realtime.events import STAFF_STATUS_CHANGED
+
 from .serializers import (
     AdminUserListSerializer,
     CreateStaffSerializer,
@@ -670,13 +673,25 @@ class UpdateStaffStatusView(APIView):
                 status=400
             )
 
+        old_status = user.status
+
         user.status = status_value
         user.save()
 
-        return Response({
-            "message": "Status updated",
-            "status": user.status
-        })
+        SupportBroadcaster.broadcast(
+            event=STAFF_STATUS_CHANGED,
+            data={
+                "user_id": str(user.id),
+                "status": user.status,
+            },
+        )
+
+        return Response(
+            {
+                "message": "Status updated",
+                "status": user.status,
+            }
+        )
 
 
 # ===================================================================================
@@ -716,9 +731,17 @@ class StaffUpdateOwnStatusView(APIView):
             request.user.status = status_value
             request.user.save()
 
+            SupportBroadcaster.broadcast(
+                event=STAFF_STATUS_CHANGED,
+                data={
+                    "user_id": str(request.user.id),
+                    "status": request.user.status,
+                },
+            )
+
             return Response({
                 "message": "Status updated",
-                "status": request.user.status
+                "status": request.user.status,
             })
 
         except Exception as e:

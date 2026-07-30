@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'price_alerts',
     'ai',
     'tickets',
+    'realtime',
 ]
 
 MIDDLEWARE = [

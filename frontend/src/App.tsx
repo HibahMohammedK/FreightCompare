@@ -5,6 +5,7 @@ import { setAccessToken, setUser, logout, setAuthLoading } from "./src/redux/aut
 import API from "./src/api/axios";
 import { getProfile } from "./src/api/auth";
 import { notificationSocket } from "./src/websocket/notificationSocket";
+import { supportSocket } from './src/websocket/supportSocket';
 import { getNotifications } from './src/api/notifications';
 import { setNotifications } from './src/redux/notificationSlice';
 import { NotificationToast } from "./src/components/shared/notification/NotificationToast";
@@ -75,6 +76,7 @@ export function App() {
         notificationSocket.connect(
             res.data.access
         );
+        supportSocket.connect(res.data.access);
 
         const profile =
             await getProfile();
