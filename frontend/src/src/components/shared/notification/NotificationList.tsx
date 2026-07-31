@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../hooks/redux';
 import { markAsRead, markAllAsRead, removeNotification, clearNotifications } from '../../../redux/notificationSlice';
 import { markNotificationRead, markAllNotificationsRead, deleteNotification, clearNotifications as clearNotificationsApi, } from '../../../api/notifications';
-import type { Notification } from "../../../redux/notificationSlice";
+import type { Notification } from "../../../types/notification"
 import { BellIcon, CheckIcon, Trash2Icon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { NotificationTypeIcon } from './NotificationTypeIcon';
+import { navigateFromNotification } from "../../../services/notificationNavigation";
 
 interface NotificationListProps {
   maxItems?: number;
@@ -56,6 +57,10 @@ export const NotificationList: React.FC<NotificationListProps> = ({
 
   };
 
+  const role = useAppSelector(
+        (state) => state.auth.user?.role
+    );
+
   const handleNotificationClick = async (
         notification: Notification
     ) => {
@@ -63,44 +68,14 @@ export const NotificationList: React.FC<NotificationListProps> = ({
         if (!notification.is_read) {
             await handleMarkAsRead(notification.id);
         }
+
         console.log(notification);
 
-        switch (notification.type) {
-
-            case "price_alert":
-                console.log(
-                    notification.source,
-                    notification.destination,
-                    notification.transport_type
-                );
-                
-            case "route_match":
-
-                if (
-                    notification.source &&
-                    notification.destination &&
-                    notification.transport_type
-                ) {
-
-                    navigate(
-                        `/search?source=${encodeURIComponent(notification.source)}&destination=${encodeURIComponent(notification.destination)}&type=${notification.transport_type}`
-                    );
-
-                }
-
-                break;
-
-            case "subscription":
-                navigate("/pricing");
-                break;
-
-            case "chat":
-                navigate("/chat");
-                break;
-
-            default:
-                break;
-        }
+        navigateFromNotification(
+            notification,
+            role!,
+            navigate,
+        );
     };
 
   const handleMarkAllAsRead = async () => {

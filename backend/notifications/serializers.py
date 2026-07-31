@@ -12,6 +12,11 @@ class NotificationSerializer(
         read_only=True,
     )
 
+    ticket_id = serializers.UUIDField(
+        source="ticket.id",
+        read_only=True,
+    )
+
     source = serializers.CharField(
         source="transport.source",
         read_only=True,
@@ -39,6 +44,7 @@ class NotificationSerializer(
             "is_read",
             "created_at",
             "transport_id",
+            "ticket_id",
             "source",
             "destination",
             "transport_type",

@@ -5,6 +5,7 @@ import {
     RouteIcon,
     TagIcon,
     CreditCardIcon,
+    TicketIcon
 } from "lucide-react";
 
 interface NotificationTypeIconProps {
@@ -30,6 +31,9 @@ export const NotificationTypeIcon = ({
 
         case "ai":
             return <BotIcon size={size} />;
+           
+        case "ticket":
+            return <TicketIcon size={size} />;
 
         case "chat":
             return <MessageSquareIcon size={size} />;

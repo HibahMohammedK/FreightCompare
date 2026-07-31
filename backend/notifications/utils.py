@@ -12,6 +12,7 @@ def send_notification(
     message,
     notification_type=Notification.SYSTEM,
     transport=None,
+    ticket=None,
 ):
     notification = Notification.objects.create(
         user=user,
@@ -19,6 +20,7 @@ def send_notification(
         message=message,
         type=notification_type,
         transport=transport,
+        ticket=ticket,
     )
 
     channel_layer = get_channel_layer()
@@ -38,6 +40,11 @@ def send_notification(
             "transport_id": (
                 str(notification.transport.id)
                 if notification.transport
+                else None
+            ),
+            "ticket_id": (
+                str(notification.ticket.id)
+                if notification.ticket
                 else None
             ),
             "source": (

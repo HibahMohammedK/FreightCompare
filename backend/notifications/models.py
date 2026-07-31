@@ -58,6 +58,14 @@ class Notification(models.Model):
         related_name="notifications",
     )
 
+    ticket = models.ForeignKey(
+        "tickets.Ticket",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
     )

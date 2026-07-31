@@ -87,6 +87,7 @@ class TicketAssignmentService:
                 "has been assigned to you."
             ),
             notification_type=Notification.TICKET,
+            ticket=ticket,
         )
 
         SupportBroadcaster.broadcast(
@@ -273,6 +274,7 @@ class TicketStatusService:
                     "has been resolved."
                 ),
                 notification_type=Notification.TICKET,
+                ticket=ticket,
             )
 
         elif status == "closed":
@@ -285,6 +287,7 @@ class TicketStatusService:
                     "has been closed."
                 ),
                 notification_type=Notification.TICKET,
+                ticket=ticket,
             )
 
         # Realtime update
