@@ -46,6 +46,11 @@ class TicketListSerializer(serializers.ModelSerializer):
     customer_name = serializers.SerializerMethodField()
     customer_email = serializers.SerializerMethodField()
 
+    assigned_staff = serializers.UUIDField(
+        source="assigned_staff.id",
+        allow_null=True,
+        read_only=True,
+    )
     assigned_staff_name = serializers.SerializerMethodField()
     assigned_staff_email = serializers.SerializerMethodField()
 
@@ -60,6 +65,7 @@ class TicketListSerializer(serializers.ModelSerializer):
             "status",
             "customer_name",
             "customer_email",
+            "assigned_staff",
             "assigned_staff_name",
             "assigned_staff_email",
             "created_at",
@@ -97,6 +103,12 @@ class TicketDetailSerializer(serializers.ModelSerializer):
 
     customer_email = serializers.EmailField(
         source="customer.email",
+        read_only=True,
+    )
+
+    assigned_staff = serializers.UUIDField(
+        source="assigned_staff.id",
+        allow_null=True,
         read_only=True,
     )
 

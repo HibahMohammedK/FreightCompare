@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/shared/Card';
 import { Button } from '../../components/shared/Button';
 import { TicketCard } from '../../components/shared/ticket/TicketCard';
+import { useAppDispatch } from '../../hooks/redux';
+import { fetchTickets } from '../../redux/ticketSlice';
 import {
   TicketIcon,
   MessageSquareIcon,
@@ -12,26 +14,46 @@ import {
 'lucide-react';
 import { useAppSelector } from '../../hooks/redux';
 import { formatDistanceToNow } from 'date-fns';
+
 export const StaffDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
-  const tickets = useAppSelector((state) => state.ticket.tickets);
+  const dispatch = useAppDispatch()
+  useEffect(() => {
+    dispatch(fetchTickets());
+  }, [dispatch]);
+  const tickets = useAppSelector(
+      (state) => state.ticket.tickets
+  );
+  const assignedTickets = tickets.filter(
+      (ticket) => ticket.assigned_staff === user?.id
+  );
   const conversations = useAppSelector((state) => state.chat.conversations);
   // Filter assigned tickets
-  const assignedTickets = tickets.filter(
-    (t) => t.assignedTo === user?.id || t.assignedTo === 's1'
+  const assignedCount = assignedTickets.filter(
+      (t) => t.status === "assigned"
   );
-  const openTickets = assignedTickets.filter((t) => t.status === 'open');
+
   const inProgressTickets = assignedTickets.filter(
-    (t) => t.status === 'in-progress'
+      (t) => t.status === "in_progress"
   );
-  const resolvedTickets = assignedTickets.filter((t) => t.status === 'resolved');
-  // Filter active chats
+
+  const resolvedTickets = assignedTickets.filter(
+      (t) => t.status === "resolved"
+  );
   const activeChats = conversations.filter((c) => c.status === 'active');
+
+  const recentTickets = [...assignedTickets]
+    .sort(
+        (a, b) =>
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+    )
+    .slice(0, 5);
   const metrics = [
   {
-    label: 'Open Tickets',
-    value: openTickets.length,
+    label: 'Assigned',
+    value: assignedCount.length,
     icon: <TicketIcon size={24} />,
     color: 'text-error',
     bg: 'bg-error-bg'
@@ -94,22 +116,25 @@ export const StaffDashboardPage: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-text-dark">Recent Tickets</h2>
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/staff/tickets')}
-              className="text-primary">
-              
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/staff/tickets")}
+                className="text-primary"
+            >
               View All <ArrowRightIcon size={16} className="ml-1" />
             </Button>
           </div>
           <div className="space-y-4">
-            {assignedTickets.slice(0, 5).map((ticket) =>
-            <TicketCard
-              key={ticket.id}
-              ticket={ticket}
-              onClick={() => navigate('/staff/tickets')} />
-
-            )}
+            {recentTickets.map((ticket) => (
+                <TicketCard
+                    key={ticket.id}
+                    ticket={ticket}
+                    onClick={() =>
+                        navigate(`/staff/tickets?ticket=${ticket.id}`)
+                    }
+                    showAssignedStaff={false}
+                />
+            ))}
             {assignedTickets.length === 0 &&
             <Card className="p-8 text-center text-text-light">
                 No tickets assigned to you.

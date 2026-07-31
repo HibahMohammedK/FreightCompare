@@ -17,7 +17,6 @@ export type TicketStatus =
   | "open"
   | "assigned"
   | "in_progress"
-  | "waiting_customer"
   | "resolved"
   | "closed";
 
@@ -47,6 +46,7 @@ export interface TicketList {
   customer_name: string;
   customer_email: string;
 
+  assigned_staff: string | null;
   assigned_staff_name: string | null;
   assigned_staff_email: string | null;
 

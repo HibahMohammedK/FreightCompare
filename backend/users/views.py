@@ -37,6 +37,8 @@ from .serializers import (
 from .utils import verify_google_token
 from .exceptions import handle_exception
 from tickets.services import TicketAssignmentService
+from subscription.models import Subscription
+from tickets.models import Ticket
 
 # =========================
 # REGISTER
@@ -547,11 +549,23 @@ class AdminDashboardView(APIView):
             status="offline"
         ).count()
 
+        premium_users = Subscription.objects.filter(
+            status="active"
+        ).count()
+
+        open_tickets = Ticket.objects.filter(
+            status__in=[
+                "open",
+                "assigned",
+                "in_progress",
+            ]
+        ).count()
+
         return Response({
             "total_users": total_users,
-            "premium_users": 0,
+            "premium_users": premium_users,
             "active_staff": active_staff,
-            "open_tickets": 0,
+            "open_tickets": open_tickets,
             "active_chats": 0
         })
         
