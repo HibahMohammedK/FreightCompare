@@ -10,7 +10,6 @@ class Ticket(models.Model):
         ("open", "Open"),
         ("assigned", "Assigned"),
         ("in_progress", "In Progress"),
-        ("waiting_customer", "Waiting for Customer"),
         ("resolved", "Resolved"),
         ("closed", "Closed"),
     )

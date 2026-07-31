@@ -1,7 +1,7 @@
 import store from "../redux/store";
 import { updateStaffStatus } from "../redux/staffSlice";
 import { updateUserStatus } from "../redux/authSlice";
-import { ticketAssigned } from "../redux/ticketSlice";
+import { ticketAssigned, ticketStatusChanged, ticketCreated } from "../redux/ticketSlice";
 
 class SupportSocket {
 
@@ -64,12 +64,30 @@ class SupportSocket {
                     break;
                 }
 
+                case "ticket_created": {
+
+                    store.dispatch(
+                        ticketCreated(message.data)
+                    );
+
+                    break;
+                }
+
                 case "ticket_assigned": {
 
                     store.dispatch(
                         ticketAssigned(message.data)
                     );
 
+
+                    break;
+                }
+
+                case "ticket_status_changed": {
+
+                    store.dispatch(
+                        ticketStatusChanged(message.data)
+                    );
 
                     break;
                 }

@@ -197,6 +197,21 @@ export const assignTicketToStaff =
     clearTicketError: (state) => {
       state.error = null;
     },
+
+    ticketCreated: (
+        state,
+        action: PayloadAction<TicketList>
+    ) => {
+
+        const exists = state.tickets.some(
+            ticket => ticket.id === action.payload.id
+        );
+
+        if (!exists) {
+            state.tickets.unshift(action.payload);
+        }
+
+    },
     
     ticketAssigned: (
         state,
@@ -238,6 +253,44 @@ export const assignTicketToStaff =
 
             state.tickets[index].assigned_staff_email =
                 action.payload.assigned_staff_email;
+        }
+
+    },
+
+    ticketStatusChanged: (
+        state,
+        action: PayloadAction<{
+            ticket_id: string;
+            status: TicketStatus;
+            resolved_at: string | null;
+            closed_at: string | null;
+        }>
+    ) => {
+
+        if (
+            state.selectedTicket &&
+            state.selectedTicket.id === action.payload.ticket_id
+        ) {
+
+            state.selectedTicket.status =
+                action.payload.status;
+
+            state.selectedTicket.resolved_at =
+                action.payload.resolved_at;
+
+            state.selectedTicket.closed_at =
+                action.payload.closed_at;
+        }
+
+        const index = state.tickets.findIndex(
+            ticket => ticket.id === action.payload.ticket_id
+        );
+
+        if (index !== -1) {
+
+            state.tickets[index].status =
+                action.payload.status;
+
         }
 
     },
@@ -413,7 +466,9 @@ export const assignTicketToStaff =
 export const {
   clearSelectedTicket,
   clearTicketError,
+  ticketCreated,
   ticketAssigned,
+  ticketStatusChanged,
 } = ticketSlice.actions;
 
 export default ticketSlice.reducer;

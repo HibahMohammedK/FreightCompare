@@ -9,7 +9,7 @@ from notifications.models import Notification
 from notifications.utils import send_notification
 
 from realtime.broadcaster import SupportBroadcaster
-from realtime.events import TICKET_ASSIGNED
+from realtime.events import TICKET_ASSIGNED, TICKET_STATUS_CHANGED
 
 
 class TicketAssignmentService:
@@ -21,7 +21,6 @@ class TicketAssignmentService:
     ACTIVE_STATUSES = (
             "assigned",
             "in_progress",
-            "waiting_customer",
             "resolved",
         )
 
@@ -222,3 +221,89 @@ class TicketAssignmentService:
             assigned_count += 1
 
         return assigned_count
+
+
+class TicketStatusService:
+
+    @classmethod
+    def change_status(
+        cls,
+        ticket,
+        status,
+    ):
+        """
+        Update ticket status, manage status timestamps,
+        notify the customer when necessary,
+        and broadcast the change in realtime.
+        """
+
+        with transaction.atomic():
+
+            ticket.status = status
+
+            if (
+                status == "resolved"
+                and ticket.resolved_at is None
+            ):
+                ticket.resolved_at = timezone.now()
+
+            if (
+                status == "closed"
+                and ticket.closed_at is None
+            ):
+                ticket.closed_at = timezone.now()
+
+            ticket.save(
+                update_fields=[
+                    "status",
+                    "resolved_at",
+                    "closed_at",
+                    "updated_at",
+                ]
+            )
+
+        # Customer notification
+        if status == "resolved":
+
+            send_notification(
+                user=ticket.customer,
+                title="Ticket Resolved",
+                message=(
+                    f"Your ticket #{ticket.ticket_number} "
+                    "has been resolved."
+                ),
+                notification_type=Notification.TICKET,
+            )
+
+        elif status == "closed":
+
+            send_notification(
+                user=ticket.customer,
+                title="Ticket Closed",
+                message=(
+                    f"Your ticket #{ticket.ticket_number} "
+                    "has been closed."
+                ),
+                notification_type=Notification.TICKET,
+            )
+
+        # Realtime update
+        SupportBroadcaster.broadcast(
+            event=TICKET_STATUS_CHANGED,
+            data={
+                "ticket_id": str(ticket.id),
+                "status": ticket.status,
+                "resolved_at": (
+                    ticket.resolved_at.isoformat()
+                    if ticket.resolved_at
+                    else None
+                ),
+                "closed_at": (
+                    ticket.closed_at.isoformat()
+                    if ticket.closed_at
+                    else None
+                ),
+            },
+        )
+
+        return ticket

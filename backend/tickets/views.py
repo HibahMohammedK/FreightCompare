@@ -2,7 +2,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
-from django.utils import timezone
+from realtime.broadcaster import SupportBroadcaster
+from realtime.events import TICKET_CREATED
 
 from .models import Ticket
 from .serializers import (
@@ -12,7 +13,7 @@ from .serializers import (
     TicketStatusSerializer,
     TicketAssignSerializer
 )
-from .services import TicketAssignmentService
+from .services import TicketAssignmentService,TicketStatusService
 from .permissions import CanViewTicket, IsCustomer, CanUpdateTicket, IsAdmin
 
 
@@ -29,6 +30,12 @@ class TicketCreateAPIView(CreateAPIView):
         )
 
         TicketAssignmentService.assign(ticket)
+        ticket.refresh_from_db()
+
+        SupportBroadcaster.broadcast(
+            event=TICKET_CREATED,
+            data=TicketListSerializer(ticket).data,
+        )
 
         return Response(
             TicketListSerializer(ticket).data,
@@ -102,29 +109,8 @@ class TicketStatusAPIView(UpdateAPIView):
             "assigned_staff",
         )
 
-    def perform_update(self, serializer):
-        ticket = serializer.save()
-
-        if (
-            ticket.status == "resolved"
-            and ticket.resolved_at is None
-        ):
-            ticket.resolved_at = timezone.now()
-
-        if (
-            ticket.status == "closed"
-            and ticket.closed_at is None
-        ):
-            ticket.closed_at = timezone.now()
-
-        ticket.save(
-            update_fields=[
-                "resolved_at",
-                "closed_at",
-            ]
-        )
-
     def update(self, request, *args, **kwargs):
+
         ticket = self.get_object()
 
         serializer = self.get_serializer(
@@ -132,12 +118,15 @@ class TicketStatusAPIView(UpdateAPIView):
             data=request.data,
             partial=True,
         )
-        serializer.is_valid(raise_exception=True)
 
-        self.perform_update(serializer)
+        serializer.is_valid(
+            raise_exception=True
+        )
 
-        # Refresh in case perform_update modified fields
-        ticket.refresh_from_db()
+        ticket = TicketStatusService.change_status(
+            ticket=ticket,
+            status=serializer.validated_data["status"],
+        )
 
         return Response(
             TicketDetailSerializer(ticket).data,

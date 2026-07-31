@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import type { TicketDetail } from "../../../types/ticket";
+import type { TicketDetail, TicketStatus } from "../../../types/ticket";
 import { useAppSelector, useAppDispatch } from '../../../hooks/redux';
 import { updateTicket } from "../../../redux/ticketSlice";
 import { Button } from '../Button';
@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { SendIcon, UserIcon, ShieldIcon, CheckCircleIcon } from 'lucide-react';
 import { toast } from "sonner";
 import { AssignTicketModal } from "./AssignTicketModal";
+import { Select } from "../Select"
 
 
 interface TicketDetailsProps {
@@ -21,27 +22,14 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
   const currentUser = useAppSelector((state) => state.auth.user);
   const [reply, setReply] = useState('');
   const [showAssignModal, setShowAssignModal] = useState(false);
+  
   // const messagesEndRef = useRef<HTMLDivElement>(null);
   // useEffect(() => {
   //   messagesEndRef.current?.scrollIntoView({
   //     behavior: 'smooth'
   //   });
   // }, [ticket?.messages]);
-  if (!ticket) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-bg-light p-8 text-center">
-        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-text-lighter mb-4 shadow-sm">
-          <ShieldIcon size={32} />
-        </div>
-        <h3 className="text-lg font-semibold text-text-dark mb-2">
-          Select a Ticket
-        </h3>
-        <p className="text-sm text-text-light max-w-sm">
-          Choose a ticket from the list to view details and respond.
-        </p>
-      </div>);
-
-  }
+  
   // const handleReply = (e: React.FormEvent) => {
   //   e.preventDefault();
   //   if (!reply.trim() || !currentUser) return;
@@ -61,28 +49,75 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
   //   );
   //   setReply('');
   // };
-  const isClosed = ticket.status === 'closed' || ticket.status === 'resolved';
+  
 
+  const statusOptions =
+  role === "admin"
+    ? [
+        { value: "open", label: "Open" },
+        { value: "assigned", label: "Assigned" },
+        { value: "in_progress", label: "In Progress" },
+        { value: "resolved", label: "Resolved" },
+        { value: "closed", label: "Closed" },
+      ]
+    : [
+        { value: "assigned", label: "Assigned" },
+        { value: "in_progress", label: "In Progress" },
+        { value: "resolved", label: "Resolved" },
+      ];
 
+  const handleStatusChange = async (
+      status: TicketStatus
+  ) => {
 
-  const handleCloseTicket = async () => {
-  if (!ticket) return;
+      if (!ticket) return;
 
-  try {
-    await dispatch(
-      updateTicket({
-        id: ticket.id,
-        data: {
-          status: "closed",
-        },
-      })
-    ).unwrap();
+      try {
 
-    toast.success("Ticket closed successfully.");
-  } catch (error) {
-    toast.error("Failed to close ticket.");
+          await dispatch(
+              updateTicket({
+                  id: ticket.id,
+                  data: {
+                      status,
+                  },
+              })
+          ).unwrap();
+
+          toast.success(
+              "Ticket status updated."
+          );
+
+      } catch {
+
+          toast.error(
+              "Failed to update ticket status."
+          );
+
+      }
+
+  };
+
+  const updatingStatus = useAppSelector(
+      (state) => state.ticket.loading.updateStatus
+  );
+
+  if (!ticket) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-bg-light p-8 text-center">
+        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-text-lighter mb-4 shadow-sm">
+          <ShieldIcon size={32} />
+        </div>
+        <h3 className="text-lg font-semibold text-text-dark mb-2">
+          Select a Ticket
+        </h3>
+        <p className="text-sm text-text-light max-w-sm">
+          Choose a ticket from the list to view details and respond.
+        </p>
+      </div>);
+
   }
-};
+  const isClosed = ticket.status === "closed";
+
   return (
     <div className="flex-1 flex flex-col bg-bg-light min-w-0">
       {/* Header */}
@@ -113,27 +148,32 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
                     : "Assign"}
                 </Button>
               )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCloseTicket}
-                icon={<CheckCircleIcon size={16} />}
-              >
-                Close Ticket
-              </Button>
-
             </div>
           )}
         </div>
 
         <div className="flex items-center gap-6 text-sm">
-          <div className="flex items-center gap-2 text-text-light">
-            <span className="font-medium text-text-dark">Status:</span>
-            <span className="capitalize">
-              {ticket.status.replace('-', ' ')}
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-text-dark">
+                Status:
             </span>
-          </div>
+
+            {role === "customer" ? (
+                <span className="capitalize text-text-light">
+                    {ticket.status.replace("_", " ")}
+                </span>
+            ) : (
+                <Select
+                    value={ticket.status}
+                    options={statusOptions}
+                    onChange={(value: string) =>
+                        handleStatusChange(value as TicketStatus)
+                    }
+                    disabled={updatingStatus}
+                    className="w-44"
+                />
+            )}
+        </div>
           <div className="flex items-center gap-2 text-text-light">
             <span className="font-medium text-text-dark">Priority:</span>
             <span className="capitalize">{ticket.priority}</span>
