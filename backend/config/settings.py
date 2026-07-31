@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'ai',
     'tickets',
     'realtime',
+    'chat'
 ]
 
 MIDDLEWARE = [

@@ -10,6 +10,7 @@ from notifications.utils import send_notification
 
 from realtime.broadcaster import SupportBroadcaster
 from realtime.events import TICKET_ASSIGNED, TICKET_STATUS_CHANGED
+from chat.services import ConversationService
 
 
 class TicketAssignmentService:
@@ -78,6 +79,7 @@ class TicketAssignmentService:
                     "updated_at",
                 ]
             )
+            ConversationService.create_conversation(ticket)
 
         send_notification(
             user=staff,
@@ -223,7 +225,6 @@ class TicketAssignmentService:
 
         return assigned_count
 
-
 class TicketStatusService:
 
     @classmethod
@@ -262,6 +263,20 @@ class TicketStatusService:
                     "updated_at",
                 ]
             )
+
+            # Close the conversation when the ticket is closed
+            if status == "closed":
+
+                conversation = getattr(
+                    ticket,
+                    "conversation",
+                    None,
+                )
+
+                if conversation:
+                    ConversationService.close_conversation(
+                        conversation
+                    )
 
         # Customer notification
         if status == "resolved":

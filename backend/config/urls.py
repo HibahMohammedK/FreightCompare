@@ -30,6 +30,7 @@ urlpatterns = [
     path("api/price_alerts/", include("price_alerts.urls")),
     path("api/ai/", include("ai.urls")),
     path("api/tickets/", include("tickets.urls")),
+    path("api/chat/", include("chat.urls")),
 ]
 
 if settings.DEBUG:
