@@ -4,10 +4,10 @@ import { BellIcon } from 'lucide-react';
 import { useAppSelector } from '../../../hooks/redux';
 import { NotificationDropdown } from './NotificationDropdown';
 interface NotificationBellProps {
-  placement?: 'top' | 'bottom';
+    placement?: "top" | "bottom";
 }
 export const NotificationBell: React.FC<NotificationBellProps> = ({
-  placement = 'bottom'
+    placement =  "bottom",
 }) => {
 
   const [isOpen, setIsOpen] = useState(false);

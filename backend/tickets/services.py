@@ -5,6 +5,11 @@ from django.utils import timezone
 from users.models import User
 
 from .models import Ticket
+from notifications.models import Notification
+from notifications.utils import send_notification
+
+from realtime.broadcaster import SupportBroadcaster
+from realtime.events import TICKET_ASSIGNED
 
 
 class TicketAssignmentService:
@@ -20,39 +25,86 @@ class TicketAssignmentService:
             "resolved",
         )
 
-    @staticmethod
-    def assign(ticket):
+    @classmethod
+    def assign(cls, ticket):
         """
         Assign a newly created ticket to the most suitable staff member.
         """
 
-        available_staff = TicketAssignmentService._get_available_staff()
+        available_staff = cls._get_available_staff()
 
         if not available_staff.exists():
             return ticket
 
-        candidates = TicketAssignmentService._get_least_loaded_staff(
+        candidates = cls._get_least_loaded_staff(
             available_staff
         )
 
-        staff = TicketAssignmentService._select_round_robin(
+        staff = cls._select_round_robin(
             candidates
         )
 
+        return cls._apply_assignment(
+            ticket,
+            staff,
+        )
+
+
+    @classmethod
+    def _apply_assignment(
+        cls,
+        ticket,
+        staff,
+    ):
+        """
+        Apply a ticket assignment, notify the assignee,
+        and broadcast the assignment event.
+        """
+
         with transaction.atomic():
+
             ticket.assigned_staff = staff
-            ticket.status = "assigned"
-            ticket.assigned_at = timezone.now()
+
+            if ticket.assigned_at is None:
+                ticket.assigned_at = timezone.now()
+
+            if ticket.status == "open":
+                ticket.status = "assigned"
 
             ticket.save(
                 update_fields=[
                     "assigned_staff",
-                    "status",
                     "assigned_at",
+                    "status",
+                    "updated_at",
                 ]
             )
 
+        send_notification(
+            user=staff,
+            title="New Ticket Assigned",
+            message=(
+                f"Ticket #{ticket.ticket_number} "
+                "has been assigned to you."
+            ),
+            notification_type=Notification.TICKET,
+        )
+
+        SupportBroadcaster.broadcast(
+            event=TICKET_ASSIGNED,
+            data={
+                "ticket_id": str(ticket.id),
+                "ticket_number": ticket.ticket_number,
+                "assigned_staff_id": str(staff.id),
+                "assigned_staff_name": staff.get_full_name() or staff.email,
+                "assigned_staff_email": staff.email,
+                "status": ticket.status,
+                "assigned_at": ticket.assigned_at.isoformat(),
+            }
+        )
+
         return ticket
+
 
     @staticmethod
     def _get_available_staff():
@@ -137,21 +189,36 @@ class TicketAssignmentService:
         Manually assign or reassign a ticket to a staff member.
         """
 
-        ticket.assigned_staff = staff
-
-        if ticket.assigned_at is None:
-            ticket.assigned_at = timezone.now()
-
-        if ticket.status == "open":
-            ticket.status = "assigned"
-
-        ticket.save(
-            update_fields=[
-                "assigned_staff",
-                "assigned_at",
-                "status",
-                "updated_at",
-            ]
+        return cls._apply_assignment(
+            ticket=ticket,
+            staff=staff,
         )
 
-        return ticket
+
+    @classmethod
+    def assign_pending_tickets(cls):
+        """
+        Assign all pending unassigned tickets when staff become available.
+        Returns the number of tickets assigned.
+        """
+
+        pending_tickets = (
+            Ticket.objects.filter(
+                assigned_staff__isnull=True,
+                status="open",
+            )
+            .order_by("created_at")
+        )
+
+        assigned_count = 0
+
+        for ticket in pending_tickets:
+
+            updated_ticket = cls.assign(ticket)
+
+            if updated_ticket.assigned_staff is None:
+                break
+
+            assigned_count += 1
+
+        return assigned_count

@@ -1,6 +1,7 @@
 import store from "../redux/store";
 import { updateStaffStatus } from "../redux/staffSlice";
 import { updateUserStatus } from "../redux/authSlice";
+import { ticketAssigned } from "../redux/ticketSlice";
 
 class SupportSocket {
 
@@ -59,6 +60,16 @@ class SupportSocket {
                             )
                         );
                     }
+
+                    break;
+                }
+
+                case "ticket_assigned": {
+
+                    store.dispatch(
+                        ticketAssigned(message.data)
+                    );
+
 
                     break;
                 }

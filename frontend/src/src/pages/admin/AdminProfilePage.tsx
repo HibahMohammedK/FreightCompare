@@ -52,10 +52,24 @@ export const AdminProfilePage: React.FC = () => {
 
         <div className="flex items-center gap-4">
 
-          <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold text-lg">
-            {user?.username?.charAt(0)?.toUpperCase() ||
-              <UserIcon size={20} />}
-          </div>
+          <div className="w-14 h-14 rounded-full overflow-hidden bg-primary-light flex items-center justify-center font-bold text-primary">
+              {user?.profile_image ? (
+
+                  <img
+                      src={user.profile_image}
+                      alt={user.username}
+                      className="w-full h-full object-cover"
+                  />
+
+              ) : (
+
+                  <span className="font-bold text-primary">
+                      {user?.username?.charAt(0).toUpperCase()}
+                  </span>
+
+              )}
+
+            </div>
 
           <div>
 

@@ -9,6 +9,7 @@ class Notification(models.Model):
     SUBSCRIPTION = "subscription"
     AI = "ai"
     SYSTEM = "system"
+    TICKET = "ticket"
     CHAT = "chat"
 
     TYPE_CHOICES = [
@@ -17,6 +18,7 @@ class Notification(models.Model):
         (SUBSCRIPTION, "Subscription"),
         (AI, "AI"),
         (SYSTEM, "System"),
+        (TICKET, "Ticket"),
         (CHAT, "Chat"),
     ]
 

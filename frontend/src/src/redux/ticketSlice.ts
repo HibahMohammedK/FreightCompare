@@ -17,6 +17,7 @@ import type {
   CreateTicketRequest,
   UpdateTicketStatusRequest,
   AssignTicketRequest,
+  TicketStatus,
 } from "../types/ticket";
 
 interface TicketState {
@@ -196,6 +197,51 @@ export const assignTicketToStaff =
     clearTicketError: (state) => {
       state.error = null;
     },
+    
+    ticketAssigned: (
+        state,
+        action: PayloadAction<{
+            ticket_id: string;
+            status: TicketStatus;
+            assigned_staff_name: string;
+            assigned_staff_email: string;
+            assigned_staff_id: string;
+            assigned_at: string;
+        }>
+    ) => {
+
+        if (
+            state.selectedTicket &&
+            state.selectedTicket.id === action.payload.ticket_id
+        ) {
+            state.selectedTicket.status =
+                action.payload.status;
+
+            state.selectedTicket.assigned_staff_name =
+                action.payload.assigned_staff_name;
+
+            state.selectedTicket.assigned_staff_email =
+                action.payload.assigned_staff_email;
+        }
+
+        const index = state.tickets.findIndex(
+            ticket => ticket.id === action.payload.ticket_id
+        );
+
+        if (index !== -1) {
+
+            state.tickets[index].status =
+                action.payload.status;
+
+            state.tickets[index].assigned_staff_name =
+                action.payload.assigned_staff_name;
+
+            state.tickets[index].assigned_staff_email =
+                action.payload.assigned_staff_email;
+        }
+
+    },
+
   },
 
   extraReducers: (builder) => {
@@ -367,6 +413,7 @@ export const assignTicketToStaff =
 export const {
   clearSelectedTicket,
   clearTicketError,
+  ticketAssigned,
 } = ticketSlice.actions;
 
 export default ticketSlice.reducer;

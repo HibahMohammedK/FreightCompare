@@ -36,6 +36,7 @@ from .serializers import (
 )
 from .utils import verify_google_token
 from .exceptions import handle_exception
+from tickets.services import TicketAssignmentService
 
 # =========================
 # REGISTER
@@ -686,6 +687,12 @@ class UpdateStaffStatusView(APIView):
             },
         )
 
+        if (
+            old_status != "online"
+            and user.status == "online"
+        ):
+            TicketAssignmentService.assign_pending_tickets()
+
         return Response(
             {
                 "message": "Status updated",
@@ -727,6 +734,8 @@ class StaffUpdateOwnStatusView(APIView):
                     {"error": "Invalid status"},
                     status=400
                 )
+            
+            old_status = request.user.status
 
             request.user.status = status_value
             request.user.save()
@@ -738,6 +747,12 @@ class StaffUpdateOwnStatusView(APIView):
                     "status": request.user.status,
                 },
             )
+
+            if (
+                old_status != "online"
+                and request.user.status == "online"
+            ):
+                TicketAssignmentService.assign_pending_tickets()
 
             return Response({
                 "message": "Status updated",
