@@ -75,6 +75,8 @@ export interface TicketDetail {
   assigned_staff_name: string | null;
   assigned_staff_email: string | null;
 
+  conversation_id: string | null;
+
   created_at: string;
   updated_at: string;
 

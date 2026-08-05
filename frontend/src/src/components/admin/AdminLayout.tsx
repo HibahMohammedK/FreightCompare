@@ -119,7 +119,7 @@ export const AdminLayout: React.FC = () => {
           )}
         </div>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="border-t border-white/10">
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-error hover:bg-white/5 transition-colors">
@@ -146,12 +146,7 @@ export const AdminLayout: React.FC = () => {
 
         </DashboardHeader>
 
-        <main
-            className="
-                flex-1
-                overflow-auto
-            "
-        >
+        <main className="flex-1 min-h-0 overflow-hidden">
             <Outlet />
         </main>
 

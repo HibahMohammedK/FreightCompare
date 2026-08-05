@@ -4,55 +4,59 @@ import { UserNavbar } from '../../components/shared/UserNavbar';
 import { Button } from '../../components/shared/Button';
 import { Card } from '../../components/shared/Card';
 import { ChatWindow } from '../../components/shared/chat/ChatWindow';
+import { ChatSidebar } from '../../components/shared/chat/ChatSidebar';
 import { MessageSquareIcon, ShieldIcon } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import {
-  createConversation,
-  setActiveConversation } from
-'../../redux/chatSlice';
-export const UserChatPage: React.FC = () => {
+    fetchConversation,
+    fetchConversations,
+    markConversationRead,
+} from "../../redux/chatSlice";
+export const CustomerChatPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
-  const { conversations, activeConversationId } = useAppSelector(
-    (state) => state.chat
+  const {
+      conversations,
+      selectedConversation,
+  } = useAppSelector(
+      (state) => state.chat
   );
-  // Find the conversation that includes the current user
-  const userConversation = conversations.find((c) =>
-  c.participants.some((p) => p.id === user?.id)
-  );
-  // When a conversation exists but no active conversation is set, activate it
+  
+  
   useEffect(() => {
-    if (userConversation && !activeConversationId) {
-      dispatch(setActiveConversation(userConversation.id));
-    }
-  }, [userConversation, activeConversationId, dispatch]);
-  const handleStartChat = () => {
-    if (!user) return;
-    const newConvId = `c${Date.now()}`;
-    dispatch(
-      createConversation({
-        id: newConvId,
-        participants: [
-        {
-          id: user.id,
-          name: user.name,
-          role: user.role
-        },
-        {
-          id: 's1',
-          name: 'Support Agent',
-          role: 'staff'
-        } // mock staff participant
-        ],
-        lastMessage: 'Chat started',
-        lastMessageAt: new Date().toISOString(),
-        unreadCount: 0,
-        status: 'active'
-      })
-    );
-    dispatch(setActiveConversation(newConvId));
-  };
+      dispatch(
+          fetchConversations()
+      );
+  }, [dispatch]);
+
+
+  useEffect(() => {
+      if (
+          conversations.length > 0 &&
+          !selectedConversation
+      ) {
+
+          dispatch(
+              fetchConversation(
+                  conversations[0].id
+              )
+          );
+
+          dispatch(
+              markConversationRead(
+                  conversations[0].id
+              )
+          );
+
+      }
+
+  }, [
+      conversations,
+      selectedConversation,
+      dispatch,
+  ]);
+  
   // If the user is not a premium member, show an upgrade prompt
   if (!user?.isPremium) {
     return (
@@ -93,23 +97,33 @@ export const UserChatPage: React.FC = () => {
             </p>
           </div>
           <div className="flex-1 bg-white rounded-2xl border border-border-light overflow-hidden flex shadow-sm min-h-[600px]">
-            {userConversation ?
-            <ChatWindow /> :
+            {selectedConversation ? (
+                  <>
+                      <ChatSidebar />
+                      <ChatWindow />
+                  </>
+              ) : ( 
 
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                 <div className="w-16 h-16 bg-bg-light rounded-full flex items-center justify-center text-text-lighter mb-4">
                   <MessageSquareIcon size={32} />
                 </div>
                 <h3 className="text-lg font-semibold text-text-dark mb-2">
-                  Need Help?
+                    No Support Conversations
                 </h3>
-                <p className="text-sm text-text-light max-w-sm mb-6">
-                  Start a live chat with one of our support agents to get
-                  immediate help with your shipments or account.
+
+                <p className="text-sm text-text-light max-w-sm">
+                    Support conversations are created automatically when
+                    one of your support tickets is assigned to a support
+                    agent.
                 </p>
-                <Button onClick={handleStartChat}>Start Conversation</Button>
+                <p className="text-text-light">
+                    You don't have any support conversations yet.
+                    A conversation will automatically appear
+                    when one of your support tickets is assigned.
+                </p>
               </div>
-            }
+           )}
           </div>
         </div>
       </div>

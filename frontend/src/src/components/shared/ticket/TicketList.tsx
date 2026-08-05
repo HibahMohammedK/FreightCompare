@@ -1,6 +1,6 @@
 import React from "react";
-import { SearchIcon, FilterIcon } from "lucide-react";
-
+import { SearchIcon, FilterIcon, PlusIcon } from "lucide-react";
+import { Button } from "../Button"
 import { TicketCard } from "./TicketCard";
 import type { TicketList as TicketListType } from "../../../types/ticket";
 
@@ -20,6 +20,9 @@ interface TicketListProps {
 
   showAssignedStaff?: boolean;
   showCustomer?: boolean;
+
+  showCreateButton?: boolean;
+  onCreateTicket?: () => void;
 }
 
 export const TicketList: React.FC<TicketListProps> = ({
@@ -34,13 +37,27 @@ export const TicketList: React.FC<TicketListProps> = ({
   showCustomer = true,
   searchValue = "",
   onSearchChange,
+  showCreateButton = true,
+  onCreateTicket,
 }) => {
+
+  console.log("TicketList tickets:", tickets);
+  console.log("Ticket count:", tickets.length);
   return (
-    <div className="flex flex-col h-full bg-white border-r border-border-light w-80 shrink-0">
+    <div className="flex flex-col h-full min-h-0 bg-white border-r border-border-light w-80 shrink-0">
       <div className="p-4 border-b border-border-light space-y-4">
         <h2 className="font-bold text-text-dark">
           Support Tickets
         </h2>
+        {showCreateButton && onCreateTicket && (
+          <Button
+              size="sm"
+              icon={<PlusIcon size={16} />}
+              onClick={onCreateTicket}
+          >
+              New Ticket
+          </Button>
+      )}
 
         {showSearch && (
           <div className="relative">
@@ -85,7 +102,7 @@ export const TicketList: React.FC<TicketListProps> = ({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
         {tickets.length > 0 ? (
           tickets.map((ticket) => (
             <TicketCard

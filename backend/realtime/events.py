@@ -7,3 +7,7 @@ TICKET_STATUS_CHANGED = "ticket_status_changed"
 TICKET_CLOSED = "ticket_closed"
 
 NOTIFICATION_CREATED = "notification_created"
+
+CHAT_MESSAGE = "chat_message"
+CHAT_READ = "chat_read"
+CONVERSATION_UPDATED = "conversation_updated"

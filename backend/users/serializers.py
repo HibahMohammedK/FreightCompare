@@ -50,6 +50,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
+from tickets.models import Ticket
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,6 +75,7 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
     )
+    
 
     class Meta:
         model = User
@@ -81,6 +83,8 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
 
 class AdminUserListSerializer(serializers.ModelSerializer):
     is_premium = serializers.SerializerMethodField()
+    ticket_count = serializers.IntegerField(read_only=True)
+    active_ticket_count = serializers.IntegerField(read_only=True)
         
     class Meta:
         model = User
@@ -90,12 +94,15 @@ class AdminUserListSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "username",
+            "profile_image",
             "role",
             "status",
             "is_active",
             "is_verified",
             "created_at",
-            "is_premium"
+            "is_premium",
+            "ticket_count",
+            "active_ticket_count"
         ]
 
     def get_is_premium(self, obj):

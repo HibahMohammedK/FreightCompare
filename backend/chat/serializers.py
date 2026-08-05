@@ -4,6 +4,10 @@ from .models import Conversation, Message
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    conversation = serializers.UUIDField(
+        source="conversation.id",
+        read_only=True,
+    )
     sender = serializers.UUIDField(source="sender.id", read_only=True)
     sender_name = serializers.CharField(source="sender.full_name", read_only=True)
     sender_email = serializers.EmailField(source="sender.email", read_only=True)
@@ -12,6 +16,7 @@ class MessageSerializer(serializers.ModelSerializer):
         model = Message
         fields = [
             "id",
+            "conversation",
             "sender",
             "sender_name",
             "sender_email",
@@ -41,15 +46,8 @@ class ConversationListSerializer(serializers.ModelSerializer):
     ticket_id = serializers.UUIDField(source="ticket.id", read_only=True)
     ticket_number = serializers.CharField(source="ticket.ticket_number", read_only=True)
 
-    customer_name = serializers.CharField(
-        source="customer.full_name",
-        read_only=True,
-    )
-
-    staff_name = serializers.CharField(
-        source="staff.full_name",
-        read_only=True,
-    )
+    customer_name = serializers.SerializerMethodField()
+    staff_name = serializers.SerializerMethodField()
 
     last_message = serializers.SerializerMethodField()
     last_message_at = serializers.SerializerMethodField()
@@ -69,6 +67,15 @@ class ConversationListSerializer(serializers.ModelSerializer):
             "unread_count",
             "updated_at",
         ]
+
+    def get_customer_name(self, obj):
+            return obj.customer.first_name or obj.customer.username
+    
+    def get_staff_name(self, obj):
+        if not obj.staff:
+            return None
+
+        return obj.staff.first_name or obj.staff.username
 
     def get_last_message(self, obj):
         message = obj.messages.order_by("-created_at").first()
@@ -95,16 +102,9 @@ class ConversationDetailSerializer(serializers.ModelSerializer):
     ticket_id = serializers.UUIDField(source="ticket.id", read_only=True)
     ticket_number = serializers.CharField(source="ticket.ticket_number", read_only=True)
 
-    customer_name = serializers.CharField(
-        source="customer.full_name",
-        read_only=True,
-    )
-
-    staff_name = serializers.CharField(
-        source="staff.full_name",
-        read_only=True,
-    )
-
+    customer_name = serializers.SerializerMethodField()
+    staff_name = serializers.SerializerMethodField()
+    
     messages = MessageSerializer(
         many=True,
         read_only=True,
@@ -125,3 +125,12 @@ class ConversationDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+        
+    def get_customer_name(self, obj):
+                return obj.customer.first_name or obj.customer.username
+        
+    def get_staff_name(self, obj):
+        if not obj.staff:
+            return None
+
+        return obj.staff.first_name or obj.staff.username

@@ -8,10 +8,10 @@ from .models import Ticket
 from notifications.models import Notification
 from notifications.utils import send_notification
 
-from realtime.broadcaster import SupportBroadcaster
+from realtime.broadcaster import RealtimeBroadcaster
 from realtime.events import TICKET_ASSIGNED, TICKET_STATUS_CHANGED
 from chat.services import ConversationService
-
+from .serializers import TicketListSerializer
 
 class TicketAssignmentService:
     """
@@ -92,17 +92,18 @@ class TicketAssignmentService:
             ticket=ticket,
         )
 
-        SupportBroadcaster.broadcast(
+        data = TicketListSerializer(ticket).data
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name=f"staff_{staff.id}",
             event=TICKET_ASSIGNED,
-            data={
-                "ticket_id": str(ticket.id),
-                "ticket_number": ticket.ticket_number,
-                "assigned_staff_id": str(staff.id),
-                "assigned_staff_name": staff.get_full_name() or staff.email,
-                "assigned_staff_email": staff.email,
-                "status": ticket.status,
-                "assigned_at": ticket.assigned_at.isoformat(),
-            }
+            data=data,
+        )
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name="admins",
+            event=TICKET_ASSIGNED,
+            data=data,
         )
 
         return ticket
@@ -306,22 +307,26 @@ class TicketStatusService:
             )
 
         # Realtime update
-        SupportBroadcaster.broadcast(
+        data = TicketListSerializer(ticket).data
+
+        if ticket.assigned_staff:
+            RealtimeBroadcaster.broadcast_to_group(
+                group_name=f"staff_{ticket.assigned_staff.id}",
+                event=TICKET_STATUS_CHANGED,
+                data=data,
+            )
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name=f"customer_{ticket.customer.id}",
             event=TICKET_STATUS_CHANGED,
-            data={
-                "ticket_id": str(ticket.id),
-                "status": ticket.status,
-                "resolved_at": (
-                    ticket.resolved_at.isoformat()
-                    if ticket.resolved_at
-                    else None
-                ),
-                "closed_at": (
-                    ticket.closed_at.isoformat()
-                    if ticket.closed_at
-                    else None
-                ),
-            },
+            data=data,
+        )
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name="admins",
+            event=TICKET_STATUS_CHANGED,
+            data=data,
+
         )
 
         return ticket

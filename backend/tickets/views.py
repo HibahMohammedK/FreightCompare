@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
-from realtime.broadcaster import SupportBroadcaster
+from realtime.broadcaster import RealtimeBroadcaster
 from realtime.events import TICKET_CREATED
 
 from .models import Ticket
@@ -32,7 +32,8 @@ class TicketCreateAPIView(CreateAPIView):
         TicketAssignmentService.assign(ticket)
         ticket.refresh_from_db()
 
-        SupportBroadcaster.broadcast(
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name="admins",
             event=TICKET_CREATED,
             data=TicketListSerializer(ticket).data,
         )

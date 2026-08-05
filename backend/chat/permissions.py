@@ -32,9 +32,6 @@ class CanSendMessage(BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
 
-        if user.role == "admin":
-            return True
-
         if obj.status != Conversation.Status.ACTIVE:
             return False
 

@@ -1,93 +1,352 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-  ChatConversation,
-  ChatMessage,
-  mockConversations,
-  mockChatMessages } from
-'../utils/mockData';
+    createAsyncThunk,
+    createSlice,
+    type PayloadAction,
+} from "@reduxjs/toolkit";
+
+import {
+    getConversation,
+    getConversations,
+    markMessagesRead,
+    sendMessage,
+} from "../api/chat";
+
+import type {
+    ConversationList,
+    ConversationDetail,
+    Message,
+    SendMessageRequest,
+} from "../types/chat";
 
 interface ChatState {
-  conversations: ChatConversation[];
-  activeConversationId: string | null;
-  messages: Record<string, ChatMessage[]>;
-  loading: boolean;
+    conversations: ConversationList[];
+    selectedConversation: ConversationDetail | null;
+
+    loading: {
+        list: boolean;
+        detail: boolean;
+        send: boolean;
+    };
+
+    error: string | null;
 }
 
 const initialState: ChatState = {
-  conversations: mockConversations,
-  activeConversationId: null,
-  messages: mockChatMessages,
-  loading: false
+    conversations: [],
+    selectedConversation: null,
+
+    loading: {
+        list: false,
+        detail: false,
+        send: false,
+    },
+
+    error: null,
 };
 
-const chatSlice = createSlice({
-  name: 'chat',
-  initialState,
-  reducers: {
-    setConversations: (state, action: PayloadAction<ChatConversation[]>) => {
-      state.conversations = action.payload;
+export const fetchConversations = createAsyncThunk(
+    "chat/fetchConversations",
+    async () => {
+        const response = await getConversations();
+        return response.data;
     },
-    setActiveConversation: (state, action: PayloadAction<string | null>) => {
-      state.activeConversationId = action.payload;
-      // Mark messages as read when opening conversation
-      if (action.payload && state.messages[action.payload]) {
-        state.messages[action.payload].forEach((msg) => {
-          msg.read = true;
-        });
-        const conv = state.conversations.find((c) => c.id === action.payload);
-        if (conv) {
-          conv.unreadCount = 0;
-        }
-      }
-    },
-    addMessage: (state, action: PayloadAction<ChatMessage>) => {
-      const { conversationId } = action.payload;
-      if (!state.messages[conversationId]) {
-        state.messages[conversationId] = [];
-      }
-      state.messages[conversationId].push(action.payload);
+);
 
-      // Update conversation last message
-      const conv = state.conversations.find((c) => c.id === conversationId);
-      if (conv) {
-        conv.lastMessage = action.payload.content;
-        conv.lastMessageAt = action.payload.createdAt;
-        if (state.activeConversationId !== conversationId) {
-          conv.unreadCount += 1;
-        }
-      }
+export const fetchConversation = createAsyncThunk(
+    "chat/fetchConversation",
+    async (id: string) => {
+        const response = await getConversation(id);
+        return response.data;
     },
-    createConversation: (state, action: PayloadAction<ChatConversation>) => {
-      state.conversations.unshift(action.payload);
-      state.messages[action.payload.id] = [];
+);
+
+export const sendChatMessage = createAsyncThunk(
+    "chat/sendMessage",
+    async (data: SendMessageRequest) => {
+        const response = await sendMessage(data);
+        return response.data as Message;
     },
-    closeConversation: (state, action: PayloadAction<string>) => {
-      const conv = state.conversations.find((c) => c.id === action.payload);
-      if (conv) {
-        conv.status = 'closed';
-      }
+);
+
+export const markConversationRead = createAsyncThunk(
+    "chat/markConversationRead",
+    async (conversationId: string) => {
+        await markMessagesRead(conversationId);
+        return conversationId;
     },
-    markMessagesAsRead: (state, action: PayloadAction<string>) => {
-      const conversationId = action.payload;
-      if (state.messages[conversationId]) {
-        state.messages[conversationId].forEach((msg) => {
-          msg.read = true;
-        });
-      }
-      const conv = state.conversations.find((c) => c.id === conversationId);
-      if (conv) {
-        conv.unreadCount = 0;
-      }
-    }
-  }
+);
+const chatSlice = createSlice({
+    name: "chat",
+    initialState,
+
+    reducers: {
+
+        messageReceived: (
+            state,
+            action: PayloadAction<Message>,
+        ) => {
+
+            if (
+                state.selectedConversation &&
+                state.selectedConversation.id ===
+                    action.payload.conversation
+            ) {
+                state.selectedConversation.messages.push(
+                    action.payload,
+                );
+            }
+
+        },
+
+        conversationUpdated: (
+            state,
+            action: PayloadAction<ConversationList>,
+        ) => {
+
+            const index = state.conversations.findIndex(
+                (conversation) =>
+                    conversation.id === action.payload.id,
+            );
+
+            if (index >= 0) {
+
+                state.conversations[index] =
+                    action.payload;
+
+            } else {
+
+                state.conversations.unshift(
+                    action.payload,
+                );
+
+            }
+
+        },
+
+        messagesMarkedRead: (
+            state,
+            action: PayloadAction<string>,
+        ) => {
+
+            if (
+                state.selectedConversation &&
+                state.selectedConversation.id ===
+                    action.payload
+            ) {
+
+                state.selectedConversation.messages.forEach(
+                    (message) => {
+
+                        message.is_read = true;
+
+                    },
+                );
+
+            }
+
+            const conversation =
+                state.conversations.find(
+                    (conversation) =>
+                        conversation.id ===
+                        action.payload,
+                );
+
+            if (conversation) {
+
+                conversation.unread_count = 0;
+
+            }
+
+        },
+
+        clearSelectedConversation: (
+            state,
+        ) => {
+
+            state.selectedConversation = null;
+
+        },
+
+    },
+
+    extraReducers: (builder) => {
+
+        builder
+
+            .addCase(
+                fetchConversations.pending,
+                (state) => {
+
+                    state.loading.list = true;
+                    state.error = null;
+
+                },
+            )
+
+            .addCase(
+                fetchConversations.fulfilled,
+                (state, action) => {
+
+                    state.loading.list = false;
+                    state.conversations =
+                        action.payload;
+
+                },
+            )
+
+            .addCase(
+                fetchConversations.rejected,
+                (state, action) => {
+
+                    state.loading.list = false;
+
+                    state.error =
+                        action.error.message ??
+                        "Failed to load conversations.";
+
+                },
+            )
+
+            .addCase(
+                fetchConversation.pending,
+                (state) => {
+
+                    state.loading.detail = true;
+                    state.error = null;
+
+                },
+            )
+
+            .addCase(
+                fetchConversation.fulfilled,
+                (state, action) => {
+
+                    state.loading.detail = false;
+
+                    state.selectedConversation =
+                        action.payload;
+
+                },
+            )
+
+            .addCase(
+                fetchConversation.rejected,
+                (state, action) => {
+
+                    state.loading.detail = false;
+
+                    state.error =
+                        action.error.message ??
+                        "Failed to load conversation.";
+
+                },
+            )
+
+            .addCase(
+                sendChatMessage.pending,
+                (state) => {
+
+                    state.loading.send = true;
+
+                },
+            )
+
+            .addCase(
+                sendChatMessage.fulfilled,
+                (state, action) => {
+
+                    state.loading.send = false;
+
+                    if (
+                        state.selectedConversation &&
+                        state.selectedConversation.id ===
+                            action.payload.conversation
+                    ) {
+
+                        state.selectedConversation.messages.push(
+                            action.payload,
+                        );
+
+                    }
+
+                    const conversation =
+                        state.conversations.find(
+                            (conversation) =>
+                                conversation.id ===
+                                action.payload.conversation,
+                        );
+
+                    if (conversation) {
+
+                        conversation.last_message =
+                            action.payload.message;
+
+                        conversation.last_message_at =
+                            action.payload.created_at;
+
+                    }
+
+                },
+            )
+
+            .addCase(
+                sendChatMessage.rejected,
+                (state, action) => {
+
+                    state.loading.send = false;
+
+                    state.error =
+                        action.error.message ??
+                        "Failed to send message.";
+
+                },
+            )
+
+            .addCase(
+                markConversationRead.fulfilled,
+                (state, action) => {
+
+                    if (
+                        state.selectedConversation &&
+                        state.selectedConversation.id ===
+                            action.payload
+                    ) {
+
+                        state.selectedConversation.messages.forEach(
+                            (message) => {
+
+                                message.is_read = true;
+
+                            },
+                        );
+
+                    }
+
+                    const conversation =
+                        state.conversations.find(
+                            (conversation) =>
+                                conversation.id ===
+                                action.payload,
+                        );
+
+                    if (conversation) {
+
+                        conversation.unread_count = 0;
+
+                    }
+
+                },
+            );
+
+    },
+
 });
 
 export const {
-  setConversations,
-  setActiveConversation,
-  addMessage,
-  createConversation,
-  closeConversation,
-  markMessagesAsRead
+    messageReceived,
+    conversationUpdated,
+    messagesMarkedRead,
+    clearSelectedConversation,
 } = chatSlice.actions;
+
 export default chatSlice.reducer;

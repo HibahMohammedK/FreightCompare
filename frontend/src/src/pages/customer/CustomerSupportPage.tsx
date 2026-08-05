@@ -1,6 +1,6 @@
 import React, { useState,useEffect } from "react";
 import { UserNavbar } from "../../components/shared/UserNavbar";
-import { SupportHeader } from "../../components/shared/support/SupportHeader";
+import { Button } from "../../components/shared/Button";
 import { TicketList } from "../../components/shared/ticket/TicketList";
 import { TicketDetails } from "../../components/shared/ticket/TicketDetails";
 import { EmptyTicketState } from "../../components/shared/ticket/EmptyTicketState";
@@ -48,49 +48,77 @@ export const CustomerSupportPage: React.FC = () => {
   }, [dispatch, tickets, selectedTicket]);
 
   return (
-    <div className="min-h-screen bg-bg-light flex flex-col">
+    <div className="h-screen flex flex-col bg-bg-light overflow-hidden">
       <UserNavbar />
 
-      <div className="bg-primary-dark pt-12 pb-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <SupportHeader
-            onCreateTicket={() => setShowCreateModal(true)}
-          />
+      <main className="flex-1 min-h-0 overflow-hidden">
+
+        <div className="h-full min-h-0 px-6 py-4 overflow-hidden">
+
+         <div
+                className="
+                    h-full
+                    min-h-0
+                    flex
+                    overflow-hidden
+                    bg-white
+                    border
+                    border-border-light
+                    rounded-xl
+                "
+            >
+            {tickets.length === 0 ? (
+
+                <EmptyTicketState
+                    onCreateTicket={() => setShowCreateModal(true)}
+                />
+
+            ) : (
+
+                <div
+                    className="
+                        flex-1
+                        min-w-0
+                        min-h-0
+                        flex
+                        overflow-hidden
+                        bg-white
+                        rounded-2xl
+                        shadow-lg
+                    "
+                >
+
+                    <TicketList
+                        activeTicketId={selectedTicket?.id}
+                        onTicketClick={(ticket) =>
+                            dispatch(fetchTicket(ticket.id))
+                        }
+                        showFilter={true}
+                        showAssignedStaff={false}
+                        showCustomer={false}
+                        searchValue={search}
+                        onSearchChange={setSearch}
+                        currentFilter={filter}
+                        onFilterChange={setFilter}
+                        tickets={filteredTickets}
+                        showCreateButton
+                        onCreateTicket={() => setShowCreateModal(true)}
+                    />
+
+                    <div className="flex-1 min-w-0 min-h-0 flex overflow-hidden">
+                        <TicketDetails
+                            ticket={selectedTicket}
+                            role="customer"
+                        />
+                    </div>
+
+                </div>
+
+            )}
+
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto w-full px-6 -mt-24 relative z-20 pb-12">
-        {tickets.length === 0 ? (
-          <EmptyTicketState
-            onCreateTicket={() => setShowCreateModal(true)}
-          />
-        ) : (
-          <div className="bg-white rounded-2xl shadow-lg flex h-[700px]">
-            <TicketList
-                activeTicketId={selectedTicket?.id}
-                onTicketClick={(ticket) =>
-                    dispatch(fetchTicket(ticket.id))
-                }
-                showFilter={true}
-                showAssignedStaff={false}
-                showCustomer={false}
-                searchValue={search}
-                onSearchChange={setSearch}
-
-                currentFilter={filter}
-                onFilterChange={setFilter}
-
-                tickets={filteredTickets}
-            />
-
-            <TicketDetails
-                ticket={selectedTicket}
-                role="customer"
-            />
         </div>
-        )}
-      </div>
-
+      </main>
       <CreateTicketModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}

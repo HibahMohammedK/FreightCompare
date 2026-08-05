@@ -69,7 +69,7 @@ export const AdminProfilePage: React.FC = () => {
 
               )}
 
-            </div>
+          </div>
 
           <div>
 

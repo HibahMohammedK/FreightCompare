@@ -2,24 +2,23 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 
-class SupportBroadcaster:
+class RealtimeBroadcaster:
 
-    GROUP_NAME = "support_updates"
-
-    @classmethod
-    def broadcast(
-        cls,
-        event: str,
-        data: dict,
+    @staticmethod
+    def broadcast_to_group(
+        group_name,
+        event,
+        data,
     ):
+        print("BROADCAST TO GROUP:", group_name)
         channel_layer = get_channel_layer()
 
         async_to_sync(
             channel_layer.group_send
         )(
-            cls.GROUP_NAME,
+            group_name,
             {
-                "type": "support_event",
+                "type": "realtime_event",
                 "event": event,
                 "data": data,
             },

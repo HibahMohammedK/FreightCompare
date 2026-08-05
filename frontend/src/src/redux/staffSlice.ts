@@ -3,15 +3,7 @@ import {
   PayloadAction
 } from "@reduxjs/toolkit";
 
-interface StaffUser {
-  id: string;
-  first_name?: string;
-  last_name?: string;
-  username: string;
-  email: string;
-  status: string;
-  is_active: boolean;
-}
+import type { StaffUser,StaffStatus } from "../types/user";
 
 interface StaffState {
   staff: StaffUser[];
@@ -48,7 +40,7 @@ const staffSlice = createSlice({
       state,
       action: PayloadAction<{
         id: string;
-        status: string;
+        status: StaffStatus;
       }>
     ) => {
 

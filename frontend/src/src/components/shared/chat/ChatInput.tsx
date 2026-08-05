@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { SendIcon, PaperclipIcon } from 'lucide-react';
 interface ChatInputProps {
-  onSendMessage: (content: string) => void;
-  disabled?: boolean;
+    onSendMessage: (message: string) => void;
+    disabled?: boolean;
 }
 export const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,

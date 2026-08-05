@@ -8,6 +8,7 @@ import { SendIcon, UserIcon, ShieldIcon, CheckCircleIcon } from 'lucide-react';
 import { toast } from "sonner";
 import { AssignTicketModal } from "./AssignTicketModal";
 import { Select } from "../Select"
+import { ChatWindow } from "../chat/ChatWindow";
 
 
 interface TicketDetailsProps {
@@ -22,33 +23,6 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
   const currentUser = useAppSelector((state) => state.auth.user);
   const [reply, setReply] = useState('');
   const [showAssignModal, setShowAssignModal] = useState(false);
-  
-  // const messagesEndRef = useRef<HTMLDivElement>(null);
-  // useEffect(() => {
-  //   messagesEndRef.current?.scrollIntoView({
-  //     behavior: 'smooth'
-  //   });
-  // }, [ticket?.messages]);
-  
-  // const handleReply = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   if (!reply.trim() || !currentUser) return;
-  //   dispatch(
-  //     addTicketMessage({
-  //       ticketId: ticket.id,
-  //       role: currentUser.role,
-  //       message: {
-  //         id: `tm-${Date.now()}`,
-  //         senderId: currentUser.id,
-  //         senderName: currentUser.name,
-  //         senderRole: currentUser.role,
-  //         content: reply.trim(),
-  //         createdAt: new Date().toISOString()
-  //       }
-  //     })
-  //   );
-  //   setReply('');
-  // };
   
 
   const statusOptions =
@@ -119,7 +93,8 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
   const isClosed = ticket.status === "closed";
 
   return (
-    <div className="flex-1 flex flex-col bg-bg-light min-w-0">
+    <div
+    className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-bg-light">
       {/* Header */}
       <div className="bg-white border-b border-border-light p-6 shrink-0">
         <div className="flex justify-between items-start mb-4">
@@ -186,43 +161,27 @@ export const TicketDetails: React.FC<TicketDetailsProps> = ({
       </div>
 
       {/* Messages */}
-      {/* <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {ticket.messages.map((msg) => {
-          const isOwn = msg.senderId === currentUser?.id;
-          const isStaffMsg =
-          msg.senderRole === 'staff' || msg.senderRole === 'admin';
-          return (
-            <div
-              key={msg.id}
-              className={`flex gap-4 max-w-[80%] ${isOwn ? 'ml-auto flex-row-reverse' : ''}`}>
-              
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isStaffMsg ? 'bg-primary text-white' : 'bg-bg-light text-text-medium border border-border-light'}`}>
-                
-                {isStaffMsg ? <ShieldIcon size={20} /> : <UserIcon size={20} />}
-              </div>
-              <div
-                className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
-                
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-sm font-semibold text-text-dark">
-                    {msg.senderName}
-                  </span>
-                  <span className="text-[10px] text-text-lighter">
-                    {format(new Date(msg.createdAt), 'MMM d, h:mm a')}
-                  </span>
-                </div>
-                <div
-                  className={`p-4 rounded-2xl text-sm ${isOwn ? 'bg-primary text-white rounded-tr-sm' : 'bg-white border border-border-light text-text-dark rounded-tl-sm'}`}>
-                  
-                  {msg.content}
-                </div>
-              </div>
-            </div>);
+        <div className="flex-1 min-h-0 overflow-hidden flex">
 
-        })}
-        <div ref={messagesEndRef} />
-      </div> */}
+          {ticket.conversation_id ? (
+
+              <ChatWindow
+                  conversationId={ticket.conversation_id}
+              />
+
+          ) : (
+
+              <div className="flex h-full items-center justify-center text-text-light">
+
+                  {ticket.status === "open"
+                      ? "This ticket hasn't been assigned to a support agent yet."
+                      : "No conversation is available for this ticket."}
+
+              </div>
+
+          )}
+
+      </div>
 
       {/* Reply Box */}
       {/* <div className="bg-white border-t border-border-light p-4 shrink-0">

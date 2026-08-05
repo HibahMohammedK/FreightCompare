@@ -98,6 +98,11 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for retrieving ticket details.
     """
+    conversation_id = serializers.UUIDField(
+        source="conversation.id",
+        read_only=True,
+        allow_null=True,
+    )
 
     customer_name = serializers.SerializerMethodField()
 
@@ -126,6 +131,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
             "category",
             "priority",
             "status",
+            "conversation_id",
             "customer",
             "customer_name",
             "customer_email",

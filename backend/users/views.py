@@ -22,7 +22,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView
 from rest_framework.pagination import PageNumberPagination
 
-from realtime.broadcaster import SupportBroadcaster
+from realtime.broadcaster import RealtimeBroadcaster
 from realtime.events import STAFF_STATUS_CHANGED
 
 from .serializers import (
@@ -375,6 +375,7 @@ class GoogleLoginView(APIView):
 class ProfileView(RetrieveAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
+    
 
     def get_object(self):
         return self.request.user
@@ -591,6 +592,8 @@ class AdminUserListView(ListAPIView):
             )
 
         return queryset
+
+from django.db.models import Count
     
 class StaffListView(ListAPIView):
     serializer_class = AdminUserListSerializer
@@ -602,10 +605,24 @@ class StaffListView(ListAPIView):
 
     def get_queryset(self):
 
-        queryset = User.objects.filter(
-            role="staff"
-        ).order_by("-created_at")
+        queryset = ( User.objects.filter(role="staff")
+            .annotate(
+                ticket_count=Count("assigned_tickets"),
 
+                active_ticket_count=Count(
+                    "assigned_tickets",
+                    filter=Q(
+                        assigned_tickets__status__in=[
+                            "assigned",
+                            "in_progress",
+                            "resolved",
+                        ]
+                    ),
+                ),
+            )
+            .order_by("-created_at")
+        )
+        
         search = self.request.query_params.get("search")
         status = self.request.query_params.get("status")
 
@@ -693,7 +710,7 @@ class UpdateStaffStatusView(APIView):
         user.status = status_value
         user.save()
 
-        SupportBroadcaster.broadcast(
+        RealtimeBroadcaster.broadcast(
             event=STAFF_STATUS_CHANGED,
             data={
                 "user_id": str(user.id),
@@ -754,7 +771,7 @@ class StaffUpdateOwnStatusView(APIView):
             request.user.status = status_value
             request.user.save()
 
-            SupportBroadcaster.broadcast(
+            RealtimeBroadcaster.broadcast(
                 event=STAFF_STATUS_CHANGED,
                 data={
                     "user_id": str(request.user.id),

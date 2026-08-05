@@ -3,6 +3,10 @@ from django.db.models import Q, Prefetch
 
 from .models import Conversation, Message
 from notifications.utils import send_notification
+from realtime.broadcaster import RealtimeBroadcaster
+from .serializers import MessageSerializer
+from realtime.events import CHAT_MESSAGE
+
 
 
 class ConversationService:
@@ -69,11 +73,16 @@ class ConversationService:
 
 
 class MessageService:
+
     @staticmethod
     @transaction.atomic
-    def send_message(conversation, sender, content):
+    def send_message(
+        conversation,
+        sender,
+        content,
+    ):
         """
-        Create a new chat message.
+        Create a new chat message and broadcast it in realtime.
         """
 
         chat_message = Message.objects.create(
@@ -84,6 +93,17 @@ class MessageService:
 
         # Update conversation activity
         conversation.save()
+        
+
+        data=MessageSerializer(chat_message).data
+        print("===== BROADCASTING CHAT =====")
+        print(data)
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name=f"conversation_{conversation.id}",
+            event=CHAT_MESSAGE,
+            data=data,
+        )
 
         return chat_message
 

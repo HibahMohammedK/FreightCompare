@@ -215,82 +215,52 @@ export const assignTicketToStaff =
     
     ticketAssigned: (
         state,
-        action: PayloadAction<{
-            ticket_id: string;
-            status: TicketStatus;
-            assigned_staff_name: string;
-            assigned_staff_email: string;
-            assigned_staff_id: string;
-            assigned_at: string;
-        }>
+        action: PayloadAction<TicketList>
     ) => {
 
-        if (
-            state.selectedTicket &&
-            state.selectedTicket.id === action.payload.ticket_id
-        ) {
-            state.selectedTicket.status =
-                action.payload.status;
-
-            state.selectedTicket.assigned_staff_name =
-                action.payload.assigned_staff_name;
-
-            state.selectedTicket.assigned_staff_email =
-                action.payload.assigned_staff_email;
-        }
-
         const index = state.tickets.findIndex(
-            ticket => ticket.id === action.payload.ticket_id
+            ticket => ticket.id === action.payload.id
         );
 
-        if (index !== -1) {
+        if (index === -1) {
 
-            state.tickets[index].status =
-                action.payload.status;
+            state.tickets.unshift(action.payload);
 
-            state.tickets[index].assigned_staff_name =
-                action.payload.assigned_staff_name;
+        } else {
 
-            state.tickets[index].assigned_staff_email =
-                action.payload.assigned_staff_email;
+            state.tickets[index] = action.payload;
+
         }
 
     },
 
     ticketStatusChanged: (
         state,
-        action: PayloadAction<{
-            ticket_id: string;
-            status: TicketStatus;
-            resolved_at: string | null;
-            closed_at: string | null;
-        }>
+        action: PayloadAction<TicketList>
     ) => {
 
-        if (
-            state.selectedTicket &&
-            state.selectedTicket.id === action.payload.ticket_id
-        ) {
-
-            state.selectedTicket.status =
-                action.payload.status;
-
-            state.selectedTicket.resolved_at =
-                action.payload.resolved_at;
-
-            state.selectedTicket.closed_at =
-                action.payload.closed_at;
-        }
-
         const index = state.tickets.findIndex(
-            ticket => ticket.id === action.payload.ticket_id
+            ticket => ticket.id === action.payload.id
         );
 
         if (index !== -1) {
+            state.tickets[index] = action.payload;
+        }
 
-            state.tickets[index].status =
-                action.payload.status;
+        if (
+            state.selectedTicket &&
+            state.selectedTicket.id === action.payload.id
+        ) {
+            state.selectedTicket.status = action.payload.status;
 
+            state.selectedTicket.assigned_staff =
+                action.payload.assigned_staff;
+
+            state.selectedTicket.assigned_staff_name =
+                action.payload.assigned_staff_name;
+
+            state.selectedTicket.assigned_staff_email =
+                action.payload.assigned_staff_email;
         }
 
     },

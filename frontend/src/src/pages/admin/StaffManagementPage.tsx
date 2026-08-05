@@ -21,10 +21,13 @@ import {
   updateStaffStatus as updateStaffStatusAction,
   toggleStaffBlocked,
 } from '../../redux/staffSlice';
+import { StaffStatus } from '../../types/user';
 
 export const StaffManagementPage: React.FC = () => {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<
+      StaffStatus | "all"
+  >("all");
 
   const staff = useAppSelector(
     state => state.staff.staff
@@ -80,7 +83,7 @@ export const StaffManagementPage: React.FC = () => {
     
   
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: StaffStatus) => {
     switch (status) {
       case 'online':
         return 'bg-success';
@@ -96,9 +99,7 @@ export const StaffManagementPage: React.FC = () => {
   const handleStatusChange = async (
     id: string,
     newStatus:
-      "online" |
-      "busy" |
-      "offline"
+      StaffStatus
   ) => {
 
     try {
@@ -172,7 +173,7 @@ export const StaffManagementPage: React.FC = () => {
           <div className="w-full md:w-48">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => setStatusFilter(e.target.value as StaffStatus | "all")}
               className="w-full rounded-xl border border-border-light bg-white px-4 py-2.5 text-sm text-text-darker focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
               
               <option value="all">All Statuses</option>
@@ -200,13 +201,25 @@ export const StaffManagementPage: React.FC = () => {
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-bold text-lg">
-                    {
-                      (member.first_name || member.username)
-                        .charAt(0)
-                        .toUpperCase()
-                    }
-                  </div>
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-primary-light flex items-center justify-center font-bold text-primary">
+                    {member?.profile_image ? (
+
+                        <img
+                            src={member.profile_image}
+                            alt={member.username}
+                            className="w-full h-full object-cover"
+                        />
+
+                    ) : (
+
+                        <span className="font-bold text-primary">
+                            {member?.username?.charAt(0).toUpperCase()}
+                        </span>
+
+                    )}
+
+                </div>
+
                   <div
                   className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${getStatusColor(member.status)}`} />
                 
@@ -239,7 +252,7 @@ export const StaffManagementPage: React.FC = () => {
                   <span className="text-xs font-medium">Tickets</span>
                 </div>
                 <p className="text-xl font-bold text-text-dark">
-                  0
+                  {member.active_ticket_count}
                 </p>
               </div>
               <div className="bg-bg-light rounded-xl p-3 text-center border border-border-light">
@@ -261,7 +274,7 @@ export const StaffManagementPage: React.FC = () => {
               disabled={!member.is_active}
               value={member.status}
               onChange={(e) =>
-              handleStatusChange(member.id, e.target.value as any)
+              handleStatusChange(member.id, e.target.value as StaffStatus)
               }
               className="w-full rounded-lg border border-border-light bg-white px-3 py-2 text-sm text-text-darker focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary capitalize">
               
