@@ -3,6 +3,7 @@ from django.db.models import Q, Prefetch
 
 from .models import Conversation, Message
 from notifications.utils import send_notification
+from notifications.models import Notification
 from realtime.broadcaster import RealtimeBroadcaster
 from .serializers import MessageSerializer
 from realtime.events import CHAT_MESSAGE
@@ -91,13 +92,26 @@ class MessageService:
             message=content,
         )
 
+        if sender == conversation.customer:
+            recipient = conversation.staff
+        else:
+            recipient = conversation.customer
+
         # Update conversation activity
         conversation.save()
+
+        if recipient:
+            send_notification(
+                user=recipient,
+                title="New message",
+                message=f"{sender.username} sent you a message.",
+                notification_type=Notification.CHAT,
+                ticket=conversation.ticket,
+            )
         
 
         data=MessageSerializer(chat_message).data
-        print("===== BROADCASTING CHAT =====")
-        print(data)
+    
 
         RealtimeBroadcaster.broadcast_to_group(
             group_name=f"conversation_{conversation.id}",

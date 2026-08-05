@@ -42,7 +42,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.group_name,
             self.channel_name,
         )
-        print("CONNECTED TO:", self.group_name)
 
         await self.accept()
 
@@ -54,8 +53,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def realtime_event(self, event):
-        print("===== CHAT CONSUMER RECEIVED EVENT =====")
-        print(event)
 
         await self.send(
             text_data=json.dumps(
