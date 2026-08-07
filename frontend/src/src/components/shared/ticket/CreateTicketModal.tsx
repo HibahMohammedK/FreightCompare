@@ -10,6 +10,7 @@ import {
   fetchTicket,
 } from "../../../redux/ticketSlice";
 import { CreateTicketRequest } from "../../../types/ticket";
+import { PremiumUpgradeModal } from "../premium/PremiumUpgradeModal";
 
 interface Option {
   value: string;
@@ -48,6 +49,12 @@ export const CreateTicketModal: React.FC<Props> = ({
     priority?: string;
     description?: string;
   }>({});
+
+  const [showUpgradeModal, setShowUpgradeModal] =
+        useState(false);
+  
+  const [upgradeMessage, setUpgradeMessage] =
+        useState("");
 
   const handleChange = (
     field: keyof TicketFormData,
@@ -123,54 +130,77 @@ export const CreateTicketModal: React.FC<Props> = ({
 
       onClose();
     } catch (error: any) {
-      if (
-        error.subject ||
-        error.description ||
-        error.category ||
-        error.priority
-      ) {
-        setErrors({
-          subject: error.subject?.[0] ?? "",
-          category: error.category?.[0] ?? "",
-          priority: error.priority?.[0] ?? "",
-          description: error.description?.[0] ?? "",
-        });
-      } else {
-        toast.error(error.detail ?? "Failed to create support ticket.");
-      }
-    } finally {
-      setLoading(false);
+
+        if (error.code === "PREMIUM_REQUIRED") {
+            onClose();
+            setUpgradeMessage(error.detail);
+            setShowUpgradeModal(true);
+            return;
+        }
+
+        if (
+            error.subject ||
+            error.description ||
+            error.category ||
+            error.priority
+        ) {
+
+            setErrors({
+                subject: error.subject?.[0] ?? "",
+                category: error.category?.[0] ?? "",
+                priority: error.priority?.[0] ?? "",
+                description: error.description?.[0] ?? "",
+            });
+
+            return;
+        }
+
+        toast.error(
+            error.detail ??
+            "Failed to create support ticket."
+        );
+
+    }
+    finally {
+        setLoading(false);
     }
   };
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Create Support Ticket"
-      maxWidth="max-w-2xl"
-    >
-      <TicketForm
-        formData={formData}
-        errors={errors}
-        onChange={handleChange}
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Create Support Ticket"
+        maxWidth="max-w-2xl"
+      >
+        <TicketForm
+          formData={formData}
+          errors={errors}
+          onChange={handleChange}
+        />
+
+        <div className="flex justify-end gap-3 mt-8">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "Creating..." : "Create Ticket"}
+          </Button>
+        </div>
+      </Modal>
+      <PremiumUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          message={upgradeMessage}
       />
-
-      <div className="flex justify-end gap-3 mt-8">
-        <Button
-          variant="outline"
-          onClick={onClose}
-          disabled={loading}
-        >
-          Cancel
-        </Button>
-
-        <Button
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? "Creating..." : "Create Ticket"}
-        </Button>
-      </div>
-    </Modal>
+    </>
   );
 };

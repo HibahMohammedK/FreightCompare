@@ -6,6 +6,7 @@ import { Input } from '../Input';
 import { BellIcon } from 'lucide-react';
 import type { Transport } from "../../../types/transport";
 import { createPriceAlert } from "../../../api/priceAlerts";
+import { PremiumUpgradeModal } from '../premium/PremiumUpgradeModal';
 
 interface PriceAlertModalProps {
   isOpen: boolean;
@@ -21,8 +22,12 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
   const [targetPrice, setTargetPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  const [upgradeMessage, setUpgradeMessage] = useState("");
+  const [showUpgradeModal, setShowUpgradeModal] =
+    useState(false);
+
+  const [upgradeMessage, setUpgradeMessage] =
+    useState("");
+
   const navigate = useNavigate()
 
   const handleCreatePriceAlert = async () => {
@@ -58,7 +63,7 @@ export const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
                 error.response.data.detail
             );
 
-            setIsUpgradeModalOpen(true);
+            setShowUpgradeModal(true);
 
             return;
         }
@@ -162,40 +167,11 @@ setError(
           </div>
         </div>
       </Modal>
-      <Modal
-      isOpen={isUpgradeModalOpen}
-      onClose={() => setIsUpgradeModalOpen(false)}
-      title="Upgrade to Premium"
-  >
-      <div className="space-y-6">
-
-          <p className="text-text-light">
-              {upgradeMessage}
-          </p>
-
-          <div className="flex gap-3">
-
-              <Button
-                  variant="secondary"
-                  fullWidth
-                  onClick={() =>
-                      setIsUpgradeModalOpen(false)
-                  }
-              >
-                  Maybe Later
-              </Button>
-
-              <Button
-                  fullWidth
-                  onClick={() => navigate("/pricing")}
-              >
-                  Upgrade Now
-              </Button>
-
-          </div>
-
-      </div>
-  </Modal>
+      <PremiumUpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={() => setShowUpgradeModal(false)}
+            message={upgradeMessage}
+        />
 </>
   );
 

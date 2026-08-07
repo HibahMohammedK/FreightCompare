@@ -15,6 +15,7 @@ from .serializers import (
 )
 from .services import TicketAssignmentService,TicketStatusService
 from .permissions import CanViewTicket, IsCustomer, CanUpdateTicket, IsAdmin
+from subscription.utils import is_premium
 
 
 class TicketCreateAPIView(CreateAPIView):
@@ -24,6 +25,18 @@ class TicketCreateAPIView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        if not is_premium(request.user):
+            return Response(
+                {   
+                    "code": "PREMIUM_REQUIRED",
+                    "detail": (
+                        "This feature is available only for Premium users. "
+                        "Upgrade to Premium for unlimited alerts."
+                    )
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         ticket = serializer.save(
             customer=request.user,

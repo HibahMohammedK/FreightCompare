@@ -6,7 +6,7 @@ from rest_framework import status
 from .models import PriceAlert
 from .serializers import PriceAlertSerializer
 from django.shortcuts import get_object_or_404
-from subscription.models import Subscription
+from subscription.utils import is_premium
 
 
 class PriceAlertListCreateView(APIView):
@@ -35,18 +35,11 @@ class PriceAlertListCreateView(APIView):
             data=request.data,
         )
 
-        try:
-            subscription = request.user.subscription
-            is_premium = subscription.status == "active"
-
-        except Subscription.DoesNotExist:
-            is_premium = False
-
         serializer.is_valid(
             raise_exception=True
         )
 
-        if not is_premium:
+        if not is_premium(request.user):
 
             active_alerts = PriceAlert.objects.filter(
                 user=request.user,
