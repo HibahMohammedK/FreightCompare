@@ -33,10 +33,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     ? {
         name: conversation?.staff_name ?? "Support",
         role: "staff",
+        image: conversation?.staff_profile_image,
     }
     : {
         name: conversation?.customer_name ?? "Customer",
         role: "customer",
+        image: conversation?.customer_profile_image,
     };
 
   useEffect(() => {
@@ -130,8 +132,22 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       <div className="h-16 bg-white border-b border-border-light px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold text-sm">
-              {otherParticipant?.name.charAt(0).toUpperCase() || '?'}
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold text-sm">
+              {otherParticipant?.image ? (
+
+                  <img
+                      src={otherParticipant.image}
+                      alt={otherParticipant.name}
+                      className="w-full h-full object-cover"
+                  />
+
+              ) : (
+
+                  <span className="font-semibold">
+                      {otherParticipant?.name.charAt(0).toUpperCase()}
+                  </span>
+
+              )}
             </div>
             {conversation?.status === 'active' &&
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white" />

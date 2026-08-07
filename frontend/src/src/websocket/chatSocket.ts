@@ -68,12 +68,10 @@ class ChatSocket {
 
                     break;
 
-                case "messages_read":
+                case "chat_read":
 
                     store.dispatch(
-                        messagesMarkedRead(
-                            message.data.conversation,
-                        ),
+                        messagesMarkedRead(message.data),
                     );
 
                     break;

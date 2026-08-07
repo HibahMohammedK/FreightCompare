@@ -36,6 +36,9 @@ export interface ConversationDetail extends ConversationList {
     staff: string | null;
 
     messages: Message[];
+    
+    customer_profile_image: string | null;
+    staff_profile_image: string | null;
 
     created_at: string;
 }

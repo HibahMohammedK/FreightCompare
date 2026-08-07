@@ -131,36 +131,41 @@ const chatSlice = createSlice({
 
         messagesMarkedRead: (
             state,
-            action: PayloadAction<string>,
+            action: PayloadAction<{
+                conversation: string;
+                message_ids: string[];
+                reader: string;
+            }>,
         ) => {
 
             if (
                 state.selectedConversation &&
-                state.selectedConversation.id ===
-                    action.payload
+                state.selectedConversation.id === action.payload.conversation
             ) {
 
-                state.selectedConversation.messages.forEach(
-                    (message) => {
+                action.payload.message_ids.forEach((id) => {
 
+                    const message =
+                        state.selectedConversation!.messages.find(
+                            (m) => m.id === id,
+                        );
+
+                    if (message) {
                         message.is_read = true;
+                    }
 
-                    },
-                );
+                });
 
             }
 
             const conversation =
                 state.conversations.find(
                     (conversation) =>
-                        conversation.id ===
-                        action.payload,
+                        conversation.id === action.payload.conversation,
                 );
 
             if (conversation) {
-
                 conversation.unread_count = 0;
-
             }
 
         },

@@ -110,6 +110,17 @@ class ConversationDetailSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    customer_profile_image = serializers.ImageField(
+        source="customer.profile_image",
+        read_only=True,
+    )
+
+    staff_profile_image = serializers.ImageField(
+        source="staff.profile_image",
+        read_only=True,
+        allow_null=True,
+    )
+
     class Meta:
         model = Conversation
         fields = [
@@ -122,6 +133,8 @@ class ConversationDetailSerializer(serializers.ModelSerializer):
             "staff_name",
             "status",
             "messages",
+            "customer_profile_image",
+            "staff_profile_image",
             "created_at",
             "updated_at",
         ]
