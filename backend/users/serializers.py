@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 from subscription.models import Subscription
-
+from .validators import validate_name
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -22,6 +22,22 @@ class RegisterSerializer(serializers.ModelSerializer):
             'confirm_password'
             ]
 
+    def validate_first_name(self, value):
+        value = value.strip()
+
+        if value:
+            validate_name(value, "First name")
+
+        return value
+
+
+    def validate_last_name(self, value):
+        value = value.strip()
+
+        if value:
+            validate_name(value, "Last name")
+
+        return value
     
     def validate(self, attrs):
 
@@ -80,6 +96,23 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["username", "first_name", "last_name", "profile_image", "remove_profile_image"]
+
+    def validate_first_name(self, value):
+        value = value.strip()
+
+        if value:
+            validate_name(value, "First name")
+
+        return value
+
+
+    def validate_last_name(self, value):
+        value = value.strip()
+
+        if value:
+            validate_name(value, "Last name")
+
+        return value
 
 class AdminUserListSerializer(serializers.ModelSerializer):
     is_premium = serializers.SerializerMethodField()

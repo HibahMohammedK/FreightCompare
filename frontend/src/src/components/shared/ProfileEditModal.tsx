@@ -109,10 +109,16 @@ export const ProfileEditModal: React.FC<Props> = ({
 
     } catch (err: any) {
 
+      const data = err?.response?.data;
+
       const error =
-        err?.response?.data?.username?.[0] ||
-        err?.response?.data?.error ||
-        "Failed to update profile";
+          data?.first_name?.[0] ||
+          data?.last_name?.[0] ||
+          data?.username?.[0] ||
+          data?.profile_image?.[0] ||
+          data?.non_field_errors?.[0] ||
+          data?.detail ||
+          "Failed to update profile";
 
       setMessage(error);
 
