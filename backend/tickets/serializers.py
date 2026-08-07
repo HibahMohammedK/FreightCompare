@@ -54,6 +54,13 @@ class TicketListSerializer(serializers.ModelSerializer):
     assigned_staff_name = serializers.SerializerMethodField()
     assigned_staff_email = serializers.SerializerMethodField()
 
+    last_message = serializers.SerializerMethodField()
+    last_message_at = serializers.SerializerMethodField()
+    unread_count = serializers.SerializerMethodField()
+    
+    last_message_sender_id = serializers.SerializerMethodField()
+    last_message_sender_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Ticket
         fields = (
@@ -69,6 +76,11 @@ class TicketListSerializer(serializers.ModelSerializer):
             "assigned_staff_name",
             "assigned_staff_email",
             "created_at",
+            "last_message",
+            "last_message_at",
+            "unread_count",
+            "last_message_sender_id",
+            "last_message_sender_name"
         )
 
     def get_customer_name(self, obj):
@@ -92,6 +104,66 @@ class TicketListSerializer(serializers.ModelSerializer):
             return obj.assigned_staff.email
 
         return None
+
+    def _last_message(self, obj):
+        conversation = getattr(obj, "conversation", None)
+
+        if not conversation:
+            return None
+
+        return (
+            conversation.messages
+            .select_related("sender")
+            .order_by("-created_at")
+            .first()
+        )
+    
+    def get_last_message(self, obj):
+        message = self._last_message(obj)
+        return message.message if message else None
+
+
+    def get_last_message_at(self, obj):
+        message = self._last_message(obj)
+        return (
+            message.created_at.isoformat()
+            if message
+            else None
+        )
+
+    def get_last_message_sender_id(self, obj):
+        message = self._last_message(obj)
+        return str(message.sender.id) if message else None
+
+
+    def get_last_message_sender_name(self, obj):
+        message = self._last_message(obj)
+
+        if not message:
+            return None
+
+        return (
+            message.sender.get_full_name().strip()
+            or message.sender.username
+        )
+
+    def get_unread_count(self, obj):
+        user = self.context.get("request_user")
+
+        if not user:
+            return 0
+
+        conversation = getattr(obj, "conversation", None)
+
+        if not conversation:
+            return 0
+
+        return (
+            conversation.messages
+            .exclude(sender=user)
+            .filter(is_read=False)
+            .count()
+        )
 
 
 class TicketDetailSerializer(serializers.ModelSerializer):

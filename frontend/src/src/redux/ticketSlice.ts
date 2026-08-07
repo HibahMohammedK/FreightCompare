@@ -265,6 +265,25 @@ export const assignTicketToStaff =
 
     },
 
+    ticketUpdated: (
+        state,
+        action: PayloadAction<TicketList>,
+    ) => {
+
+        const index = state.tickets.findIndex(
+            ticket => ticket.id === action.payload.id
+        );
+
+        if (index >= 0) {
+
+            state.tickets.splice(index, 1);
+
+        }
+
+        state.tickets.unshift(action.payload);
+
+    },
+
   },
 
   extraReducers: (builder) => {
@@ -439,6 +458,7 @@ export const {
   ticketCreated,
   ticketAssigned,
   ticketStatusChanged,
+  ticketUpdated,
 } = ticketSlice.actions;
 
 export default ticketSlice.reducer;

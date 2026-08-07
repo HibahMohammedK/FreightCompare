@@ -1,3 +1,5 @@
+import { UserRole } from "./user";
+
 export type TicketCategory =
   | "transport"
   | "subscription"
@@ -51,6 +53,13 @@ export interface TicketList {
   assigned_staff_email: string | null;
 
   created_at: string;
+
+  // Chat summary
+  last_message: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+  last_message_sender_id: string | null;
+  last_message_sender_name: string | null;
 }
 
 /**

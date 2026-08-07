@@ -40,15 +40,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     };
 
   useEffect(() => {
-      if (selectedConversation?.id !== conversationId) {
-          dispatch(fetchConversation(conversationId));
-      }
+      dispatch(fetchConversation(conversationId));
+  }, [dispatch, conversationId]);
 
-  }, [
-      dispatch,
-      conversationId,
-      selectedConversation?.id,
-  ]);
+  useEffect(() => {
+      if (!selectedConversation) return;
+
+      if (selectedConversation.id !== conversationId) return;
+
+      chatSocket.connect(conversationId);
+
+      return () => chatSocket.disconnect();
+
+  }, [conversationId, selectedConversation?.id]);
 
   useEffect(() => {
     if (!conversation || !currentUser) return;
@@ -97,15 +101,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   };
 
-    useEffect(() => {
-
-      chatSocket.connect(conversationId);
-
-      return () => {
-          chatSocket.disconnect();
-      };
-
-  }, [conversationId]);
 
   if (loading) {
       return (

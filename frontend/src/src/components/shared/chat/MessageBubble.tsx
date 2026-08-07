@@ -21,34 +21,38 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                     : "items-start"
             }`}
         >
-            <div className="flex items-end gap-2 max-w-[80%]">
-
-                {!isOwnMessage && (
-                    <div className="w-8 h-8 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold text-xs shrink-0">
-                        {message.sender
-                            .charAt(0)
-                            .toUpperCase()}
-                    </div>
-                )}
+            <div
+                className={`max-w-[70%] px-3 py-1 rounded-xl text-[14px] ${
+                    isOwnMessage
+                        ? "bg-primary text-white rounded-br-sm"
+                        : "bg-white border border-border-light text-text-dark rounded-bl-sm"
+                }`}
+            >
+                <p className="break-words leading-5">
+                    {message.message}
+                </p>
 
                 <div
-                    className={`px-4 py-2.5 rounded-2xl text-sm ${
+                    className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
                         isOwnMessage
-                            ? "bg-primary text-white rounded-br-sm"
-                            : "bg-white border border-border-light text-text-dark rounded-bl-sm"
+                            ? "text-primary-lighter"
+                            : "text-text-lighter"
                     }`}
                 >
-                    {message.message}
+                    <span>
+                        {format(
+                            new Date(message.created_at),
+                            "h:mm a"
+                        )}
+                    </span>
+
+                    {isOwnMessage && (
+                        <span>
+                            {message.is_read ? "✓✓" : "✓"}
+                        </span>
+                    )}
                 </div>
-
             </div>
-
-            <span className="text-[10px] text-text-lighter mt-1 px-10">
-                {format(
-                    new Date(message.created_at),
-                    "h:mm a",
-                )}
-            </span>
         </div>
     );
 

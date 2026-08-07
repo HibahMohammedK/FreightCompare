@@ -1,7 +1,7 @@
 import store from "../redux/store";
 import { updateStaffStatus } from "../redux/staffSlice";
 import { updateUserStatus } from "../redux/authSlice";
-import { ticketAssigned, ticketStatusChanged, ticketCreated } from "../redux/ticketSlice";
+import { ticketAssigned, ticketStatusChanged, ticketCreated, ticketUpdated } from "../redux/ticketSlice";
 
 class SupportSocket {
 
@@ -91,6 +91,12 @@ class SupportSocket {
 
                     break;
                 }
+
+                case "ticket_updated":
+                    store.dispatch(
+                        ticketUpdated(message.data)
+                    );
+                    break;
 
                 default:
 

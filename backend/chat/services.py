@@ -6,7 +6,9 @@ from notifications.utils import send_notification
 from notifications.models import Notification
 from realtime.broadcaster import RealtimeBroadcaster
 from .serializers import MessageSerializer
-from realtime.events import CHAT_MESSAGE
+from realtime.events import CHAT_MESSAGE, CHAT_READ, TICKET_UPDATED
+from tickets.serializers import TicketListSerializer
+
 
 
 
@@ -76,6 +78,13 @@ class ConversationService:
 class MessageService:
 
     @staticmethod
+    def _serialize_ticket(ticket, user=None):
+        return TicketListSerializer(
+            ticket,
+            context={"request_user": user} if user else {},
+        ).data
+
+    @staticmethod
     @transaction.atomic
     def send_message(
         conversation,
@@ -119,6 +128,35 @@ class MessageService:
             data=data,
         )
 
+
+
+        ticket = conversation.ticket
+
+        if ticket.assigned_staff:
+            RealtimeBroadcaster.broadcast_to_group(
+                group_name=f"staff_{ticket.assigned_staff.id}",
+                event=TICKET_UPDATED,
+                data=MessageService._serialize_ticket(
+                    ticket,
+                    ticket.assigned_staff,
+                ),
+            )
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name=f"customer_{ticket.customer.id}",
+            event=TICKET_UPDATED,
+            data=MessageService._serialize_ticket(
+                ticket,
+                ticket.customer,
+            ),
+        )
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name="admins",
+            event=TICKET_UPDATED,
+            data=MessageService._serialize_ticket(ticket),
+        )
+
         return chat_message
 
 
@@ -126,14 +164,59 @@ class MessageService:
     @transaction.atomic
     def mark_messages_as_read(conversation, user):
         """
-        Mark all unread messages from the other participant as read.
+        Mark all unread messages from the other participant as read
+        and notify the sender in realtime.
         """
 
-        return (
-            conversation.messages.exclude(sender=user)
+        messages = (
+            conversation.messages
+            .exclude(sender=user)
             .filter(is_read=False)
-            .update(is_read=True)
         )
+
+        message_ids = list(
+            messages.values_list("id", flat=True)
+        )
+
+        updated = messages.update(is_read=True)
+
+        if updated:
+            RealtimeBroadcaster.broadcast_to_group(
+                group_name=f"conversation_{conversation.id}",
+                event=CHAT_READ,
+                data={
+                    "conversation": str(conversation.id),
+                    "message_ids": [
+                        str(message_id)
+                        for message_id in message_ids
+                    ],
+                    "reader": str(user.id),
+                },
+            )
+
+        ticket = conversation.ticket
+
+        if ticket.assigned_staff:
+            RealtimeBroadcaster.broadcast_to_group(
+                group_name=f"staff_{ticket.assigned_staff.id}",
+                event=TICKET_UPDATED,
+                data=MessageService._serialize_ticket(
+                    ticket,
+                    ticket.assigned_staff,
+                ),
+            )
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name=f"customer_{ticket.customer.id}",
+            event=TICKET_UPDATED,
+            data=MessageService._serialize_ticket(
+                ticket,
+                ticket.customer,
+            ),
+        )
+
+        return updated
+    
 
 
     @staticmethod

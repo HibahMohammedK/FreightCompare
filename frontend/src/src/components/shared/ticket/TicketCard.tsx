@@ -1,6 +1,7 @@
 import React from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ClockIcon } from "lucide-react";
+import { useAppSelector } from "../../../hooks/redux";
 
 import type { TicketList } from "../../../types/ticket";
 
@@ -19,6 +20,16 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   showAssignedStaff = true,
   showCustomer = true
 }) => {
+
+  const currentUser = useAppSelector(
+      (state) => state.auth.user,
+  );
+
+  const senderPrefix =
+      ticket.last_message_sender_id === currentUser?.id
+          ? "You"
+          : ticket.last_message_sender_name ?? "";
+
   const getStatusColor = (status: TicketList["status"]) => {
     switch (status) {
       case "open":
@@ -79,13 +90,28 @@ export const TicketCard: React.FC<TicketCardProps> = ({
             ticket.status
           )}`}
         >
-          {ticket.status.replace(/_/g, " ")}
+          {ticket.status
+          ? ticket.status.replace(/_/g, " ")
+          : ""}
         </span>
       </div>
 
-      <h4 className="font-semibold text-text-dark text-sm mb-2 line-clamp-2">
-        {ticket.subject}
+      <h4 className="font-semibold text-text-dark text-sm mb-1 line-clamp-1">
+          {ticket.subject}
       </h4>
+
+      <p className="text-xs text-text-medium truncate">
+          {ticket.last_message ? (
+              <>
+                  <span className="font-medium">
+                      {senderPrefix}:
+                  </span>{" "}
+                  {ticket.last_message}
+              </>
+          ) : (
+              "No messages yet"
+          )}
+      </p>
 
       <div className="flex items-center justify-between text-xs">
         <span
@@ -100,12 +126,20 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         <div className="flex items-center gap-1 text-text-light">
           <ClockIcon size={12} />
           <span>
-            {formatDistanceToNow(new Date(ticket.created_at), {
+            {formatDistanceToNow(new Date(ticket.last_message_at ?? ticket.created_at), {
               addSuffix: true,
             })}
           </span>
         </div>
       </div>
+        
+        <div className="flex items-center gap-2">
+          {ticket.unread_count > 0 && (
+              <span className="min-w-5 h-5 px-1 rounded-full bg-primary text-white text-[10px] font-semibold flex items-center justify-center">
+                  {ticket.unread_count}
+              </span>
+          )}
+        </div>
 
       {showCustomer && ticket.customer_name && (
         <div className="mt-3 pt-3 border-t border-border-light text-xs text-text-medium">

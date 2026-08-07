@@ -88,12 +88,18 @@ const chatSlice = createSlice({
 
             if (
                 state.selectedConversation &&
-                state.selectedConversation.id ===
-                    action.payload.conversation
+                state.selectedConversation.id === action.payload.conversation
             ) {
-                state.selectedConversation.messages.push(
-                    action.payload,
-                );
+                const exists =
+                    state.selectedConversation.messages.some(
+                        message => message.id === action.payload.id,
+                    );
+
+                if (!exists) {
+                    state.selectedConversation.messages.push(
+                        action.payload,
+                    );
+                }
             }
 
         },
@@ -263,9 +269,16 @@ const chatSlice = createSlice({
                             action.payload.conversation
                     ) {
 
-                        state.selectedConversation.messages.push(
-                            action.payload,
-                        );
+                        const exists =
+                            state.selectedConversation.messages.some(
+                                message => message.id === action.payload.id,
+                            );
+
+                        if (!exists) {
+                            state.selectedConversation.messages.push(
+                                action.payload,
+                            );
+                        }
 
                     }
 
