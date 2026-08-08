@@ -69,6 +69,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 from tickets.models import Ticket
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    force_password_change = serializers.BooleanField(read_only=True)
     class Meta:
         model = User
         fields = [
@@ -83,6 +84,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "profile_image",
             "is_staff",
             "created_at",
+            "force_password_change",
         ]
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
@@ -162,6 +164,7 @@ class CreateStaffSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "password",
+            "force_password_change",
         ]
 
     def validate_email(self, value):
@@ -195,6 +198,7 @@ class CreateStaffSerializer(serializers.ModelSerializer):
             role="staff",
             is_verified=True,
             is_active=True,
+            force_password_change=True,
         )
 
         send_staff_credentials_email(

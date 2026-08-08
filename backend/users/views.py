@@ -243,6 +243,10 @@ class ChangePasswordView(APIView):
 
         user = request.user
         user.set_password(serializer.validated_data["new_password"])
+
+        if user.role == "staff":
+            user.force_password_change = False
+
         user.save()
 
         return Response({
@@ -518,8 +522,8 @@ class VerifyEmailChangeView(APIView):
         )
 
         return Response({
-            "message":
-            "Email updated successfully"
+            "message": "Email updated successfully",
+            "email": request.user.email,
         })
     
 # ========================================================================================================

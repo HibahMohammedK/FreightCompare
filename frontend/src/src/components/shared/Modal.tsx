@@ -8,6 +8,7 @@ interface ModalProps {
   children: React.ReactNode;
   maxWidth?: string;
   headerAction?: React.ReactNode;
+  disableClose?: boolean;
 }
 export const Modal: React.FC<ModalProps> = ({
   isOpen,

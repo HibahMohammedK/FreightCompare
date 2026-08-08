@@ -9,18 +9,23 @@ import {
 import { Modal } from "./Modal";
 import { Input } from "./Input";
 import { Button } from "./Button";
-
+import { useAppDispatch } from "../../hooks/redux";
+import { updateUser } from "../../redux/authSlice";
 import { changePassword } from "../../api/auth";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  forceMode?: boolean;
 };
 
 export const ChangePasswordModal: React.FC<Props> = ({
   isOpen,
-  onClose
+  onClose,
+  forceMode = false,
 }) => {
+
+  const dispatch = useAppDispatch()
 
   const [showCurrent, setShowCurrent] =
     useState(false);
@@ -118,6 +123,12 @@ export const ChangePasswordModal: React.FC<Props> = ({
           confirmPassword
       });
 
+      dispatch(
+          updateUser({
+              force_password_change: false,
+          })
+      );
+
       setErrors({
         general:
           "Password updated successfully"
@@ -147,7 +158,9 @@ export const ChangePasswordModal: React.FC<Props> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      disableClose={forceMode}
       title="Change Password"
+
     >
 
       <div className="flex items-center gap-3 mb-6">
@@ -167,6 +180,14 @@ export const ChangePasswordModal: React.FC<Props> = ({
         </div>
 
       </div>
+      {forceMode && (
+          <div className="mb-5 rounded-xl bg-warning-bg border border-warning p-4">
+              <p className="text-sm text-warning">
+                  Your account is using a temporary password.
+                  Please change it before continuing.
+              </p>
+          </div>
+      )}
 
       <form
         onSubmit={handleSubmit}

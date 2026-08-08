@@ -59,6 +59,8 @@ class User(AbstractUser):
         auto_now=True
     )
 
+    force_password_change = models.BooleanField(default=False)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 

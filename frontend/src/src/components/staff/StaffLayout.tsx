@@ -11,6 +11,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { logout, updateUserStatus } from '../../redux/authSlice';
 import { NotificationBell } from '../shared/notification/NotificationBell';
 import { DashboardHeader } from '../layout/DashboardHeader';
+import { ChangePasswordModal } from '../shared/ChangePasswordModal';
 import { ProfileMenu } from "../layout/ProfileMenu";
 import { logoutUser } from '../../api/auth';
 import { updateMyStatus } from "../../api/staff";
@@ -19,7 +20,6 @@ export const StaffLayout: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
-  
 
   const status = user?.status || "offline";
   const handleLogout = async () => {
@@ -148,6 +148,11 @@ export const StaffLayout: React.FC = () => {
           </main>
 
       </div>
+      <ChangePasswordModal
+          isOpen={!!user?.force_password_change}
+          onClose={() => {}}
+          forceMode={!!user?.force_password_change}
+      />
     </div>);
 
 };

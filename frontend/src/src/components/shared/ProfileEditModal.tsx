@@ -5,7 +5,9 @@ import { Input } from "./Input";
 import { Button } from "./Button";
 import { Trash2Icon } from "lucide-react";
 
-import { useAppSelector } from "../../hooks/redux";
+
+import { useAppSelector, useAppDispatch } from "../../hooks/redux";
+import { updateUser } from "../../redux/authSlice";
 
 import {
   updateProfile,
@@ -27,6 +29,7 @@ export const ProfileEditModal: React.FC<Props> = ({
   const user = useAppSelector(
     (state) => state.auth.user
   );
+  const dispatch = useAppDispatch()
 
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -61,7 +64,7 @@ export const ProfileEditModal: React.FC<Props> = ({
       setProfileImage(null);
     }
 
-  }, [isOpen, user]);
+  }, [isOpen]);
 
   const handleSave = async () => {
 
@@ -94,17 +97,18 @@ export const ProfileEditModal: React.FC<Props> = ({
           );
       }
 
-      await updateProfile(formData);
+      const response = await updateProfile(formData);
+
+      dispatch(
+          updateUser(response.data)
+      );    
 
       setMessage(
         "Profile updated successfully"
       );
 
       setTimeout(() => {
-
         onClose();
-        window.location.reload();
-
       }, 1000);
 
     } catch (err: any) {
@@ -176,23 +180,32 @@ export const ProfileEditModal: React.FC<Props> = ({
 
       setMessage("");
 
-      await verifyEmailChange({
+      const response = await verifyEmailChange({
         verification_id: verificationId,
         otp
       });
+
+      console.log("SUCCESS", response);
 
       setMessage(
         "Email updated successfully"
       );
 
+      dispatch(
+          updateUser({
+              email: response.data.email,
+          })
+      );
+
       setTimeout(() => {
-
         onClose();
-        window.location.reload();
-
       }, 1000);
 
     } catch (err: any) {
+      
+      console.log("ERROR", err);
+      console.log("STATUS", err.response?.status);
+      console.log("DATA", err.response?.data);
 
       const error =
         err?.response?.data?.error ||
@@ -217,11 +230,15 @@ export const ProfileEditModal: React.FC<Props> = ({
 
           await updateProfile(formData);
 
+          dispatch(
+              updateUser({
+                  profile_image: null,
+              })
+          );
+
           setProfileImage(null);
 
           setIsDeleteImageModalOpen(false);
-
-          window.location.reload();
 
       } catch (err: any) {
 

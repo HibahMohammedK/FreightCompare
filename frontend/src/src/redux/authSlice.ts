@@ -77,6 +77,20 @@ const authSlice = createSlice({
       }
 
     },
+
+    updateUser: (
+        state,
+        action: PayloadAction<Partial<User>>
+    ) => {
+
+        if (!state.user) return;
+
+        Object.assign(
+            state.user,
+            action.payload,
+        );
+
+    },
   },
 });
 
@@ -87,7 +101,8 @@ export const {
   loginFailure,
   logout,
   setAuthLoading,
-  updateUserStatus
+  updateUserStatus,
+  updateUser,
 } = authSlice.actions;
 
 export default authSlice.reducer;

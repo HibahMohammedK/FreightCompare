@@ -23,11 +23,12 @@ export interface User {
     is_active: boolean;
     is_staff: boolean;
 
-    profile_image?: string;
+    profile_image?: string | null;
 
     isPremium?: boolean;
 
     created_at: string;
+    force_password_change: boolean;
 }
 
 export interface StaffUser extends User {
