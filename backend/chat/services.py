@@ -89,8 +89,9 @@ class MessageService:
     def send_message(
         conversation,
         sender,
-        content,
-    ):
+        content="",
+        attachment=None,
+        ):
         """
         Create a new chat message and broadcast it in realtime.
         """
@@ -99,6 +100,7 @@ class MessageService:
             conversation=conversation,
             sender=sender,
             message=content,
+            attachment=attachment,
         )
 
         if sender == conversation.customer:

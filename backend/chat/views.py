@@ -1,10 +1,8 @@
-from django.shortcuts import get_object_or_404
-
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Conversation
 from .permissions import (
     CanSendMessage,
     IsConversationParticipant,
@@ -16,6 +14,7 @@ from .serializers import (
     SendMessageSerializer,
 )
 from .services import ConversationService, MessageService
+
 
 
 class ConversationListAPIView(generics.ListAPIView):
@@ -59,6 +58,12 @@ class SendMessageAPIView(APIView):
                 CanSendMessage,
             ]
 
+    parser_classes = [
+        MultiPartParser,
+        FormParser,
+    ]
+
+
     def post(self, request):
         serializer = SendMessageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -73,11 +78,15 @@ class SendMessageAPIView(APIView):
         message = MessageService.send_message(
             conversation=conversation,
             sender=request.user,
-            content=serializer.validated_data["message"],
+            content=serializer.validated_data.get("message", ""),
+            attachment=serializer.validated_data.get("attachment"),
         )
 
         return Response(
-            MessageSerializer(message).data,
+            MessageSerializer(
+                message,
+                context={"request": request},
+            ).data,
             status=status.HTTP_201_CREATED,
         )
 

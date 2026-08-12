@@ -83,6 +83,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const handleSendMessage = async (
       message: string,
+      attachment?: File | null,
   ) => {
 
       if (!conversation) return;
@@ -93,6 +94,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               sendChatMessage({
                   conversation: conversation.id,
                   message,
+                  attachment,
               }),
           ).unwrap();
 

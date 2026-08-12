@@ -11,6 +11,9 @@ class MessageSerializer(serializers.ModelSerializer):
     sender = serializers.UUIDField(source="sender.id", read_only=True)
     sender_name = serializers.CharField(source="sender.full_name", read_only=True)
     sender_email = serializers.EmailField(source="sender.email", read_only=True)
+    attachment = serializers.FileField(
+        read_only=True,
+    )
 
     class Meta:
         model = Message
@@ -21,6 +24,7 @@ class MessageSerializer(serializers.ModelSerializer):
             "sender_name",
             "sender_email",
             "message",
+            "attachment",
             "is_read",
             "created_at",
         ]
@@ -29,17 +33,31 @@ class MessageSerializer(serializers.ModelSerializer):
 
 class SendMessageSerializer(serializers.Serializer):
     conversation = serializers.UUIDField()
+
     message = serializers.CharField(
         max_length=5000,
+        required=False,
+        allow_blank=True,
         trim_whitespace=True,
     )
 
-    def validate_message(self, value):
-        if not value.strip():
+    attachment = serializers.FileField(
+        required=False,
+        allow_null=True,
+    )
+
+    def validate(self, attrs):
+        message = attrs.get("message", "").strip()
+        attachment = attrs.get("attachment")
+
+        if not message and not attachment:
             raise serializers.ValidationError(
-                "Message cannot be empty."
+                "Message or attachment is required."
             )
-        return value
+
+        attrs["message"] = message
+
+        return attrs
 
 
 class ConversationListSerializer(serializers.ModelSerializer):

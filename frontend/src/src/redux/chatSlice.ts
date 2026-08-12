@@ -297,7 +297,10 @@ const chatSlice = createSlice({
                     if (conversation) {
 
                         conversation.last_message =
-                            action.payload.message;
+                            action.payload.message ||
+                            (action.payload.attachment
+                                ? "📎 Attachment"
+                                : null);
 
                         conversation.last_message_at =
                             action.payload.created_at;

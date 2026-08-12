@@ -62,7 +62,15 @@ class Message(models.Model):
         related_name="sent_messages",
     )
 
-    message = models.TextField()
+    message = models.TextField(
+        blank=True,
+    )
+
+    attachment = models.FileField(
+        upload_to="chat/attachments/",
+        blank=True,
+        null=True,
+    )
 
     is_read = models.BooleanField(default=False)
 

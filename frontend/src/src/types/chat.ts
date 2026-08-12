@@ -8,6 +8,8 @@ export interface Message {
     sender_email: string;
 
     message: string;
+    attachment: string | null;
+
     is_read: boolean;
 
     created_at: string;
@@ -45,5 +47,6 @@ export interface ConversationDetail extends ConversationList {
 
 export interface SendMessageRequest {
     conversation: string;
-    message: string;
+    message?: string;
+    attachment?: File | null;
 }

@@ -21,9 +21,30 @@ export const getConversation = (id: string) => {
 export const sendMessage = (
     data: SendMessageRequest,
 ) => {
+    const formData = new FormData();
+
+    formData.append(
+        "conversation",
+        data.conversation,
+    );
+
+    if (data.message?.trim()) {
+        formData.append(
+            "message",
+            data.message.trim(),
+        );
+    }
+
+    if (data.attachment) {
+        formData.append(
+            "attachment",
+            data.attachment,
+        );
+    }
+
     return API.post(
         "/chat/messages/",
-        data,
+        formData,
     );
 };
 
