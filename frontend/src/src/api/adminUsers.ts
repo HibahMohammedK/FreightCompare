@@ -1,15 +1,22 @@
 import API from "./axios";
 
 export const getAdminUsers = (
- search?: string
+    search?: string,
+    premium?: "all" | "premium" | "free"
 ) => {
-
- return API.get("/users/admin/users/", {
-   params: {
-     search
-   }
- });
-
+    return API.get("/users/admin/users/", {
+        params: {
+            search,
+            ...(premium && premium !== "all"
+                ? {
+                      premium:
+                          premium === "premium"
+                              ? "true"
+                              : "false",
+                  }
+                : {}),
+        },
+    });
 };
 
 export const getUsersByUrl = (url: string) => {

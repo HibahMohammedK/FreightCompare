@@ -21,6 +21,10 @@ export const UserManagementPage: React.FC = () => {
   const [prevPage, setPrevPage] = useState<string | null>(null);
   const [userToToggle, setUserToToggle] = useState<any | null>(null);
 
+  const [premiumFilter, setPremiumFilter] = useState<
+      "all" | "premium" | "free"
+  >("all");
+
   const handleToggleBlock = async () => {
     if (!userToToggle) return;
     try {
@@ -47,7 +51,8 @@ export const UserManagementPage: React.FC = () => {
 
   const fetchUsers = async (
     url?: string,
-    searchTerm?: string
+    searchTerm?: string,
+    premium?: "all" | "premium" | "free"
   ) => {
 
     try {
@@ -61,7 +66,9 @@ export const UserManagementPage: React.FC = () => {
       } else {
 
         res = await getAdminUsers(
-          searchTerm || search
+          searchTerm || search,
+          premium ?? premiumFilter
+
         );
 
       }
@@ -85,10 +92,11 @@ export const UserManagementPage: React.FC = () => {
 
     fetchUsers(
       undefined,
-      search
+      search,
+      premiumFilter
     );
 
-  }, [search]);
+  }, [search, premiumFilter]);
 
   if (loading) {
     return <div className="p-8">Loading customers...</div>;
@@ -107,15 +115,42 @@ export const UserManagementPage: React.FC = () => {
 
       <Card className="mb-6 p-4">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Search customers by name or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              icon={<SearchIcon size={18} />} />
-            
+            <div className="flex-1">
+                <Input
+                    placeholder="Search customers by name or email..."
+                    value={search}
+                    onChange={(e) =>
+                        setSearch(e.target.value)
+                    }
+                    icon={<SearchIcon size={18} />}
+                />
+            </div>
+
+            <select
+                value={premiumFilter}
+                onChange={(e) =>
+                    setPremiumFilter(
+                        e.target.value as
+                            | "all"
+                            | "premium"
+                            | "free"
+                    )
+                }
+                className="h-10 rounded-lg border border-border-light bg-white px-3 text-sm text-text-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                  <option value="all">
+                      All Customers
+                  </option>
+
+                  <option value="premium">
+                      Premium
+                  </option>
+
+                  <option value="free">
+                      Free
+                  </option>
+              </select>
           </div>
-        </div>
       </Card>
 
       <Card className="p-0 overflow-hidden">

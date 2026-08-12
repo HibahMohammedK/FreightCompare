@@ -585,14 +585,30 @@ class AdminUserListView(ListAPIView):
     pagination_class = AdminUserPagination
 
     def get_queryset(self):
+        queryset = (
+            User.objects
+            .filter(role="customer")
+            .order_by("-created_at")
+        )
 
-        queryset = User.objects.filter(role='customer').order_by("-created_at")
         search = self.request.query_params.get("search")
- 
+        premium = self.request.query_params.get("premium")
+
         if search:
             queryset = queryset.filter(
                 Q(username__icontains=search) |
                 Q(email__icontains=search)
+            )
+
+        if premium == "true":
+            queryset = queryset.filter(
+                subscription__status="active"
+            )
+
+        elif premium == "false":
+            queryset = queryset.filter(
+                Q(subscription__isnull=True) |
+                ~Q(subscription__status="active")
             )
 
         return queryset
