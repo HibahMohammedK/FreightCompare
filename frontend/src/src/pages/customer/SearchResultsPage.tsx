@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
-import { setFilters, setSearchResults, removeSavedRoute, addSavedRoute } from '../../redux/transportSlice';
+import { setFilters, setSearchResults, removeSavedRoute, addSavedRoute, MAX_COMPARE_ITEMS } from '../../redux/transportSlice';
 
 import { getTransports, getLocations, saveSearchHistory } from '../../api/transport';
 import { useLocation, useNavigate } from "react-router-dom";
@@ -427,7 +427,16 @@ export const SearchResultsPage: React.FC = () => {
             <p className="text-sm text-text-light">
               {filteredResults.length} options found
             </p>
+
+            <p className="text-xs text-text-light mt-1">
+                Select up to{" "}
+                <span className="font-medium text-text-dark">
+                    {MAX_COMPARE_ITEMS}
+                </span>{" "}
+                transport options to compare.
+            </p>
           </div>
+
 
           <div className="bg-white rounded-xl border border-border-light p-5 sticky top-40">
             <div className="flex items-center gap-2 mb-6 text-text-dark font-semibold text-sm">
@@ -616,9 +625,10 @@ export const SearchResultsPage: React.FC = () => {
           className="fixed bottom-6 right-6 z-50 bg-primary text-white px-5 py-3 rounded-full shadow-lg hover:bg-primary-dark transition flex items-center gap-2"
         >
           <ArrowLeftRightIcon size={18} />
-          Compare ({compareItems.length})
+          Compare ({compareItems.length}/{MAX_COMPARE_ITEMS})
         </button>
       )}
+
 
       <PriceAlertModal
         isOpen={isAlertModalOpen}

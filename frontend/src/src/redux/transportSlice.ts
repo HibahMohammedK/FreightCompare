@@ -3,6 +3,8 @@ import type { Transport } from "../types/transport";
 import type { SearchHistory } from "../types/searchHistory";
 import type { PriceAlert } from "../types/priceAlert";
 
+export const MAX_COMPARE_ITEMS = 4;
+
 interface TransportState {
   searchResults: Transport[];
   compareItems: Transport[];
@@ -55,7 +57,9 @@ const transportSlice = createSlice({
         state.compareItems = state.compareItems.filter(
           (item) => item.id !== action.payload.id
         );
-      } else if (state.compareItems.length < 4) {
+      } else if (
+          state.compareItems.length < MAX_COMPARE_ITEMS
+      ) {
         state.compareItems.push(action.payload);
       }
     },
