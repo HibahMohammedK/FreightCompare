@@ -14,9 +14,10 @@ from .permissions import IsAdminUserCustom
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from price_alerts.utils import check_price_alerts
 from .utils import check_route_matches
+
 
 
 class TransportViewSet(viewsets.ModelViewSet):
@@ -222,15 +223,25 @@ class CsvUploadView(APIView):
                 validated["company"].split()
             )
 
+            company_name = " ".join(
+                validated["company"].split()
+            )
+
             company = Company.objects.filter(
                 name__iexact=company_name
             ).first()
 
             if not company:
-                company = Company.objects.create(
-                    name=company_name,
-                    is_active=True,
-                )
+                try:
+                    with transaction.atomic():
+                        company = Company.objects.create(
+                            name=company_name,
+                            is_active=True,
+                        )
+                except IntegrityError:
+                    company = Company.objects.get(
+                        name__iexact=company_name
+                    )
 
             try:
                 transport = Transport.objects.create(
