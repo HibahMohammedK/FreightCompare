@@ -271,3 +271,40 @@ class TicketAssignSerializer(serializers.Serializer):
             )
 
         return staff
+
+
+class TicketBulkReassignSerializer(serializers.Serializer):
+    from_staff = serializers.UUIDField()
+    to_staff = serializers.UUIDField()
+
+    def validate(self, attrs):
+        if attrs["from_staff"] == attrs["to_staff"]:
+            raise serializers.ValidationError(
+                "Source and target staff members must be different."
+            )
+
+        try:
+            source_staff = User.objects.get(
+                id=attrs["from_staff"],
+                role="staff",
+            )
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                {"from_staff": "Source staff member does not exist."}
+            )
+
+        try:
+            target_staff = User.objects.get(
+                id=attrs["to_staff"],
+                role="staff",
+                is_active=True,
+            )
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                {"to_staff": "Target staff member does not exist or is inactive."}
+            )
+
+        attrs["source_staff"] = source_staff
+        attrs["target_staff"] = target_staff
+
+        return attrs

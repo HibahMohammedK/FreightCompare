@@ -9,6 +9,7 @@ import {
   createTicket,
   updateTicketStatus,
   assignTicket,
+  reassignTickets,
 } from "../api/ticket";
 
 import type {
@@ -30,6 +31,7 @@ interface TicketState {
     createTicket: boolean;
     updateStatus: boolean;
     assignTicket: boolean;
+    reassignTickets: boolean;
   };
 
   error: string | null;
@@ -45,6 +47,7 @@ const initialState: TicketState = {
     createTicket: false,
     updateStatus: false,
     assignTicket: false,
+    reassignTickets: false,
   },
 
   error: null,
@@ -56,18 +59,21 @@ const initialState: TicketState = {
 
 export const fetchTickets = createAsyncThunk<
   TicketList[],
-  void,
+  string | undefined,
   { rejectValue: string }
 >(
   "ticket/fetchTickets",
-  async (_, { rejectWithValue }) => {
+  async (assignedStaff, { rejectWithValue }) => {
     try {
-      const response = await getTickets();
+      const response = await getTickets(
+        assignedStaff
+      );
+
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.detail ??
-          "Failed to fetch tickets."
+        "Failed to fetch tickets."
       );
     }
   }
@@ -182,6 +188,44 @@ export const assignTicketToStaff =
         return rejectWithValue(
           error.response?.data?.detail ??
             "Failed to assign ticket."
+        );
+      }
+    }
+  );
+
+  /* ============================================================
+    BULK REASSIGN STAFF
+  ============================================================ */
+
+  export const reassignTicketsToStaff = createAsyncThunk<
+    {
+      message: string;
+      updated_count: number;
+    },
+    {
+      fromStaff: string;
+      toStaff: string;
+    },
+    { rejectValue: string }
+  >(
+    "ticket/reassignTickets",
+    async (
+      { fromStaff, toStaff },
+      { rejectWithValue }
+    ) => {
+      try {
+        const response = await reassignTickets(
+          fromStaff,
+          toStaff
+        );
+
+        return response.data;
+      } catch (error: any) {
+        return rejectWithValue(
+          error.response?.data?.detail ??
+            error.response?.data?.to_staff?.[0] ??
+            error.response?.data?.from_staff?.[0] ??
+            "Failed to reassign tickets."
         );
       }
     }
@@ -448,7 +492,32 @@ export const assignTicketToStaff =
         state.error =
           action.payload ??
           "Failed to assign ticket.";
-      });
+      })
+
+      .addCase(
+        reassignTicketsToStaff.pending,
+        (state) => {
+          state.loading.reassignTickets = true;
+          state.error = null;
+        }
+      )
+
+      .addCase(
+        reassignTicketsToStaff.fulfilled,
+        (state) => {
+          state.loading.reassignTickets = false;
+        }
+      )
+
+      .addCase(
+        reassignTicketsToStaff.rejected,
+        (state, action) => {
+          state.loading.reassignTickets = false;
+          state.error =
+            action.payload ??
+            "Failed to reassign tickets.";
+        }
+      );
   },
 });
 

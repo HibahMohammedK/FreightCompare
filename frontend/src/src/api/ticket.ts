@@ -9,8 +9,17 @@ import {
 } from "../types/ticket";
 
 // GET all tickets
-export const getTickets = () =>
-  API.get<TicketList[]>("/tickets/");
+export const getTickets = (
+  assignedStaff?: string
+) =>
+  API.get<TicketList[]>("/tickets/", {
+    params:
+      assignedStaff && assignedStaff !== "all"
+        ? {
+            assigned_staff: assignedStaff,
+          }
+        : undefined,
+  });
 
 // GET single ticket
 export const getTicket = (id: string) =>
@@ -44,3 +53,12 @@ export const assignTicket = (
     `/tickets/${id}/assign/`,
     data
   );
+
+export const reassignTickets = (
+  fromStaff: string,
+  toStaff: string
+) =>
+  API.patch("/tickets/reassign-staff/", {
+    from_staff: fromStaff,
+    to_staff: toStaff,
+  });

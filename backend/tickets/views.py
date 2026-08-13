@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -11,7 +12,8 @@ from .serializers import (
     TicketDetailSerializer,
     TicketListSerializer,
     TicketStatusSerializer,
-    TicketAssignSerializer
+    TicketAssignSerializer,
+    TicketBulkReassignSerializer
 )
 from .services import TicketAssignmentService,TicketStatusService
 from .permissions import CanViewTicket, IsCustomer, CanUpdateTicket, IsAdmin
@@ -73,6 +75,20 @@ class TicketListAPIView(ListAPIView):
         )
 
         if user.role == "admin":
+            staff_id = self.request.query_params.get(
+                "assigned_staff"
+            )
+
+            if staff_id == "unassigned":
+                return queryset.filter(
+                    assigned_staff__isnull=True
+                )
+
+            if staff_id:
+                return queryset.filter(
+                    assigned_staff_id=staff_id
+                )
+
             return queryset
 
         if user.role == "staff":
@@ -178,5 +194,52 @@ class TicketAssignAPIView(UpdateAPIView):
 
         return Response(
             TicketDetailSerializer(ticket).data,
+            status=status.HTTP_200_OK,
+        )
+
+class TicketBulkReassignAPIView(APIView):
+    """
+    Reassign all tickets from one staff member to another.
+    Only administrators can perform this action.
+    """
+
+    permission_classes = [
+        IsAuthenticated,
+        IsAdmin,
+    ]
+
+    def patch(self, request):
+        serializer = TicketBulkReassignSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        source_staff = serializer.validated_data[
+            "source_staff"
+        ]
+
+        target_staff = serializer.validated_data[
+            "target_staff"
+        ]
+
+        updated_count = Ticket.objects.filter(
+            assigned_staff=source_staff
+        ).exclude(
+            status="closed"
+        ).update(
+            assigned_staff=target_staff
+        )
+
+        return Response(
+            {
+                "message": (
+                    f"{updated_count} ticket(s) "
+                    "reassigned successfully."
+                ),
+                "updated_count": updated_count,
+            },
             status=status.HTTP_200_OK,
         )

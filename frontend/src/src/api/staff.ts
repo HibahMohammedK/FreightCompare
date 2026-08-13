@@ -1,4 +1,5 @@
 import API from "./axios";
+import type { StaffUser } from "../types/user";
 
 export const getStaff = (
   search?: string,
@@ -73,4 +74,26 @@ export const updateMyStatus = (
     }
   );
 
+};
+
+export const getAllStaff = async (): Promise<StaffUser[]> => {
+  let response = await getStaff();
+
+  const allStaff: StaffUser[] = [
+    ...(response.data.results || []),
+  ];
+
+  let nextUrl = response.data.next;
+
+  while (nextUrl) {
+    response = await getStaffByUrl(nextUrl);
+
+    allStaff.push(
+      ...(response.data.results || [])
+    );
+
+    nextUrl = response.data.next;
+  }
+
+  return allStaff;
 };
