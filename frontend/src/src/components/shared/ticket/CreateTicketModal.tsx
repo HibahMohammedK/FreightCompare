@@ -10,7 +10,7 @@ import {
   fetchTicket,
 } from "../../../redux/ticketSlice";
 import { CreateTicketRequest } from "../../../types/ticket";
-import { PremiumUpgradeModal } from "../premium/PremiumUpgradeModal";
+
 
 interface Option {
   value: string;
@@ -50,11 +50,7 @@ export const CreateTicketModal: React.FC<Props> = ({
     description?: string;
   }>({});
 
-  const [showUpgradeModal, setShowUpgradeModal] =
-        useState(false);
   
-  const [upgradeMessage, setUpgradeMessage] =
-        useState("");
 
   const handleChange = (
     field: keyof TicketFormData,
@@ -131,13 +127,6 @@ export const CreateTicketModal: React.FC<Props> = ({
       onClose();
     } catch (error: any) {
 
-        if (error.code === "PREMIUM_REQUIRED") {
-            onClose();
-            setUpgradeMessage(error.detail);
-            setShowUpgradeModal(true);
-            return;
-        }
-
         if (
             error.subject ||
             error.description ||
@@ -196,11 +185,7 @@ export const CreateTicketModal: React.FC<Props> = ({
           </Button>
         </div>
       </Modal>
-      <PremiumUpgradeModal
-          isOpen={showUpgradeModal}
-          onClose={() => setShowUpgradeModal(false)}
-          message={upgradeMessage}
-      />
+      
     </>
   );
 };

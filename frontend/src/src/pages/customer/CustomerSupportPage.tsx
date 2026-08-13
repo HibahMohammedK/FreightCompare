@@ -1,6 +1,6 @@
 import React, { useState,useEffect } from "react";
 import { UserNavbar } from "../../components/shared/UserNavbar";
-import { Button } from "../../components/shared/Button";
+import { PremiumUpgradeModal } from "../../components/shared/premium/PremiumUpgradeModal";
 import { TicketList } from "../../components/shared/ticket/TicketList";
 import { TicketDetails } from "../../components/shared/ticket/TicketDetails";
 import { EmptyTicketState } from "../../components/shared/ticket/EmptyTicketState";
@@ -22,6 +22,14 @@ export const CustomerSupportPage: React.FC = () => {
   
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+
+  const { user } = useAppSelector((state) => state.auth);
+
+  const [showUpgradeModal, setShowUpgradeModal] =
+    useState(false);
+
+  const [upgradeMessage, setUpgradeMessage] =
+    useState("");
 
   const filteredTickets = tickets.filter((ticket) => {
       const matchesFilter =
@@ -47,6 +55,18 @@ export const CustomerSupportPage: React.FC = () => {
       }
   }, [dispatch, tickets, selectedTicket]);
 
+  const handleCreateTicket = () => {
+        if (!user?.isPremium) {
+            setUpgradeMessage(
+                "Creating support tickets is available only for Premium users. Upgrade to Premium to create a support ticket."
+            );
+            setShowUpgradeModal(true);
+            return;
+        }
+
+        setShowCreateModal(true);
+    };
+
   return (
     <div className="h-screen flex flex-col bg-bg-light overflow-hidden">
       <UserNavbar />
@@ -70,7 +90,7 @@ export const CustomerSupportPage: React.FC = () => {
             {tickets.length === 0 ? (
 
                 <EmptyTicketState
-                    onCreateTicket={() => setShowCreateModal(true)}
+                    onCreateTicket={handleCreateTicket}
                 />
 
             ) : (
@@ -102,7 +122,7 @@ export const CustomerSupportPage: React.FC = () => {
                         onFilterChange={setFilter}
                         tickets={filteredTickets}
                         showCreateButton
-                        onCreateTicket={() => setShowCreateModal(true)}
+                        onCreateTicket={handleCreateTicket}
                     />
 
                     <div className="flex-1 min-w-0 min-h-0 flex overflow-hidden">
@@ -122,6 +142,12 @@ export const CustomerSupportPage: React.FC = () => {
       <CreateTicketModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
+      />
+
+      <PremiumUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          message={upgradeMessage}
       />
     </div>
   );
