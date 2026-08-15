@@ -101,6 +101,7 @@ export const TransportManagementPage: React.FC = () => {
         source: values.source.trim(),
         destination: values.destination.trim(),
         price: Number(values.price),
+        price_unit: values.priceUnit,
         duration: Number(values.duration),
         departure_date: values.departureDate,
         booking_url: values.bookingUrl,

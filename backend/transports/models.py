@@ -9,6 +9,14 @@ class Transport(models.Model):
         ("sea", "Sea"),
     )
 
+    PRICE_UNIT_CHOICES = (
+            ("shipment", "Per Shipment"),
+            ("kg", "Per KG"),
+            ("cbm", "Per CBM"),
+            ("pallet", "Per Pallet"),
+            ("container", "Per Container"),
+        )
+
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     transport_type = models.CharField(max_length=10, choices=TRANSPORT_TYPE_CHOICES)
 
@@ -16,6 +24,13 @@ class Transport(models.Model):
     destination = models.CharField(max_length=255)
 
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    price_unit = models.CharField(
+        max_length=20,
+        choices=PRICE_UNIT_CHOICES,
+        default="shipment",
+    )
+
     duration = models.IntegerField(help_text="Duration in hours")
 
     departure_date = models.DateField()

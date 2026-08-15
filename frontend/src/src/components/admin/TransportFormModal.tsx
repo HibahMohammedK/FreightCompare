@@ -15,6 +15,7 @@ export interface TransportFormValues {
   source: string;
   destination: string;
   price: string;
+  priceUnit: "shipment" | "kg" | "cbm" | "pallet" | "container";
   duration: string;
   departureDate: string;
   bookingUrl: string;
@@ -34,6 +35,7 @@ const emptyValues: TransportFormValues = {
   source: '',
   destination: '',
   price: '',
+  priceUnit: 'shipment',
   duration: '',
   departureDate: '',
   bookingUrl: ''
@@ -106,6 +108,7 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
         source: initialValues.source,
         destination: initialValues.destination,
         price: String(initialValues.price),
+        priceUnit: initialValues.price_unit || 'shipment',
         duration: initialValues.duration,
         departureDate: initialValues.departure_date,
         bookingUrl: initialValues.booking_url
@@ -360,13 +363,40 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                <Input
-                  label="Price"
-                  type="number"
-                  value={values.price}
-                  onChange={(e) => updateField("price", e.target.value)}
-                  error={errors.price}
-                />
+                <div className="flex flex-col gap-1.5">
+                  <Input
+                    label="Price"
+                    type="number"
+                    value={values.price}
+                    onChange={(e) =>
+                      updateField("price", e.target.value)
+                    }
+                    error={errors.price}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-text-medium">
+                    Price Unit
+                  </label>
+
+                  <select
+                    value={values.priceUnit}
+                    onChange={(e) =>
+                      updateField(
+                        "priceUnit",
+                        e.target.value as TransportFormValues["priceUnit"]
+                      )
+                    }
+                    className="w-full rounded-xl border border-border-light bg-white px-4 py-2.5 text-sm"
+                  >
+                    <option value="shipment">Per Shipment</option>
+                    <option value="kg">Per KG</option>
+                    <option value="cbm">Per CBM</option>
+                    <option value="pallet">Per Pallet</option>
+                    <option value="container">Per Container</option>
+                  </select>
+                </div>
 
                 <div className="flex flex-col">
                   <Input

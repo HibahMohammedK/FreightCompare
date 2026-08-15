@@ -83,6 +83,18 @@ export const TransportCard: React.FC<TransportCardProps> = ({
         dispatch(toggleCompareItem(transport));
     };
 
+    const formatPriceUnit = (unit: Transport["price_unit"]) => {
+        const labels: Record<Transport["price_unit"], string> = {
+            shipment: "Per Shipment",
+            kg: "Per KG",
+            cbm: "Per CBM",
+            pallet: "Per Pallet",
+            container: "Per Container",
+        };
+
+        return labels[unit];
+    };
+
     return (
         <article
             className="bg-white rounded-[28px] border border-slate-100 overflow-hidden shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]"
@@ -156,14 +168,12 @@ export const TransportCard: React.FC<TransportCardProps> = ({
                             </span>
 
                             <span className="text-[20px] font-bold text-slate-900">
-                                {formatPrice(
-                                    transport.price
-                                )}
+                                {formatPrice(transport.price)}
                             </span>
                         </div>
 
-                        <span className="mt-1 block text-[11px] text-slate-400 uppercase tracking-[0.18em]">
-                            AED
+                        <span className="mt-1 block text-[11px] text-slate-400">
+                            {formatPriceUnit(transport.price_unit)}
                         </span>
                     </div>
                 </div>

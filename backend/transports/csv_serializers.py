@@ -19,6 +19,16 @@ class TransportCsvRowSerializer(serializers.Serializer):
         decimal_places=2,
     )
 
+    price_unit = serializers.ChoiceField(
+        choices=[
+            "shipment",
+            "kg",
+            "cbm",
+            "pallet",
+            "container",
+        ]
+    )
+
     duration = serializers.IntegerField()
 
     departure_date = serializers.DateField()

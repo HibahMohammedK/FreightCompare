@@ -5,6 +5,7 @@ export interface Transport {
   source: string;
   destination: string;
   price: number;
+  price_unit : "shipment" | "kg" | "cbm" | "pallet" | "container";
   duration: number;
   departure_date: string;
   booking_url?: string;

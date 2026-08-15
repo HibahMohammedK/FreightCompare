@@ -22,6 +22,7 @@ class TransportSerializer(serializers.ModelSerializer):
             "source",
             "destination",
             "price",
+            "price_unit",
             "duration",
             "departure_date",
             "booking_url",

@@ -172,6 +172,7 @@ class CsvUploadView(APIView):
                 "source",
                 "destination",
                 "price",
+                "price_unit",
                 "duration",
                 "departure_date",
                 "booking_url",
@@ -223,10 +224,6 @@ class CsvUploadView(APIView):
                 validated["company"].split()
             )
 
-            company_name = " ".join(
-                validated["company"].split()
-            )
-
             company = Company.objects.filter(
                 name__iexact=company_name
             ).first()
@@ -250,6 +247,7 @@ class CsvUploadView(APIView):
                     source=validated["source"],
                     destination=validated["destination"],
                     price=validated["price"],
+                    price_unit=validated["price_unit"],
                     duration=validated["duration"],
                     departure_date=validated["departure_date"],
                     booking_url=validated["booking_url"],
