@@ -27,11 +27,9 @@ import { SavedPage } from './src/pages/customer/SavedPage';
 import { ComparePage } from './src/pages/customer/ComparePage';
 import { HistoryPage } from './src/pages/customer/HistoryPage';
 import { PricingPage } from './src/pages/customer/PricingPage';
-import { SupportPage } from './src/pages/customer/SupportPage';
 import { SubscriptionCancelPage } from './src/pages/customer/SubscriptionCancelPage';
 import { SubscriptionSuccessPage } from './src/pages/customer/SubscriptionSuccessPage';
 import { CustomerSupportPage } from './src/pages/customer/CustomerSupportPage';
-import { CustomerChatPage } from './src/pages/customer/CustomerChatPage';
 import { PriceAlertsPage } from './src/pages/customer/PriceAlertsPage';
 
 // Staff
@@ -167,7 +165,6 @@ export function App() {
           <Route path="/subscription/success" element={<SubscriptionSuccessPage />}/>
           <Route path="/subscription/cancel" element={<SubscriptionCancelPage />}/>
           <Route path="/support" element={<CustomerSupportPage />} />
-          <Route path="/chat" element={<CustomerChatPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>

@@ -21,7 +21,6 @@ import { toast } from "sonner";
 
 interface TransportCardProps {
     transport: Transport;
-    onBook?: () => void;
     onTrack?: () => void;
     index?: number;
     isSaved?: boolean;
@@ -30,7 +29,6 @@ interface TransportCardProps {
 
 export const TransportCard: React.FC<TransportCardProps> = ({
     transport,
-    onBook,
     onTrack,
     index = 0,
     isSaved,
@@ -273,16 +271,17 @@ export const TransportCard: React.FC<TransportCardProps> = ({
 
                     {/* Book */}
                     <div className="ml-auto">
-                        <button
-                            type="button"
-                            onClick={onBook}
-                            className="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
-                        >
-                            Book Now
-                            <ArrowUpRightIcon
-                                size={16}
-                            />
-                        </button>
+                        {transport.booking_url && (
+                            <a
+                                href={transport.booking_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+                            >
+                                Book Now
+                                <ArrowUpRightIcon size={16} />
+                            </a>
+                        )}
                     </div>
                 </div>
             </div>

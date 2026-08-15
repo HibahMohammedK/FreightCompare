@@ -147,9 +147,9 @@ export const PricingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant={isPremium ? 'outline' : 'primary'}
-                onClick={() => navigate('/chat')}
+                onClick={() => navigate('/support')}
               >
-                {isPremium ? 'Open Premium Chat' : 'Preview Chat Access'}
+                {isPremium ? 'Go to Support ' : 'Preview Support'}
               </Button>
 
               {isPremium && (
