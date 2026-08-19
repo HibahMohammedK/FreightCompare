@@ -15,6 +15,7 @@ import { ChangePasswordModal } from '../shared/ChangePasswordModal';
 import { ProfileMenu } from "../layout/ProfileMenu";
 import { logoutUser } from '../../api/auth';
 import { updateMyStatus } from "../../api/staff";
+import { presenceSocket } from '../../websocket/PresenceSocket';
 
 export const StaffLayout: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -28,6 +29,8 @@ export const StaffLayout: React.FC = () => {
     } catch (err) {
       console.error("Logout failed", err);
     } finally {
+      presenceSocket.disconnect();
+
       dispatch(logout());
       navigate("/login");
     }

@@ -1,7 +1,20 @@
 import store from "../redux/store";
-import { updateStaffStatus } from "../redux/staffSlice";
-import { updateUserStatus } from "../redux/authSlice";
-import { ticketAssigned, ticketStatusChanged, ticketCreated, ticketUpdated } from "../redux/ticketSlice";
+
+import {
+    updateStaffStatus
+} from "../redux/staffSlice";
+
+import {
+    updateUserStatus
+} from "../redux/authSlice";
+
+import {
+    ticketAssigned,
+    ticketStatusChanged,
+    ticketCreated,
+    ticketUpdated
+} from "../redux/ticketSlice";
+
 
 class SupportSocket {
 
@@ -18,23 +31,34 @@ class SupportSocket {
         );
 
         this.socket.onopen = () => {
-            console.log("Support WebSocket Connected");
+
+            console.log(
+                "Support WebSocket Connected"
+            );
+
         };
 
         this.socket.onclose = () => {
-            console.log("Support WebSocket Closed");
+
+            console.log(
+                "Support WebSocket Closed"
+            );
+
         };
 
         this.socket.onerror = (error) => {
+
             console.error(
                 "Support WebSocket Error:",
                 error
             );
+
         };
 
         this.socket.onmessage = (event) => {
 
-            const message = JSON.parse(event.data);
+            const message =
+                JSON.parse(event.data);
 
             switch (message.event) {
 
@@ -42,61 +66,123 @@ class SupportSocket {
 
                     store.dispatch(
                         updateStaffStatus({
-                            id: message.data.user_id,
-                            status: message.data.status,
+                            id:
+                                message.data.user_id,
+                            status:
+                                message.data.status,
                         })
                     );
 
                     const currentUser =
-                        store.getState().auth.user;
+                        store.getState()
+                            .auth.user;
 
                     if (
                         currentUser &&
-                        currentUser.id === message.data.user_id
+                        currentUser.id ===
+                            message.data.user_id
                     ) {
+
                         store.dispatch(
                             updateUserStatus(
                                 message.data.status
                             )
                         );
+
                     }
 
                     break;
                 }
 
+
+                case "staff_presence": {
+
+                    const staffId =
+                        message.data.staff_id;
+
+                    const status =
+                        message.data.status;
+
+
+                    // Update admin staff list.
+                    store.dispatch(
+                        updateStaffStatus({
+                            id: staffId,
+                            status: status,
+                        })
+                    );
+
+
+                    // Update the logged-in staff's
+                    // own ProfileMenu.
+                    const currentUser =
+                        store.getState()
+                            .auth.user;
+
+                    if (
+                        currentUser &&
+                        currentUser.id === staffId
+                    ) {
+
+                        store.dispatch(
+                            updateUserStatus(
+                                status
+                            )
+                        );
+
+                    }
+
+                    break;
+                }
+
+
                 case "ticket_created": {
 
                     store.dispatch(
-                        ticketCreated(message.data)
+                        ticketCreated(
+                            message.data
+                        )
                     );
 
                     break;
                 }
+
 
                 case "ticket_assigned": {
 
                     store.dispatch(
-                        ticketAssigned(message.data)
+                        ticketAssigned(
+                            message.data
+                        )
                     );
-
 
                     break;
                 }
+
 
                 case "ticket_status_changed": {
 
                     store.dispatch(
-                        ticketStatusChanged(message.data)
+                        ticketStatusChanged(
+                            message.data
+                        )
                     );
 
                     break;
                 }
 
-                case "ticket_updated":
+
+                case "ticket_updated": {
+
                     store.dispatch(
-                        ticketUpdated(message.data)
+                        ticketUpdated(
+                            message.data
+                        )
                     );
+
                     break;
+                }
+
 
                 default:
 
@@ -104,9 +190,7 @@ class SupportSocket {
                         "Unknown support event:",
                         message.event
                     );
-
             }
-
         };
     }
 
@@ -117,8 +201,8 @@ class SupportSocket {
         this.socket = null;
 
     }
-
 }
+
 
 export const supportSocket =
     new SupportSocket();

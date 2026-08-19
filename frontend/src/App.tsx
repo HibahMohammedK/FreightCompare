@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from "react";
-import { useAppDispatch } from "./src/hooks/redux";
+import { useAppDispatch, useAppSelector } from "./src/hooks/redux";
 import { setAccessToken, setUser, logout, setAuthLoading } from "./src/redux/authSlice";
 import API from "./src/api/axios";
 import { getProfile } from "./src/api/auth";
 import { notificationSocket } from "./src/websocket/notificationSocket";
 import { supportSocket } from './src/websocket/supportSocket';
+import { presenceSocket } from './src/websocket/PresenceSocket';
 import { getNotifications } from './src/api/notifications';
 import { setNotifications } from './src/redux/notificationSlice';
 import { NotificationToast } from "./src/components/shared/notification/NotificationToast";
@@ -58,86 +59,150 @@ import ProtectedRoute from './src/components/auth/ProtectedRoute';
 import PublicRoute from './src/components/auth/PublicRoute';
 
 export function App() {
-  const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const res = await API.post("/users/token/refresh/");
+    const dispatch = useAppDispatch();
 
-        dispatch(
-            setAccessToken(
-                res.data.access
-            )
+    const accessToken = useAppSelector(
+        (state) => state.auth.accessToken
+    );
+
+    const user = useAppSelector(
+        (state) => state.auth.user
+    );
+
+    useEffect(() => {
+
+        const initAuth = async () => {
+
+            try {
+
+                const res = await API.post(
+                    "/users/token/refresh/"
+                );
+
+                const accessToken =
+                    res.data.access;
+
+                dispatch(
+                    setAccessToken(
+                        accessToken
+                    )
+                );
+
+                const profile =
+                    await getProfile();
+
+                dispatch(
+                    setUser(
+                        profile.data
+                    )
+                );
+
+                const notificationRes =
+                    await getNotifications();
+
+                dispatch(
+                    setNotifications(
+                        notificationRes.data
+                    )
+                );
+
+            } catch {
+
+                dispatch(logout());
+
+            } finally {
+
+                dispatch(
+                    setAuthLoading(
+                        false
+                    )
+                );
+
+            }
+
+        };
+
+        initAuth();
+
+    }, [dispatch]);
+
+
+    /*
+     * WebSocket connections
+     */
+    useEffect(() => {
+
+        if (!accessToken || !user) {
+            return;
+        }
+
+        console.log(
+            "AUTHENTICATED USER:",
+            user.role
         );
 
         notificationSocket.connect(
-            res.data.access
-        );
-        supportSocket.connect(res.data.access);
-
-        const profile =
-            await getProfile();
-
-        dispatch(
-            setUser(
-                profile.data
-            )
+            accessToken
         );
 
-        const notificationRes =
-            await getNotifications();
-
-        dispatch(
-            setNotifications(
-                notificationRes.data
-            )
+        supportSocket.connect(
+            accessToken
         );
 
-      } catch {
+        if (user.role === "staff") {
 
-        dispatch(logout());
+            console.log(
+                "STARTING STAFF PRESENCE SOCKET"
+            );
 
-      } finally {
+            presenceSocket.connect(
+                accessToken
+            );
+        }
 
-        dispatch(
-          setAuthLoading(
-            false
-          )
+        return () => {
+
+            notificationSocket.disconnect();
+
+            supportSocket.disconnect();
+
+            presenceSocket.disconnect();
+
+        };
+
+    }, [
+        accessToken,
+        user?.role,
+    ]);
+
+
+    useEffect(() => {
+
+        const unlockAudio = () => {
+
+            notificationAudio.unlock();
+
+        };
+
+        window.addEventListener(
+            "pointerdown",
+            unlockAudio,
+            {
+                once: true,
+            }
         );
 
-      }
-    };
+        return () => {
 
-    initAuth();
-  }, [dispatch]);
+            window.removeEventListener(
+                "pointerdown",
+                unlockAudio,
+            );
 
-  useEffect(() => {
+        };
 
-      const unlockAudio = () => {
-
-          notificationAudio.unlock();
-
-      };
-
-      window.addEventListener(
-          "pointerdown",
-          unlockAudio,
-          {
-              once: true,
-          }
-      );
-
-      return () => {
-
-          window.removeEventListener(
-              "pointerdown",
-              unlockAudio,
-          );
-
-      };
-
-  }, []);
+    }, []);
 
   return (
     <BrowserRouter>

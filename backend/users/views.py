@@ -728,14 +728,33 @@ class UpdateStaffStatusView(APIView):
         old_status = user.status
 
         user.status = status_value
-        user.save()
+        user.manual_status = (
+            status_value != "online"
+        )
 
-        RealtimeBroadcaster.broadcast(
+        user.save(
+            update_fields=[
+                "status",
+                "manual_status",
+                "updated_at",
+            ]
+        )
+
+        data = {
+            "user_id": str(user.id),
+            "status": user.status,
+        }
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name="admins",
             event=STAFF_STATUS_CHANGED,
-            data={
-                "user_id": str(user.id),
-                "status": user.status,
-            },
+            data=data,
+        )
+
+        RealtimeBroadcaster.broadcast_to_group(
+            group_name=f"staff_{user.id}",
+            event=STAFF_STATUS_CHANGED,
+            data=data,
         )
 
         if (
@@ -789,9 +808,31 @@ class StaffUpdateOwnStatusView(APIView):
             old_status = request.user.status
 
             request.user.status = status_value
-            request.user.save()
+            request.user.manual_status = (
+                status_value != "online"
+            )
 
-            RealtimeBroadcaster.broadcast(
+            request.user.save(
+                update_fields=[
+                    "status",
+                    "manual_status",
+                    "updated_at",
+                ]
+            )
+
+            # Update Admin UI
+            RealtimeBroadcaster.broadcast_to_group(
+                group_name="admins",
+                event=STAFF_STATUS_CHANGED,
+                data={
+                    "user_id": str(request.user.id),
+                    "status": request.user.status,
+                },
+            )
+
+            # Update Staff's own UI
+            RealtimeBroadcaster.broadcast_to_group(
+                group_name=f"staff_{request.user.id}",
                 event=STAFF_STATUS_CHANGED,
                 data={
                     "user_id": str(request.user.id),

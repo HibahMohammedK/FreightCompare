@@ -41,6 +41,13 @@ class User(AbstractUser):
         default="offline"
     )
 
+    manual_status = models.BooleanField(default=False)
+    
+    last_seen = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
     is_verified = models.BooleanField(
         default=False
     )
