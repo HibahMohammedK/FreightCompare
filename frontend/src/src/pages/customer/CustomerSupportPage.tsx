@@ -7,7 +7,7 @@ import { EmptyTicketState } from "../../components/shared/ticket/EmptyTicketStat
 import { CreateTicketModal } from "../../components/shared/ticket/CreateTicketModal";
 import { useAppDispatch,useAppSelector } from '../../hooks/redux';
 import { fetchTickets, fetchTicket } from "../../redux/ticketSlice";
-
+import { getCurrentSubscription } from "../../api/subscription";
 export const CustomerSupportPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -16,14 +16,10 @@ export const CustomerSupportPage: React.FC = () => {
   const {
       tickets,
       selectedTicket,
-      loading,
-      error,
   } = useAppSelector((state) => state.ticket);
-  
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-
-  const { user } = useAppSelector((state) => state.auth);
 
   const [showUpgradeModal, setShowUpgradeModal] =
     useState(false);
@@ -44,6 +40,23 @@ export const CustomerSupportPage: React.FC = () => {
             return matchesFilter && matchesSearch;
         });
 
+  useEffect(() => {
+        const checkSubscription = async () => {
+            try {
+                const res = await getCurrentSubscription();
+
+                setIsSubscribed(
+                    res.data?.status === "active"
+                );
+            } catch (err) {
+                console.error(err);
+                setIsSubscribed(false);
+            }
+        };
+
+        checkSubscription();
+    }, []);
+
 
   useEffect(() => {
     dispatch(fetchTickets());
@@ -56,9 +69,9 @@ export const CustomerSupportPage: React.FC = () => {
   }, [dispatch, tickets, selectedTicket]);
 
   const handleCreateTicket = () => {
-        if (!user?.isPremium) {
+        if (!isSubscribed) {
             setUpgradeMessage(
-                "Creating support tickets is available only for Premium users. Upgrade to Premium to create a support ticket."
+                "Creating support tickets is available only for subscribed users. Please choose a subscription plan to create a support ticket."
             );
             setShowUpgradeModal(true);
             return;
@@ -67,6 +80,7 @@ export const CustomerSupportPage: React.FC = () => {
         setShowCreateModal(true);
     };
 
+   
   return (
     <div className="h-screen flex flex-col bg-bg-light overflow-hidden">
       <UserNavbar />

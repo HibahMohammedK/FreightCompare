@@ -4,56 +4,66 @@ import { UserNavbar } from '../../components/shared/UserNavbar';
 import { Button } from '../../components/shared/Button';
 import { Card } from '../../components/shared/Card';
 import { Modal } from "../../components/shared/Modal";
-import { getCurrentSubscription, createCheckoutSession, cancelSubscription, } from "../../api/subscription";
-
+import { getSubscriptionPlans,
+         createCheckoutSession,
+         cancelSubscription,
+         getCurrentSubscription } from "../../api/subscription";
+import type { SubscriptionPlan } from "../../types/subscription";
 
 export const PricingPage: React.FC = () => {
 
   const navigate = useNavigate();
   const [subscription, setSubscription] = useState<{
-    status: string;
-    start_date?: string;
-    expiry_date?: string;
-    cancel_at_period_end?: boolean;
-  } | null>(null);
-
+      plan?: SubscriptionPlan;
+      status: string;
+      start_date?: string;
+      expiry_date?: string;
+      cancel_at_period_end?: boolean;
+    } | null>(null);
+  
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
   const [loading, setLoading] = useState(true);
-  const isPremium = subscription?.status === "active";
+  const isSubscribed = subscription?.status === "active";
+  const currentPlanId = subscription?.plan?.id;
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
-    const fetchSubscription = async () => {
+    const fetchData = async () => {
       try {
-        const res = await getCurrentSubscription();
-        setSubscription(res.data);
+        const [subscriptionRes, plansRes] = await Promise.all([
+          getCurrentSubscription(),
+          getSubscriptionPlans(),
+        ]);
+
+        setSubscription(subscriptionRes.data);
+        setPlans(plansRes.data);
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
+        setPlansLoading(false);
       }
     };
 
-    fetchSubscription();
+    fetchData();
   }, []);
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (planId: number) => {
+    setIsProcessing(true);
 
-      setIsProcessing(true);
+    try {
+      const res = await createCheckoutSession(planId);
 
-      try {
-          const res = await createCheckoutSession();
-          window.location.href =
-              res.data.checkout_url;
-
-      } catch (err) {
-          console.error(err);
-
-      } finally {
-          setIsProcessing(false);
-      }
+      window.location.href = res.data.checkout_url;
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleCancel = async () => {
@@ -90,131 +100,239 @@ export const PricingPage: React.FC = () => {
       <div className="max-w-7xl mx-auto w-full px-6 py-16 flex-1">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h1 className="text-4xl font-bold text-text-dark mb-4">
-            Simple, transparent pricing
+            Choose the plan that works for you
           </h1>
           <p className="text-lg text-text-light">
-            Get access to premium features like priority support, direct chat
-            with agents, and advanced tracking.
+            Get the features and support you need to manage your shipping
+            more efficiently.
           </p>
         </div>
 
-        {/* Subscription Status */}
-        <Card className="max-w-4xl mx-auto mb-8 p-6 border-border-light">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div>
-              <p className="text-sm font-medium text-primary mb-2">
-                Your subscription
-              </p>
-              <h2 className="text-2xl font-bold text-text-dark mb-2">
-                {isPremium
-                  ? 'Premium plan is active'
-                  : 'You are on the Basic plan'}
-              </h2>
+        {/* Current Subscription */}
+        <Card className="max-w-6xl mx-auto mb-12 p-6 md:p-7 border-border-light">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
 
-              <p className="text-sm text-text-light">
-                {isPremium ? (
-                  subscription?.cancel_at_period_end ? (
-                    <>
-                      Your subscription has been scheduled for cancellation.
-                      {subscription.expiry_date &&
-                        ` You will continue to enjoy Premium features until ${new Date(
+            <div className="flex items-start gap-4">
+
+              <div
+                className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${
+                  isSubscribed
+                    ? "bg-primary/10 text-primary"
+                    : "bg-bg-light text-text-light"
+                }`}
+              >
+                <span className="text-lg">
+                  {isSubscribed ? "✓" : "○"}
+                </span>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-text-light mb-1">
+                  Your subscription
+                </p>
+
+                <h2 className="text-xl md:text-2xl font-bold text-text-dark">
+                  {isSubscribed
+                    ? subscription?.plan?.name ?? "Active subscription"
+                    : "Basic plan"}
+                </h2>
+
+                <p className="text-sm text-text-light mt-1">
+                  {isSubscribed
+                    ? subscription?.cancel_at_period_end
+                      ? `Your plan will remain active until ${
                           subscription.expiry_date
-                        ).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}.`}
-                    </>
-                  ) : (
-                    <>
-                      Status: {subscription?.status}
-                      {subscription?.expiry_date &&
-                        ` • Renews on ${new Date(
+                            ? new Date(
+                                subscription.expiry_date
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "-"
+                        }.`
+                      : `Active • Renews ${
                           subscription.expiry_date
-                        ).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}`}
-                    </>
-                  )
-                ) : (
-                  "Upgrade here to unlock live agent chat, premium support, and advanced shipping tools."
-                )}
-              </p>
+                            ? new Date(
+                                subscription.expiry_date
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "-"
+                        }`
+                    : "You're currently using the free plan."}
+                </p>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
-                variant={isPremium ? 'outline' : 'primary'}
-                onClick={() => navigate('/support')}
+                variant={isSubscribed ? "outline" : "primary"}
+                onClick={() => navigate("/support")}
               >
-                {isPremium ? 'Go to Support ' : 'Preview Support'}
+                {isSubscribed ? "Go to Support" : "Preview Support"}
               </Button>
 
-              {isPremium && (
+              {isSubscribed && (
                 <Button
-                      variant="secondary"
-                      disabled={subscription?.cancel_at_period_end}
-                      onClick={() => setIsCancelModalOpen(true)}
-                  >
+                  variant="secondary"
+                  disabled={subscription?.cancel_at_period_end}
+                  onClick={() => setIsCancelModalOpen(true)}
+                >
                   {subscription?.cancel_at_period_end
                     ? "Cancellation Scheduled"
                     : "Cancel Plan"}
                 </Button>
               )}
             </div>
+
           </div>
         </Card>
 
         {/* Plans */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Basic */}
-          <Card className="p-8 border-2 border-transparent hover:border-border-medium transition-colors">
-            <h3 className="text-xl font-bold text-text-dark mb-2">Basic</h3>
-            <div className="text-4xl font-bold mb-4">AED 0</div>
+        <div className="max-w-6xl mx-auto">
 
-            <Button
-              variant="outline"
-              fullWidth
-              disabled={
-                !isPremium || subscription?.cancel_at_period_end
-              }
-              onClick={() => setIsCancelModalOpen(true)}
-            >
-              {!isPremium
-                ? "Current Plan"
-                : subscription?.cancel_at_period_end
-                  ? "Cancellation Scheduled"
-                  : "Switch to Basic"}
-            </Button>
-          </Card>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-text-dark">
+              Plans
+            </h2>
 
-          {/* Premium */}
-          <Card className="p-8 border-2 border-primary shadow-lg">
-            <h3 className="text-xl font-bold text-primary mb-2">Premium</h3>
-            <div className="text-4xl font-bold mb-4">AED 20</div>
+            <p className="text-sm text-text-light mt-1">
+              Choose a plan based on the features you need.
+            </p>
+          </div>
 
-            <Button
-              fullWidth
-              disabled={isPremium || isProcessing}
-              onClick={handleUpgrade}
-            >
-              {isPremium ? 'Active Plan' : 'Upgrade to Premium'}
-            </Button>
-          </Card>
+          {plansLoading ? (
+            <div className="text-center py-12 text-text-light">
+              Loading plans...
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="text-center py-12 text-text-light">
+              No subscription plans are currently available.
+            </div>
+          ) : (
+            <div className="flex flex-wrap justify-center gap-6">
+
+              {plans.map((plan) => {
+
+                const isCurrentPlan =
+                  isSubscribed &&
+                  currentPlanId === plan.id;
+
+                return (
+                  <Card
+                    key={plan.id}
+                    className={`relative p-7 flex flex-col w-full sm:w-[360px] ${
+                      isCurrentPlan
+                        ? "border-2 border-primary shadow-lg"
+                        : "border border-border-light hover:border-border-medium"
+                    } transition-all duration-200`}
+                  >
+
+                    {/* Current Plan Badge */}
+                    {isCurrentPlan && (
+                      <div className="absolute top-4 right-4">
+                        <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                          Current plan
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Plan Name */}
+                    <div className="mb-5 pr-24">
+                      <h3
+                        className={`text-xl font-bold ${
+                          isCurrentPlan
+                            ? "text-primary"
+                            : "text-text-dark"
+                        }`}
+                      >
+                        {plan.name}
+                      </h3>
+
+                      {plan.description && (
+                        <p className="text-sm text-text-light mt-2 leading-6">
+                          {plan.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Price */}
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-sm font-medium text-text-light">
+                          {plan.currency.toUpperCase()}
+                        </span>
+
+                        <span className="text-4xl font-bold text-text-dark">
+                          {plan.price}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-text-light mt-1">
+                        per {plan.billing_interval}
+                      </p>
+                    </div>
+
+                    {/* Features */}
+                    <div className="flex-1">
+                      {plan.features.length > 0 && (
+                        <ul className="space-y-3 mb-8">
+                          {plan.features.map((feature, index) => (
+                            <li
+                              key={index}
+                              className="flex items-start gap-2 text-sm text-text-light"
+                            >
+                              <span className="text-primary font-semibold mt-0.5">
+                                ✓
+                              </span>
+
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Button */}
+                    <Button
+                      fullWidth
+                      variant={isCurrentPlan ? "outline" : "primary"}
+                      disabled={
+                        isCurrentPlan ||
+                        isSubscribed ||
+                        isProcessing
+                      }
+                      onClick={() => handleUpgrade(plan.id)}
+                    >
+                      {isCurrentPlan
+                        ? "Active Plan"
+                        : isSubscribed
+                          ? "Already Subscribed"
+                          : `Subscribe to ${plan.name}`}
+                    </Button>
+
+                  </Card>
+                );
+              })}
+
+            </div>
+          )}
         </div>
       </div>
       <Modal
         isOpen={isCancelModalOpen}
         onClose={() => !isCancelling && setIsCancelModalOpen(false)}
-        title="Cancel Premium Subscription"
+        title={`Cancel ${subscription?.plan?.name ?? "Subscription"}`}
       >
 
         <div className="space-y-6">
 
           <p className="text-text-light">
-            Are you sure you want to cancel your Premium subscription?
+            Are you sure you want to cancel your{" "}
+            <strong>{subscription?.plan?.name}</strong> subscription?
           </p>
 
           <div className="rounded-lg bg-bg-light p-4">
@@ -230,7 +348,9 @@ export const PricingPage: React.FC = () => {
               </li>
 
               <li>
-                You will continue enjoying Premium features until{" "}
+                You will continue enjoying{" "}
+                <strong>{subscription?.plan?.name}</strong>{" "}
+                features until{" "}
                 <strong>
                   {subscription?.expiry_date
                     ? new Date(

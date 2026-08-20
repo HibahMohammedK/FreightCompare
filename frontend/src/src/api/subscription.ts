@@ -1,11 +1,18 @@
 import api from "./axios";
+import type { SubscriptionPlan } from "../types/subscription";
 
 export const getCurrentSubscription = () => {
   return api.get("/subscription/me/");
 };
 
-export const createCheckoutSession = () => {
-  return api.post("/subscription/create-checkout-session/");
+export const getSubscriptionPlans = () => {
+  return api.get<SubscriptionPlan[]>("/subscription/plans/");
+};
+
+export const createCheckoutSession = (planId: number) => {
+  return api.post("/subscription/create-checkout-session/", {
+    plan_id: planId,
+  });
 };
 
 export const cancelSubscription = () => {
