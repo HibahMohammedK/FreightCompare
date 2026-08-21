@@ -120,3 +120,61 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.status}"
+
+class SubscriptionHistory(models.Model):
+
+    STATUS_CHOICES = (
+        ("active", "Active"),
+        ("cancelled", "Cancelled"),
+        ("expired", "Expired"),
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="subscription_history",
+    )
+
+    plan = models.ForeignKey(
+        SubscriptionPlan,
+        on_delete=models.PROTECT,
+        related_name="history",
+    )
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
+
+    currency = models.CharField(
+        max_length=10,
+    )
+
+    billing_interval = models.CharField(
+        max_length=20,
+    )
+
+    start_date = models.DateTimeField()
+
+    end_date = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+    )
+
+    stripe_subscription_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    def __str__(self):
+        return f"{self.user.email} - {self.plan.name}"

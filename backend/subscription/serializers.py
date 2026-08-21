@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Subscription, SubscriptionPlan
+from .models import Subscription, SubscriptionPlan, SubscriptionHistory
 
 
 class CreateCheckoutSessionSerializer(serializers.Serializer):
@@ -101,3 +101,24 @@ class AdminSubscriptionSerializer(serializers.ModelSerializer):
             if obj.status == "active"
             else "basic"
         )
+
+
+class SubscriptionHistorySerializer(serializers.ModelSerializer):
+
+    plan_name = serializers.CharField(
+        source="plan.name",
+        read_only=True,
+    )
+
+    class Meta:
+        model = SubscriptionHistory
+        fields = [
+            "id",
+            "plan_name",
+            "price",
+            "currency",
+            "billing_interval",
+            "start_date",
+            "end_date",
+            "status",
+        ]

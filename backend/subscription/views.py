@@ -16,13 +16,14 @@ from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 
 from users.models import User
-from .models import Subscription, SubscriptionPlan
+from .models import Subscription, SubscriptionPlan, SubscriptionHistory
 from .serializers import (
     CreateCheckoutSessionSerializer,
     SubscriptionSerializer, 
     AdminSubscriptionSerializer,
     SubscriptionPlanSerializer,
-    PublicSubscriptionPlanSerializer)
+    PublicSubscriptionPlanSerializer,
+    SubscriptionHistorySerializer)
 from .utils import create_stripe_plan
 from notifications.utils import send_notification
 from notifications.models import Notification
@@ -154,15 +155,65 @@ class StripeWebhookView(APIView):
                 secret=settings.STRIPE_WEBHOOK_SECRET,
             )
 
-            if event["type"] != "checkout.session.completed":
+            event_type = event["type"]
+
+            if event_type not in [
+                "checkout.session.completed",
+                "customer.subscription.deleted",
+            ]:
                 return Response(
-                    {
-                        "received": True
-                    },
+                    {"received": True},
                     status=status.HTTP_200_OK,
                 )
 
             session = event["data"]["object"]
+            if event_type == "customer.subscription.deleted":
+
+                stripe_subscription_id = session["id"]
+
+                history = (
+                    SubscriptionHistory.objects
+                    .filter(
+                        stripe_subscription_id=stripe_subscription_id,
+                        status="active",
+                    )
+                    .first()
+                )
+
+                if history:
+                    history.status = "cancelled"
+                    history.end_date = timezone.now()
+                    history.save(
+                        update_fields=[
+                            "status",
+                            "end_date",
+                            "updated_at",
+                        ]
+                    )
+
+                subscription = (
+                    Subscription.objects
+                    .filter(
+                        stripe_subscription_id=stripe_subscription_id,
+                    )
+                    .first()
+                )
+
+                if subscription:
+                    subscription.status = "cancelled"
+                    subscription.cancel_at_period_end = False
+                    subscription.save(
+                        update_fields=[
+                            "status",
+                            "cancel_at_period_end",
+                            "updated_at",
+                        ]
+                    )
+
+                return Response(
+                    {"received": True},
+                    status=status.HTTP_200_OK,
+                )
 
             user_id = session["client_reference_id"]
             subscription_id = session["subscription"]
@@ -218,6 +269,23 @@ class StripeWebhookView(APIView):
                     "cancel_at_period_end": False,
                 }
             )
+
+            history_exists = SubscriptionHistory.objects.filter(
+                stripe_subscription_id=subscription_id
+            ).exists()
+
+            if not history_exists:
+                SubscriptionHistory.objects.create(
+                    user=user,
+                    plan=plan,
+                    price=plan.price,
+                    currency=plan.currency,
+                    billing_interval=plan.billing_interval,
+                    start_date=start_date,
+                    end_date=None,
+                    status= stripe_subscription["status"],
+                    stripe_subscription_id=subscription_id,
+                )
 
             send_notification(
                 user=user,
@@ -322,15 +390,22 @@ class CancelSubscriptionView(APIView):
                 ]
             )
 
+            plan_name = (
+                subscription.plan.name
+                if subscription.plan
+                else "subscription"
+            )
+
             send_notification(
-                    user=request.user,
-                    title="Subscription Cancellation Scheduled",
-                    message=(
-                        "Your Premium subscription has been scheduled for cancellation. "
-                        f"You will continue to enjoy Premium features until "
-                        f"{subscription.expiry_date.strftime('%d %b %Y')}."
-                    ),
-                    notification_type=Notification.SUBSCRIPTION,
+                user=request.user,
+                title=f"{plan_name} Subscription Cancellation Scheduled",
+                message=(
+                    f"Your {plan_name} subscription has been scheduled "
+                    f"for cancellation. You will continue to enjoy "
+                    f"your subscription features until "
+                    f"{subscription.expiry_date.strftime('%d %b %Y')}."
+                ),
+                notification_type=Notification.SUBSCRIPTION,
             )
                 
 
@@ -595,3 +670,26 @@ class AdminSubscriptionListView(ListAPIView):
             )
 
         return queryset
+
+
+class SubscriptionHistoryView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        history = (
+            SubscriptionHistory.objects
+            .filter(user=request.user)
+            .select_related("plan")
+            .order_by("-start_date")
+        )
+
+        serializer = SubscriptionHistorySerializer(
+            history,
+            many=True,
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )

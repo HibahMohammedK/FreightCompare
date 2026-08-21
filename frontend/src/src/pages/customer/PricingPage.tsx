@@ -1,43 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { UserNavbar } from '../../components/shared/UserNavbar';
-import { Button } from '../../components/shared/Button';
-import { Card } from '../../components/shared/Card';
-import { Modal } from "../../components/shared/Modal";
-import { getSubscriptionPlans,
-         createCheckoutSession,
-         cancelSubscription,
-         getCurrentSubscription } from "../../api/subscription";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { UserNavbar } from "../../components/shared/UserNavbar";
+import { Button } from "../../components/shared/Button";
+import { Card } from "../../components/shared/Card";
+import {
+  getSubscriptionPlans,
+  createCheckoutSession,
+  getCurrentSubscription,
+} from "../../api/subscription";
 import type { SubscriptionPlan } from "../../types/subscription";
+import { CancelSubscriptionModal } from "../../components/shared/subscription/CancelSubscriptionModal";
 
 export const PricingPage: React.FC = () => {
-
   const navigate = useNavigate();
+
   const [subscription, setSubscription] = useState<{
-      plan?: SubscriptionPlan;
-      status: string;
-      start_date?: string;
-      expiry_date?: string;
-      cancel_at_period_end?: boolean;
-    } | null>(null);
-  
+    plan?: SubscriptionPlan;
+    status: string;
+    start_date?: string;
+    expiry_date?: string;
+    cancel_at_period_end?: boolean;
+  } | null>(null);
+
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
   const [loading, setLoading] = useState(true);
-  const isSubscribed = subscription?.status === "active";
-  const currentPlanId = subscription?.plan?.id;
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
+
+  const isSubscribed = subscription?.status === "active";
+  const currentPlanId = subscription?.plan?.id;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [subscriptionRes, plansRes] = await Promise.all([
-          getCurrentSubscription(),
-          getSubscriptionPlans(),
-        ]);
+        const [subscriptionRes, plansRes] =
+          await Promise.all([
+            getCurrentSubscription(),
+            getSubscriptionPlans(),
+          ]);
 
         setSubscription(subscriptionRes.data);
         setPlans(plansRes.data);
@@ -66,28 +68,21 @@ export const PricingPage: React.FC = () => {
     }
   };
 
-  const handleCancel = async () => {
-
-    setIsCancelling(true);
-    try {
-      await cancelSubscription();
-      const res = await getCurrentSubscription();
-      setSubscription(res.data);
-      setIsCancelModalOpen(false);
-
-    } catch (err) {
-      console.error(err);
-
-    } finally {
-      setIsCancelling(false);
-
+  const formatDate = (date?: string) => {
+    if (!date) {
+      return "-";
     }
 
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-bg-light">
         Loading subscription...
       </div>
     );
@@ -98,13 +93,16 @@ export const PricingPage: React.FC = () => {
       <UserNavbar />
 
       <div className="max-w-7xl mx-auto w-full px-6 py-16 flex-1">
+
+        {/* Page Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h1 className="text-4xl font-bold text-text-dark mb-4">
             Choose the plan that works for you
           </h1>
+
           <p className="text-lg text-text-light">
-            Get the features and support you need to manage your shipping
-            more efficiently.
+            Get the features and support you need to manage
+            your shipping more efficiently.
           </p>
         </div>
 
@@ -112,6 +110,7 @@ export const PricingPage: React.FC = () => {
         <Card className="max-w-6xl mx-auto mb-12 p-6 md:p-7 border-border-light">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
 
+            {/* Subscription Information */}
             <div className="flex items-start gap-4">
 
               <div
@@ -133,61 +132,61 @@ export const PricingPage: React.FC = () => {
 
                 <h2 className="text-xl md:text-2xl font-bold text-text-dark">
                   {isSubscribed
-                    ? subscription?.plan?.name ?? "Active subscription"
+                    ? subscription?.plan?.name ??
+                      "Active subscription"
                     : "Basic plan"}
                 </h2>
 
                 <p className="text-sm text-text-light mt-1">
                   {isSubscribed
                     ? subscription?.cancel_at_period_end
-                      ? `Your plan will remain active until ${
+                      ? `Your plan will remain active until ${formatDate(
                           subscription.expiry_date
-                            ? new Date(
-                                subscription.expiry_date
-                              ).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })
-                            : "-"
-                        }.`
-                      : `Active • Renews ${
+                        )}.`
+                      : `Active • Renews ${formatDate(
                           subscription.expiry_date
-                            ? new Date(
-                                subscription.expiry_date
-                              ).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })
-                            : "-"
-                        }`
+                        )}`
                     : "You're currently using the free plan."}
                 </p>
               </div>
             </div>
 
+            {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3">
+
               <Button
                 variant={isSubscribed ? "outline" : "primary"}
                 onClick={() => navigate("/support")}
               >
-                {isSubscribed ? "Go to Support" : "Preview Support"}
+                {isSubscribed
+                  ? "Go to Support"
+                  : "Preview Support"}
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() =>
+                  navigate("/subscription/history")
+                }
+              >
+                Subscription History
               </Button>
 
               {isSubscribed && (
                 <Button
                   variant="secondary"
                   disabled={subscription?.cancel_at_period_end}
-                  onClick={() => setIsCancelModalOpen(true)}
+                  onClick={() =>
+                    setIsCancelModalOpen(true)
+                  }
                 >
                   {subscription?.cancel_at_period_end
                     ? "Cancellation Scheduled"
                     : "Cancel Plan"}
                 </Button>
               )}
-            </div>
 
+            </div>
           </div>
         </Card>
 
@@ -216,7 +215,6 @@ export const PricingPage: React.FC = () => {
             <div className="flex flex-wrap justify-center gap-6">
 
               {plans.map((plan) => {
-
                 const isCurrentPlan =
                   isSubscribed &&
                   currentPlanId === plan.id;
@@ -280,32 +278,40 @@ export const PricingPage: React.FC = () => {
                     <div className="flex-1">
                       {plan.features.length > 0 && (
                         <ul className="space-y-3 mb-8">
-                          {plan.features.map((feature, index) => (
-                            <li
-                              key={index}
-                              className="flex items-start gap-2 text-sm text-text-light"
-                            >
-                              <span className="text-primary font-semibold mt-0.5">
-                                ✓
-                              </span>
+                          {plan.features.map(
+                            (feature, index) => (
+                              <li
+                                key={index}
+                                className="flex items-start gap-2 text-sm text-text-light"
+                              >
+                                <span className="text-primary font-semibold mt-0.5">
+                                  ✓
+                                </span>
 
-                              <span>{feature}</span>
-                            </li>
-                          ))}
+                                <span>{feature}</span>
+                              </li>
+                            )
+                          )}
                         </ul>
                       )}
                     </div>
 
-                    {/* Button */}
+                    {/* Plan Button */}
                     <Button
                       fullWidth
-                      variant={isCurrentPlan ? "outline" : "primary"}
+                      variant={
+                        isCurrentPlan
+                          ? "outline"
+                          : "primary"
+                      }
                       disabled={
                         isCurrentPlan ||
                         isSubscribed ||
                         isProcessing
                       }
-                      onClick={() => handleUpgrade(plan.id)}
+                      onClick={() =>
+                        handleUpgrade(plan.id)
+                      }
                     >
                       {isCurrentPlan
                         ? "Active Plan"
@@ -322,82 +328,21 @@ export const PricingPage: React.FC = () => {
           )}
         </div>
       </div>
-      <Modal
+
+      {/* Cancellation Modal */}
+      <CancelSubscriptionModal
         isOpen={isCancelModalOpen}
-        onClose={() => !isCancelling && setIsCancelModalOpen(false)}
-        title={`Cancel ${subscription?.plan?.name ?? "Subscription"}`}
-      >
+        onClose={() =>
+          setIsCancelModalOpen(false)
+        }
+        expiryDate={subscription?.expiry_date}
+        onCancelled={async () => {
+          const res =
+            await getCurrentSubscription();
 
-        <div className="space-y-6">
-
-          <p className="text-text-light">
-            Are you sure you want to cancel your{" "}
-            <strong>{subscription?.plan?.name}</strong> subscription?
-          </p>
-
-          <div className="rounded-lg bg-bg-light p-4">
-
-            <p className="font-medium text-text-dark">
-              What happens next?
-            </p>
-
-            <ul className="mt-3 space-y-2 text-sm text-text-light list-disc list-inside">
-
-              <li>
-                Your subscription will <strong>not renew</strong>.
-              </li>
-
-              <li>
-                You will continue enjoying{" "}
-                <strong>{subscription?.plan?.name}</strong>{" "}
-                features until{" "}
-                <strong>
-                  {subscription?.expiry_date
-                    ? new Date(
-                        subscription.expiry_date
-                      ).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })
-                    : "-"}
-                </strong>.
-              </li>
-
-              <li>
-                After that date your account will automatically return to the Basic plan.
-              </li>
-
-            </ul>
-
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-
-            <Button
-              variant="outline"
-              fullWidth
-              disabled={isCancelling}
-              onClick={() => setIsCancelModalOpen(false)}
-            >
-              Keep Subscription
-            </Button>
-
-            <Button
-              fullWidth
-              disabled={isCancelling}
-              onClick={handleCancel}
-            >
-              {isCancelling
-                ? "Scheduling..."
-                : "Schedule Cancellation"}
-            </Button>
-
-          </div>
-
-        </div>
-
-      </Modal>
+          setSubscription(res.data);
+        }}
+      />
     </div>
   );
 };

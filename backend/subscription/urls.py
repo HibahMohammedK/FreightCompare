@@ -7,7 +7,8 @@ from .views import ( CreateCheckoutSessionView,
                      AdminSubscriptionListView,
                      AdminSubscriptionPlanListCreateView,
                      AdminSubscriptionPlanDetailView,
-                     SubscriptionPlanListView)
+                     SubscriptionPlanListView,
+                     SubscriptionHistoryView)
 
 urlpatterns = [
     path("create-checkout-session/", CreateCheckoutSessionView.as_view(), name="create-checkout-session"),
@@ -18,4 +19,5 @@ urlpatterns = [
     path("admin/plans/", AdminSubscriptionPlanListCreateView.as_view(), name="admin-subscription-plan-list-create"),
     path("admin/subscriptions/", AdminSubscriptionListView.as_view(), name="admin-subscriptions"),
     path("admin/plans/<int:pk>/", AdminSubscriptionPlanDetailView.as_view(), name="admin-subscription-plan-detail"),
+    path("history/", SubscriptionHistoryView.as_view(), name="subscription-history"),
 ]

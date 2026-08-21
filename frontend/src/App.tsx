@@ -32,6 +32,7 @@ import { SubscriptionCancelPage } from './src/pages/customer/SubscriptionCancelP
 import { SubscriptionSuccessPage } from './src/pages/customer/SubscriptionSuccessPage';
 import { CustomerSupportPage } from './src/pages/customer/CustomerSupportPage';
 import { PriceAlertsPage } from './src/pages/customer/PriceAlertsPage';
+import { SubscriptionHistoryPage } from "../src/src/pages/customer/SubscriptionHistoryPage";
 
 // Staff
 import { StaffLayout } from './src/components/staff/StaffLayout';
@@ -230,6 +231,7 @@ export function App() {
           <Route path="/subscription/success" element={<SubscriptionSuccessPage />}/>
           <Route path="/subscription/cancel" element={<SubscriptionCancelPage />}/>
           <Route path="/support" element={<CustomerSupportPage />} />
+          <Route path="/subscription/history" element={<SubscriptionHistoryPage />}/>
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>

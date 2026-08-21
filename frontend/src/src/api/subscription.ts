@@ -46,3 +46,7 @@ export const getAdminSubscriptionsByUrl = (
   return api.get(url);
 
 };
+
+export const getSubscriptionHistory = () => {
+  return api.get("/subscription/history/");
+};
