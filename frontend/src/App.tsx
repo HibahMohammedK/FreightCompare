@@ -49,7 +49,6 @@ import { SubscriptionManagementLayout } from './src/components/admin/Subscriptio
 import { SubscriptionManagementPage } from './src/pages/admin/SubscriptionManagementPage';
 import { StaffManagementPage } from './src/pages/admin/StaffManagementPage';
 import { TicketMonitoringPage } from './src/pages/admin/TicketMonitoringPage';
-import { ChatMonitoringPage } from './src/pages/admin/ChatMonitoringPage';
 import { TransportManagementPage } from './src/pages/admin/TransportManagementPage';
 import { CompanyManagementPage } from './src/pages/admin/CompanyManagementPage';
 import { AdminProfilePage } from './src/pages/admin/AdminProfilePage';
@@ -240,26 +239,15 @@ export function App() {
             <Route index element={<AdminDashboardPage />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />
             <Route path="users" element={<UserManagementPage />} />
-            <Route
-  path="/admin/subscriptions"
-  element={<SubscriptionManagementLayout />}
->
-  <Route
-    index
-    element={<SubscriptionManagementPage />}
-  />
-
-  <Route
-    path="plans"
-    element={<SubscriptionPlansPage />}
-  />
-</Route>
+            <Route path="/admin/subscriptions" element={<SubscriptionManagementLayout />}>
+            <Route index element={<SubscriptionManagementPage />} />
+            <Route path="plans" element={<SubscriptionPlansPage />}/>
+            </Route>
             <Route path="transports" element={<TransportManagementPage />} />
             <Route path="companies" element={<CompanyManagementPage />} />
             <Route path="csv-upload" element={<CsvUploadPage />} />
             <Route path="staff" element={<StaffManagementPage />} />
             <Route path="tickets" element={<TicketMonitoringPage />} />
-            <Route path="chats" element={<ChatMonitoringPage />} />
           </Route>
         </Route>
 

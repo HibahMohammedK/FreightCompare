@@ -39,6 +39,7 @@ from .exceptions import handle_exception
 from tickets.services import TicketAssignmentService
 from subscription.models import Subscription
 from tickets.models import Ticket
+from transports.models import Transport
 
 # =========================
 # REGISTER
@@ -566,12 +567,105 @@ class AdminDashboardView(APIView):
             ]
         ).count()
 
+        # --------------------------------
+        # Recent Activity
+        # --------------------------------
+
+        activities = []
+
+        # New users
+        users = User.objects.filter(
+            role="customer"
+        ).order_by("-created_at")[:10]
+
+        for user in users:
+            activities.append({
+                "title": "New User Registration",
+                "description": user.username,
+                "type": "user",
+                "created_at": user.created_at,
+            })
+
+        # New subscriptions
+        subscriptions = Subscription.objects.select_related(
+            "user",
+            "plan"
+        ).order_by("-created_at")[:10]
+
+        for subscription in subscriptions:
+
+            if subscription.status == "active":
+                title = "New Premium Subscription"
+            elif subscription.status == "cancelled":
+                title = "Subscription Cancelled"
+            elif subscription.status == "expired":
+                title = "Subscription Expired"
+            else:
+                title = "Subscription Updated"
+
+            activities.append({
+                "title": title,
+                "description": (
+                    f"{subscription.user.username} "
+                    f"({subscription.plan.name if subscription.plan else 'No Plan'})"
+                ),
+                "type": "subscription",
+                "created_at": subscription.created_at,
+            })
+
+        # Tickets
+        tickets = Ticket.objects.select_related(
+            "customer"
+        ).order_by("-created_at")[:10]
+
+        for ticket in tickets:
+            activities.append({
+                "title": "New Support Ticket",
+                "description": (
+                    f"{ticket.ticket_number} · {ticket.subject}"
+                ),
+                "type": "ticket",
+                "created_at": ticket.created_at,
+            })
+
+        # Transports
+        transports = Transport.objects.select_related(
+            "company"
+        ).order_by("-created_at")[:10]
+
+        for transport in transports:
+            activities.append({
+                "title": "New Transport Route",
+                "description": (
+                    f"{transport.source} → "
+                    f"{transport.destination} "
+                    f"({transport.transport_type.upper()})"
+                ),
+                "type": "transport",
+                "created_at": transport.created_at,
+            })
+
+        # Sort everything together
+        activities.sort(
+            key=lambda activity: activity["created_at"],
+            reverse=True
+        )
+
+        # Keep only latest 5
+        activities = activities[:5]
+
+        # Convert datetime to ISO format
+        for activity in activities:
+            activity["created_at"] = (
+                activity["created_at"].isoformat()
+            )
+
         return Response({
             "total_users": total_users,
             "premium_users": premium_users,
             "active_staff": active_staff,
             "open_tickets": open_tickets,
-            "active_chats": 0
+            "recent_activity": activities,
         })
         
 class AdminUserPagination(PageNumberPagination):

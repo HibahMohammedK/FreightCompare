@@ -9,7 +9,6 @@ import {
   CreditCardIcon,
   UserCogIcon,
   TicketIcon,
-  MessageSquareIcon,
   LogOutIcon,
   Building2Icon
  } from
@@ -76,11 +75,7 @@ export const AdminLayout: React.FC = () => {
     path: '/admin/tickets',
     icon: <TicketIcon size={20} />
   },
-  {
-    name: 'Chats',
-    path: '/admin/chats',
-    icon: <MessageSquareIcon size={20} />
-  }];
+ ];
 
   return (
     <div className="min-h-screen flex bg-bg-light">

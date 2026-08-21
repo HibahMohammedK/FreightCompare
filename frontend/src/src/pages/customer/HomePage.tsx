@@ -592,7 +592,7 @@ export const HomePage: React.FC = () => {
                   <MessageSquareIcon size={22} />
                 </div>
                 <h2 className="text-xl font-bold text-text-dark mb-2">
-                  Support Chat
+                  Support
                 </h2>
                 <p className="text-sm text-text-light max-w-md">
                   {isPremium ?
@@ -603,8 +603,8 @@ export const HomePage: React.FC = () => {
             </div>
             <Button
               variant={isPremium ? 'primary' : 'outline'}
-              onClick={() => navigate('/chat')}>
-              {isPremium ? 'Open Chat' : 'See Chat Access'}
+              onClick={() => navigate('/support')}>
+              {isPremium ? 'Get Support' : 'See Support'}
             </Button>
           </Card>
         </div>
