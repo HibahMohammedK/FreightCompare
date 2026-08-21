@@ -65,16 +65,7 @@ export const SubscriptionManagementPage: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-text-dark">
-          Subscription Management
-        </h1>
-        <p className="text-sm text-text-light">
-          Track and manage user premium plans and billing status.
-        </p>
-      </div>
-
+  <>
       <Card className="mb-6 p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
@@ -197,6 +188,5 @@ export const SubscriptionManagementPage: React.FC = () => {
           </div>
         </div>
       </Card>
-    </div>);
-
-};
+    </>
+)};

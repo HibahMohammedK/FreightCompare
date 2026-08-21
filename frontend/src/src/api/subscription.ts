@@ -50,3 +50,28 @@ export const getAdminSubscriptionsByUrl = (
 export const getSubscriptionHistory = () => {
   return api.get("/subscription/history/");
 };
+
+export const getAdminSubscriptionPlans = () => {
+  return api.get<SubscriptionPlan[]>(
+    "/subscription/admin/plans/"
+  );
+};
+
+export const createSubscriptionPlan = (
+  data: Partial<SubscriptionPlan>
+) => {
+  return api.post<SubscriptionPlan>(
+    "/subscription/admin/plans/",
+    data
+  );
+};
+
+export const updateSubscriptionPlan = (
+  id: number,
+  data: Partial<SubscriptionPlan>
+) => {
+  return api.patch<SubscriptionPlan>(
+    `/subscription/admin/plans/${id}/`,
+    data
+  );
+};

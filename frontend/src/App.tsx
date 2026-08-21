@@ -45,6 +45,7 @@ import { StaffProfilePage } from './src/pages/staff/StaffProfilePage';
 import { AdminLayout } from './src/components/admin/AdminLayout';
 import { AdminDashboardPage } from './src/pages/admin/AdminDashboardPage';
 import { UserManagementPage } from './src/pages/admin/UserManagementPage';
+import { SubscriptionManagementLayout } from './src/components/admin/SubscriptionManagementLayout';
 import { SubscriptionManagementPage } from './src/pages/admin/SubscriptionManagementPage';
 import { StaffManagementPage } from './src/pages/admin/StaffManagementPage';
 import { TicketMonitoringPage } from './src/pages/admin/TicketMonitoringPage';
@@ -52,7 +53,7 @@ import { ChatMonitoringPage } from './src/pages/admin/ChatMonitoringPage';
 import { TransportManagementPage } from './src/pages/admin/TransportManagementPage';
 import { CompanyManagementPage } from './src/pages/admin/CompanyManagementPage';
 import { AdminProfilePage } from './src/pages/admin/AdminProfilePage';
-
+import { SubscriptionPlansPage } from "../src/src/pages/admin/SubscriptionPlansPage";
 import { CsvUploadPage } from './src/pages/admin/CsvUploadPage';
 
 // Auth Guards
@@ -239,7 +240,20 @@ export function App() {
             <Route index element={<AdminDashboardPage />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />
             <Route path="users" element={<UserManagementPage />} />
-            <Route path="subscriptions" element={<SubscriptionManagementPage />} />
+            <Route
+  path="/admin/subscriptions"
+  element={<SubscriptionManagementLayout />}
+>
+  <Route
+    index
+    element={<SubscriptionManagementPage />}
+  />
+
+  <Route
+    path="plans"
+    element={<SubscriptionPlansPage />}
+  />
+</Route>
             <Route path="transports" element={<TransportManagementPage />} />
             <Route path="companies" element={<CompanyManagementPage />} />
             <Route path="csv-upload" element={<CsvUploadPage />} />

@@ -7,6 +7,7 @@ export interface SubscriptionPlan {
   billing_interval: "month" | "year";
   features: string[];
   sort_order: number;
+  is_active: boolean;
 }
 
 export interface SubscriptionHistory {
