@@ -10,6 +10,8 @@ client = Groq(
     api_key=settings.GROQ_API_KEY,
 )
 
+MAX_CONTENT_LENGTH = 1500
+
 
 def summarize_transport(
     *,
@@ -18,26 +20,38 @@ def summarize_transport(
     transport_type,
     search_results,
 ):
+
     formatted_results = ""
 
-    for index, result in enumerate(search_results, start=1):
+    for index, result in enumerate(
+        search_results,
+        start=1,
+    ):
+
+        title = result.get("title", "")
+        url = result.get("url", "")
+        content = result.get("content", "")
+
+        if not content:
+            continue
+
         formatted_results += f"""
 Result {index}
 
 Title:
-{result.get("title")}
+{title}
 
 URL:
-{result.get("url")}
+{url}
 
 Content:
-{result.get("content")}
+{content[:MAX_CONTENT_LENGTH]}
 
 ----------------------------------------
 """
 
     user_prompt = f"""
-Requested Transport
+Requested Route
 
 Source:
 {source}
@@ -50,15 +64,20 @@ Transport Type:
 
 ========================================
 
-Web Search Results
+SUPPLIED WEB RESULTS
 
 {formatted_results}
+
+========================================
+
+Analyze the supplied results.
+
+Return ONLY the JSON object requested by the system prompt.
 """
 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-20b",
         temperature=0,
-        top_p=0.1,
         response_format={
             "type": "json_object",
         },
@@ -74,6 +93,17 @@ Web Search Results
         ],
     )
 
-    return json.loads(
-        response.choices[0].message.content
-    )
+    content = response.choices[0].message.content
+
+    if not content:
+        raise ValueError(
+            "Groq returned an empty response."
+        )
+
+    try:
+        return json.loads(content)
+
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"Groq returned invalid JSON: {content}"
+        ) from exc

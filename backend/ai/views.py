@@ -17,17 +17,17 @@ class SearchTransportAPIView(APIView):
         serializer.is_valid(
             raise_exception=True
         )
-
-        if not is_premium(request.user):
-            return Response(
-                            {
-                                "detail": (
-                                    "This feature is available only for Premium users. "
-                                    "Please upgrade your subscription to continue."
+        if request.user.role == "customer":
+            if not is_premium(request.user):
+                return Response(
+                                {
+                                    "detail": (
+                                        "This feature is available only for Premium users. "
+                                        "Please upgrade your subscription to continue."
+                                    )
+                                },
+                                status=status.HTTP_403_FORBIDDEN,
                                 )
-                            },
-                            status=status.HTTP_403_FORBIDDEN,
-                            )
             
 
         result = search_transport_ai(
