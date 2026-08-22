@@ -5,7 +5,16 @@ export interface SubscriptionPlan {
   price: string;
   currency: string;
   billing_interval: "month" | "year";
+
+  // Human-readable features
   features: string[];
+
+  // Machine-readable usage limits
+  limits: {
+    price_alerts?: number;
+    [key: string]: number | undefined;
+  };
+
   sort_order: number;
   is_active: boolean;
 }

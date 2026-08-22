@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
 
-
-
 class SubscriptionPlan(models.Model):
     BILLING_INTERVAL_CHOICES = (
         ("month", "Monthly"),
@@ -10,6 +8,7 @@ class SubscriptionPlan(models.Model):
     )
 
     name = models.CharField(max_length=100)
+
     description = models.TextField(blank=True)
 
     price = models.DecimalField(
@@ -40,8 +39,15 @@ class SubscriptionPlan(models.Model):
         null=True,
     )
 
+    # Human-readable features shown on pricing page
     features = models.JSONField(
         default=list,
+        blank=True,
+    )
+
+    # Machine-readable permissions and limits
+    limits = models.JSONField(
+        default=dict,
         blank=True,
     )
 

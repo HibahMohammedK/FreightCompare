@@ -2,14 +2,33 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+
 from .serializers import TransportSearchSerializer
 from .services import search_transport_ai
-from subscription.utils import is_premium
+from subscription.utils import has_feature
+
 
 class SearchTransportAPIView(APIView):
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+
+        if not has_feature(
+            request.user,
+            "ai_search",
+        ):
+            return Response(
+                {
+                    "code": "FEATURE_NOT_AVAILABLE",
+                    "detail": (
+                        "AI Transport Assistant is not available "
+                        "on your current subscription plan."
+                    ),
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         serializer = TransportSearchSerializer(
             data=request.data
         )
@@ -17,18 +36,6 @@ class SearchTransportAPIView(APIView):
         serializer.is_valid(
             raise_exception=True
         )
-        if request.user.role == "customer":
-            if not is_premium(request.user):
-                return Response(
-                                {
-                                    "detail": (
-                                        "This feature is available only for Premium users. "
-                                        "Please upgrade your subscription to continue."
-                                    )
-                                },
-                                status=status.HTTP_403_FORBIDDEN,
-                                )
-            
 
         result = search_transport_ai(
             serializer.validated_data

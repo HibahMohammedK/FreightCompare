@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Modal } from "../Modal";
 import { Button } from "../Button";
 import { Input } from "../Input";
+
 import {
   createSubscriptionPlan,
   updateSubscriptionPlan,
 } from "../../../api/subscription";
+
 import type { SubscriptionPlan } from "../../../types/subscription";
 
 interface SubscriptionPlanModalProps {
@@ -14,6 +16,21 @@ interface SubscriptionPlanModalProps {
   plan?: SubscriptionPlan | null;
   onSaved: () => void;
 }
+
+const AVAILABLE_FEATURES = [
+  {
+    key: "ai_search",
+    label: "AI Transport Search",
+    description:
+      "Allow customers to use the AI-powered transport search assistant.",
+  },
+  {
+    key: "support_tickets",
+    label: "Support Tickets",
+    description:
+      "Allow customers to create support tickets and contact support staff.",
+  },
+];
 
 export const SubscriptionPlanModal: React.FC<
   SubscriptionPlanModalProps
@@ -29,16 +46,41 @@ export const SubscriptionPlanModal: React.FC<
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("aed");
+
   const [billingInterval, setBillingInterval] = useState<
     "month" | "year"
   >("month");
-  const [features, setFeatures] = useState<string[]>([""]);
+
+  /*
+   * Machine-readable feature keys.
+   *
+   * Example:
+   *
+   * [
+   *   "ai_search",
+   *   "support_tickets"
+   * ]
+   */
+  const [features, setFeatures] = useState<string[]>([]);
+
+  /*
+   * Machine-readable usage limits.
+   *
+   * -1 means unlimited.
+   */
+  const [limits, setLimits] = useState({
+    price_alerts: 1,
+  });
+
   const [sortOrder, setSortOrder] = useState("0");
   const [isActive, setIsActive] = useState(true);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  /*
+   * Load existing plan when editing.
+   */
   useEffect(() => {
     if (plan) {
       setName(plan.name);
@@ -46,20 +88,39 @@ export const SubscriptionPlanModal: React.FC<
       setPrice(plan.price);
       setCurrency(plan.currency);
       setBillingInterval(plan.billing_interval);
+
       setFeatures(
-        plan.features.length > 0
+        Array.isArray(plan.features)
           ? plan.features
-          : [""]
+          : []
       );
-      setSortOrder(String(plan.sort_order));
+
+      setLimits({
+        price_alerts:
+          plan.limits?.price_alerts ?? 1,
+      });
+
+      setSortOrder(
+        String(plan.sort_order)
+      );
+
       setIsActive(plan.is_active);
     } else {
+      /*
+       * Reset form for new plan.
+       */
       setName("");
       setDescription("");
       setPrice("");
       setCurrency("aed");
       setBillingInterval("month");
-      setFeatures([""]);
+
+      setFeatures([]);
+
+      setLimits({
+        price_alerts: 1,
+      });
+
       setSortOrder("0");
       setIsActive(true);
     }
@@ -67,30 +128,30 @@ export const SubscriptionPlanModal: React.FC<
     setError("");
   }, [plan, isOpen]);
 
-  const handleFeatureChange = (
-    index: number,
-    value: string
+  /*
+   * Toggle a machine-readable feature.
+   */
+  const toggleFeature = (
+    featureKey: string
   ) => {
-    setFeatures((current) =>
-      current.map((feature, i) =>
-        i === index ? value : feature
-      )
-    );
+    setFeatures((current) => {
+      if (current.includes(featureKey)) {
+        return current.filter(
+          (feature) =>
+            feature !== featureKey
+        );
+      }
+
+      return [
+        ...current,
+        featureKey,
+      ];
+    });
   };
 
-  const addFeature = () => {
-    setFeatures((current) => [
-      ...current,
-      "",
-    ]);
-  };
-
-  const removeFeature = (index: number) => {
-    setFeatures((current) =>
-      current.filter((_, i) => i !== index)
-    );
-  };
-
+  /*
+   * Submit subscription plan.
+   */
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
@@ -99,40 +160,82 @@ export const SubscriptionPlanModal: React.FC<
     setError("");
 
     if (!name.trim()) {
-      setError("Plan name is required.");
+      setError(
+        "Plan name is required."
+      );
       return;
     }
 
-    if (!price || Number(price) < 0) {
-      setError("Please enter a valid price.");
+    if (
+      !price ||
+      Number(price) < 0
+    ) {
+      setError(
+        "Please enter a valid price."
+      );
       return;
     }
 
-    const cleanedFeatures = features
-      .map((feature) => feature.trim())
-      .filter(Boolean);
+    if (
+      limits.price_alerts < -1
+    ) {
+      setError(
+        "Price alert limit must be -1 or greater."
+      );
+      return;
+    }
 
     const data = {
       name: name.trim(),
-      description: description.trim(),
+
+      description:
+        description.trim(),
+
       price,
-      currency: currency.toLowerCase(),
-      billing_interval: billingInterval,
-      features: cleanedFeatures,
-      sort_order: Number(sortOrder) || 0,
-      is_active: isActive,
+
+      currency:
+        currency.toLowerCase(),
+
+      billing_interval:
+        billingInterval,
+
+      /*
+       * Machine-readable feature keys.
+       */
+      features,
+
+      /*
+       * Machine-readable limits.
+       */
+      limits: {
+        price_alerts:
+          Number(
+            limits.price_alerts
+          ),
+      },
+
+      sort_order:
+        Number(sortOrder) || 0,
+
+      is_active:
+        isActive,
     };
 
     try {
       setSaving(true);
 
-      if (isEditing && plan) {
+      if (
+        isEditing &&
+        plan
+      ) {
         await updateSubscriptionPlan(
           plan.id,
           data
         );
       } else {
-        await createSubscriptionPlan(data);
+        await createSubscriptionPlan(
+          data
+        );
       }
 
       onSaved();
@@ -188,7 +291,9 @@ export const SubscriptionPlanModal: React.FC<
           <Input
             value={name}
             onChange={(e) =>
-              setName(e.target.value)
+              setName(
+                e.target.value
+              )
             }
             placeholder="e.g. Premium"
             disabled={saving}
@@ -204,7 +309,9 @@ export const SubscriptionPlanModal: React.FC<
           <textarea
             value={description}
             onChange={(e) =>
-              setDescription(e.target.value)
+              setDescription(
+                e.target.value
+              )
             }
             placeholder="Describe what this plan offers..."
             disabled={saving}
@@ -243,7 +350,9 @@ export const SubscriptionPlanModal: React.FC<
               step="0.01"
               value={price}
               onChange={(e) =>
-                setPrice(e.target.value)
+                setPrice(
+                  e.target.value
+                )
               }
               placeholder="39.00"
               disabled={saving}
@@ -258,7 +367,9 @@ export const SubscriptionPlanModal: React.FC<
             <Input
               value={currency}
               onChange={(e) =>
-                setCurrency(e.target.value)
+                setCurrency(
+                  e.target.value
+                )
               }
               placeholder="AED"
               disabled={saving}
@@ -311,59 +422,126 @@ export const SubscriptionPlanModal: React.FC<
 
         {/* Features */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-text-dark">
-              Features
-            </label>
+          <label className="block text-sm font-medium text-text-dark mb-2">
+            Features
+          </label>
 
-            <button
-              type="button"
-              onClick={addFeature}
-              disabled={saving}
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              + Add feature
-            </button>
+          <div className="rounded-xl border border-border-light p-4 space-y-4">
+
+            {AVAILABLE_FEATURES.map(
+              (feature) => {
+                const enabled =
+                  features.includes(
+                    feature.key
+                  );
+
+                return (
+                  <label
+                    key={
+                      feature.key
+                    }
+                    className="
+                      flex
+                      items-start
+                      gap-3
+                      cursor-pointer
+                    "
+                  >
+                    <input
+                      type="checkbox"
+                      checked={
+                        enabled
+                      }
+                      onChange={() =>
+                        toggleFeature(
+                          feature.key
+                        )
+                      }
+                      disabled={
+                        saving
+                      }
+                      className="
+                        mt-1
+                        h-4
+                        w-4
+                        rounded
+                        border-gray-300
+                        text-primary
+                        focus:ring-primary
+                      "
+                    />
+
+                    <div>
+                      <p className="text-sm font-medium text-text-dark">
+                        {
+                          feature.label
+                        }
+                      </p>
+
+                      <p className="text-xs text-text-light mt-0.5">
+                        {
+                          feature.description
+                        }
+                      </p>
+                    </div>
+                  </label>
+                );
+              }
+            )}
+
           </div>
 
-          <div className="space-y-2">
-            {features.map(
-              (feature, index) => (
-                <div
-                  key={index}
-                  className="flex gap-2"
-                >
-                  <Input
-                    value={feature}
-                    onChange={(e) =>
-                      handleFeatureChange(
-                        index,
-                        e.target.value
-                      )
-                    }
-                    placeholder="e.g. Priority support"
-                    disabled={saving}
-                  />
+          <p className="text-xs text-text-light mt-2">
+            These settings control which functionality customers can access.
+          </p>
+        </div>
 
-                  {features.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={saving}
-                      onClick={() =>
-                        removeFeature(index)
-                      }
-                    >
-                      ×
-                    </Button>
-                  )}
-                </div>
-              )
-            )}
+        {/* Usage Limits */}
+        <div>
+          <label className="block text-sm font-medium text-text-dark mb-2">
+            Usage Limits
+          </label>
+
+          <div className="rounded-xl border border-border-light p-4">
+
+            <div>
+              <label className="block text-sm font-medium text-text-dark mb-1">
+                Price Alerts
+              </label>
+
+              <Input
+                type="number"
+                min="-1"
+                value={
+                  limits.price_alerts
+                }
+                onChange={(e) =>
+                  setLimits({
+                    ...limits,
+                    price_alerts:
+                      Number(
+                        e.target.value
+                      ),
+                  })
+                }
+                disabled={saving}
+              />
+
+              <p className="text-xs text-text-light mt-1">
+                Maximum active price
+                alerts allowed for
+                this plan.
+              </p>
+
+              <p className="text-xs text-primary mt-1">
+                Use -1 for unlimited.
+              </p>
+            </div>
+
           </div>
         </div>
 
-        {/* Sort Order */}
+        {/* Display Order */}
         <div>
           <label className="block text-sm font-medium text-text-dark mb-2">
             Display Order
@@ -374,7 +552,9 @@ export const SubscriptionPlanModal: React.FC<
             min="0"
             value={sortOrder}
             onChange={(e) =>
-              setSortOrder(e.target.value)
+              setSortOrder(
+                e.target.value
+              )
             }
             disabled={saving}
           />
@@ -401,7 +581,10 @@ export const SubscriptionPlanModal: React.FC<
             type="button"
             disabled={saving}
             onClick={() =>
-              setIsActive((current) => !current)
+              setIsActive(
+                (current) =>
+                  !current
+              )
             }
             className={`
               relative

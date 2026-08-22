@@ -3,6 +3,50 @@ import stripe
 from django.conf import settings
 from .models import SubscriptionPlan
 
+from .models import Subscription
+
+
+def get_user_subscription(user):
+    try:
+        subscription = user.subscription
+
+        if subscription.status != "active":
+            return None
+
+        return subscription
+
+    except Subscription.DoesNotExist:
+        return None
+
+
+def get_user_plan(user):
+    subscription = get_user_subscription(user)
+
+    if not subscription:
+        return None
+
+    return subscription.plan
+
+
+def has_feature(user, feature):
+    plan = get_user_plan(user)
+
+    if not plan:
+        return False
+
+    return feature in plan.features
+
+
+def get_plan_limit(user, limit_name, default=0):
+    plan = get_user_plan(user)
+
+    if not plan:
+        return default
+
+    return plan.limits.get(
+        limit_name,
+        default,
+    )
 
 def is_premium(user):
     try:

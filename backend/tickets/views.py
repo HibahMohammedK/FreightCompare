@@ -17,34 +17,48 @@ from .serializers import (
 )
 from .services import TicketAssignmentService,TicketStatusService
 from .permissions import CanViewTicket, IsCustomer, CanUpdateTicket, IsAdmin
-from subscription.utils import is_premium
-
+from subscription.utils import has_feature
 
 class TicketCreateAPIView(CreateAPIView):
+
     serializer_class = TicketCreateSerializer
-    permission_classes = [IsAuthenticated, IsCustomer]
+
+    permission_classes = [
+        IsAuthenticated,
+        IsCustomer,
+    ]
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
 
-        if not is_premium(request.user):
+        if not has_feature(
+            request.user,
+            "support_tickets",
+        ):
             return Response(
-                {   
-                    "code": "PREMIUM_REQUIRED",
+                {
+                    "code": "FEATURE_NOT_AVAILABLE",
                     "detail": (
-                        "This feature is available only for Premium users. "
-                        "Upgrade to Premium for unlimited alerts."
-                    )
+                        "Support tickets are not available "
+                        "on your current subscription plan."
+                    ),
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
+
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
 
         ticket = serializer.save(
             customer=request.user,
         )
 
         TicketAssignmentService.assign(ticket)
+
         ticket.refresh_from_db()
 
         RealtimeBroadcaster.broadcast_to_group(

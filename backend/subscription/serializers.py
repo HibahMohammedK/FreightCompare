@@ -18,6 +18,7 @@ class PublicSubscriptionPlanSerializer(serializers.ModelSerializer):
             "currency",
             "billing_interval",
             "features",
+            "limits",
             "sort_order",
         ]
 
@@ -45,6 +46,7 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
             "currency",
             "billing_interval",
             "features",
+            "limits",
             "is_active",
             "sort_order",
             "stripe_product_id",
@@ -95,12 +97,10 @@ class AdminSubscriptionSerializer(serializers.ModelSerializer):
         ]
 
     def get_plan(self, obj):
+        if not obj.plan:
+            return None
 
-        return (
-            "premium"
-            if obj.status == "active"
-            else "basic"
-        )
+        return obj.plan.name
 
 
 class SubscriptionHistorySerializer(serializers.ModelSerializer):

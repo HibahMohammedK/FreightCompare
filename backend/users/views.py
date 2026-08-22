@@ -383,7 +383,8 @@ class ProfileView(RetrieveAPIView):
     
 
     def get_object(self):
-        return self.request.user
+        return self.request.user 
+        
     
 class UpdateProfileView(UpdateAPIView):
 

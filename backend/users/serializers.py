@@ -66,7 +66,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-from tickets.models import Ticket
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     force_password_change = serializers.BooleanField(read_only=True)
@@ -86,7 +86,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "created_at",
             "force_password_change",
         ]
-
+    
 class UpdateProfileSerializer(serializers.ModelSerializer):
 
     remove_profile_image = serializers.BooleanField(
