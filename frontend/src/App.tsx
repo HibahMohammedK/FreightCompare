@@ -38,7 +38,6 @@ import { SubscriptionHistoryPage } from "../src/src/pages/customer/SubscriptionH
 import { StaffLayout } from './src/components/staff/StaffLayout';
 import { StaffDashboardPage } from './src/pages/staff/StaffDashboardPage';
 import { StaffTicketsPage } from './src/pages/staff/StaffTicketsPage';
-import { StaffChatPage } from './src/pages/staff/StaffChatPage';
 import { StaffProfilePage } from './src/pages/staff/StaffProfilePage';
 
 // Admin
@@ -256,7 +255,6 @@ export function App() {
             <Route path="/staff/profile" element={<StaffProfilePage />} />
             <Route index element={<StaffDashboardPage />} />
             <Route path="tickets" element={<StaffTicketsPage />} />
-            <Route path="chat" element={<StaffChatPage />} />
           </Route>
         </Route>
 

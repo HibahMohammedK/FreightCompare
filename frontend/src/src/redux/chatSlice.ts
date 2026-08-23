@@ -71,8 +71,9 @@ export const sendChatMessage = createAsyncThunk(
 export const markConversationRead = createAsyncThunk(
     "chat/markConversationRead",
     async (conversationId: string) => {
-        await markMessagesRead(conversationId);
-        return conversationId;
+        const response = await markMessagesRead(conversationId);
+
+        return response.data;
     },
 );
 const chatSlice = createSlice({
@@ -327,37 +328,39 @@ const chatSlice = createSlice({
                 markConversationRead.fulfilled,
                 (state, action) => {
 
+                    const {
+                        conversation,
+                        message_ids,
+                    } = action.payload;
+
                     if (
                         state.selectedConversation &&
-                        state.selectedConversation.id ===
-                            action.payload
+                        state.selectedConversation.id === conversation
                     ) {
 
                         state.selectedConversation.messages.forEach(
                             (message) => {
 
-                                message.is_read = true;
+                                if (message_ids.includes(message.id)) {
+                                    message.is_read = true;
+                                }
 
                             },
                         );
-
                     }
 
-                    const conversation =
+                    const conversationItem =
                         state.conversations.find(
-                            (conversation) =>
-                                conversation.id ===
-                                action.payload,
+                            (item) =>
+                                item.id === conversation,
                         );
 
-                    if (conversation) {
-
-                        conversation.unread_count = 0;
-
+                    if (conversationItem) {
+                        conversationItem.unread_count = 0;
                     }
 
                 },
-            );
+            )
 
     },
 

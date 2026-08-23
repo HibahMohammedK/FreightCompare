@@ -13,21 +13,21 @@ class SearchTransportAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
-        if not has_feature(
-            request.user,
-            "ai_search",
-        ):
-            return Response(
-                {
-                    "code": "FEATURE_NOT_AVAILABLE",
-                    "detail": (
-                        "AI Transport Assistant is not available "
-                        "on your current subscription plan."
-                    ),
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        if request.user.role == "customer":
+            if not has_feature(
+                request.user,
+                "ai_search",
+            ):
+                return Response(
+                    {
+                        "code": "FEATURE_NOT_AVAILABLE",
+                        "detail": (
+                            "AI Transport Assistant is not available "
+                            "on your current subscription plan."
+                        ),
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
 
         serializer = TransportSearchSerializer(
             data=request.data

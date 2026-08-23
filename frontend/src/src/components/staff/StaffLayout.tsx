@@ -47,11 +47,7 @@ export const StaffLayout: React.FC = () => {
     path: '/staff/tickets',
     icon: <TicketIcon size={20} />
   },
-  {
-    name: 'Chat',
-    path: '/staff/chat',
-    icon: <MessageSquareIcon size={20} />
-  }];
+  ];
 
   
   const handleStatusChange = async (

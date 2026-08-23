@@ -14,6 +14,7 @@ import {
 'lucide-react';
 import { useAppSelector } from '../../hooks/redux';
 import { formatDistanceToNow } from 'date-fns';
+import { fetchConversations } from '../../redux/chatSlice';
 
 export const StaffDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export const StaffDashboardPage: React.FC = () => {
   const dispatch = useAppDispatch()
   useEffect(() => {
     dispatch(fetchTickets());
+    dispatch(fetchConversations());
   }, [dispatch]);
   const tickets = useAppSelector(
       (state) => state.ticket.tickets
@@ -145,60 +147,96 @@ export const StaffDashboardPage: React.FC = () => {
 
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-text-dark">Active Chats</h2>
+            <h2 className="text-lg font-bold text-text-dark">
+              Active Chats
+            </h2>
+
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/staff/chat')}
-              className="text-primary">
-              
-              View All <ArrowRightIcon size={16} className="ml-1" />
+              onClick={() => navigate("/staff/tickets")}
+              className="text-primary"
+            >
+              View Tickets
+              <ArrowRightIcon size={16} className="ml-1" />
             </Button>
           </div>
-          <div className="space-y-4">
-            {activeChats.slice(0, 3).map((chat) => {
-              const otherParticipant = chat.participants.find(
-                (p) => p.id !== user?.id
-              );
-              return (
-                <Card
-                  key={chat.id}
-                  className="p-4 flex items-center justify-between hover:border-primary cursor-pointer transition-colors"
-                  onClick={() => navigate('/staff/chat')}>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold">
-                      {otherParticipant?.name.charAt(0).toUpperCase() || '?'}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-text-dark text-sm">
-                        {otherParticipant?.name}
-                      </h4>
-                      <p className="text-xs text-text-medium truncate max-w-[200px]">
-                        {chat.lastMessage}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-text-lighter block mb-1">
-                      {formatDistanceToNow(new Date(chat.lastMessageAt), {
-                        addSuffix: true
-                      })}
-                    </span>
-                    {chat.unreadCount > 0 &&
-                    <span className="inline-flex w-4 h-4 bg-primary text-white text-[10px] font-bold items-center justify-center rounded-full">
-                        {chat.unreadCount}
-                      </span>
-                    }
-                  </div>
-                </Card>);
 
-            })}
-            {activeChats.length === 0 &&
-            <Card className="p-8 text-center text-text-light">
+          <div className="space-y-4">
+
+            {activeChats.slice(0, 3).map((conversation) => (
+
+              <Card
+                key={conversation.id}
+                className="p-4 flex items-center justify-between hover:border-primary cursor-pointer transition-colors"
+                onClick={() =>
+                  navigate(
+                    `/staff/tickets?ticket=${conversation.ticket_id}`
+                  )
+                }
+              >
+
+                <div className="flex items-center gap-3">
+
+                  <div className="w-10 h-10 rounded-full bg-primary-lighter flex items-center justify-center text-primary-darker font-semibold">
+                    {(conversation.customer_name || "C")
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
+
+                  <div className="min-w-0">
+
+                    <div className="flex items-center gap-2">
+
+                      <h4 className="font-semibold text-text-dark text-sm truncate">
+                        {conversation.customer_name}
+                      </h4>
+
+                      {conversation.unread_count > 0 && (
+                        <span className="inline-flex w-4 h-4 bg-primary text-white text-[10px] font-bold items-center justify-center rounded-full shrink-0">
+                          {conversation.unread_count}
+                        </span>
+                      )}
+
+                    </div>
+
+                    <p className="text-xs text-text-light">
+                      {conversation.ticket_number}
+                    </p>
+
+                    <p className="text-xs text-text-medium truncate max-w-[220px]">
+                      {conversation.last_message || "No messages yet"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <div className="text-right shrink-0">
+
+                  {conversation.last_message_at && (
+                    <span className="text-[10px] text-text-lighter block">
+                      {formatDistanceToNow(
+                        new Date(conversation.last_message_at),
+                        {
+                          addSuffix: true,
+                        }
+                      )}
+                    </span>
+                  )}
+
+                </div>
+
+              </Card>
+
+            ))}
+
+            {activeChats.length === 0 && (
+              <Card className="p-8 text-center text-text-light">
                 No active chats right now.
               </Card>
-            }
+            )}
+
           </div>
         </div>
       </div>

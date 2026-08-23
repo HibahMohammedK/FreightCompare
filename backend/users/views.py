@@ -674,36 +674,48 @@ class AdminUserPagination(PageNumberPagination):
     page_size_query_param = "page_size"
     max_page_size = 100
 
+
+
+
 class AdminUserListView(ListAPIView):
+
     serializer_class = AdminUserListSerializer
-    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    permission_classes = [
+        IsAuthenticated,
+        IsAdminRole,
+    ]
+
     pagination_class = AdminUserPagination
 
     def get_queryset(self):
+
         queryset = (
             User.objects
             .filter(role="customer")
+            .select_related(
+                "subscription",
+                "subscription__plan",
+            )
             .order_by("-created_at")
         )
 
         search = self.request.query_params.get("search")
-        premium = self.request.query_params.get("premium")
+        plan = self.request.query_params.get("plan")
 
         if search:
             queryset = queryset.filter(
                 Q(username__icontains=search) |
-                Q(email__icontains=search)
+                Q(email__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search)
             )
 
-        if premium == "true":
+        # Dynamic subscription-plan filtering
+        if plan and plan != "all":
             queryset = queryset.filter(
-                subscription__status="active"
-            )
-
-        elif premium == "false":
-            queryset = queryset.filter(
-                Q(subscription__isnull=True) |
-                ~Q(subscription__status="active")
+                subscription__plan_id=plan,
+                subscription__status="active",
             )
 
         return queryset

@@ -120,6 +120,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     is_premium = serializers.SerializerMethodField()
     ticket_count = serializers.IntegerField(read_only=True)
     active_ticket_count = serializers.IntegerField(read_only=True)
+    plan_name = serializers.SerializerMethodField()
         
     class Meta:
         model = User
@@ -132,6 +133,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
             "profile_image",
             "role",
             "status",
+            "plan_name",
             "is_active",
             "is_verified",
             "created_at",
@@ -145,6 +147,18 @@ class AdminUserListSerializer(serializers.ModelSerializer):
             return obj.subscription.status == "active"
         except Subscription.DoesNotExist:
             return False
+
+    def get_plan_name(self, obj):
+
+        if (
+            hasattr(obj, "subscription")
+            and obj.subscription
+            and obj.subscription.status == "active"
+            and obj.subscription.plan
+        ):
+            return obj.subscription.plan.name
+
+        return None
 
 
 from .utils import send_staff_credentials_email

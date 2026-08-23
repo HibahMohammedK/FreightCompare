@@ -1,8 +1,6 @@
 import type { NavigateFunction } from "react-router-dom";
 import type { Notification } from "../types/notification";
-import type {
-    UserRole,
-} from "../types/user";
+import type { UserRole } from "../types/user";
 
 export function navigateFromNotification(
     notification: Notification,
@@ -13,6 +11,11 @@ export function navigateFromNotification(
     switch (notification.type) {
 
         case "ticket":
+        case "chat":
+
+            if (!notification.ticket_id) {
+                break;
+            }
 
             if (role === "customer") {
 
@@ -47,13 +50,18 @@ export function navigateFromNotification(
             ) {
 
                 navigate(
-                    `/search?source=${encodeURIComponent(notification.source)}&destination=${encodeURIComponent(notification.destination)}&type=${notification.transport_type}`
+                    `/search?source=${encodeURIComponent(
+                        notification.source
+                    )}&destination=${encodeURIComponent(
+                        notification.destination
+                    )}&type=${notification.transport_type}`
                 );
 
             }
 
             break;
 
-            }
-
+        default:
+            break;
+    }
 }

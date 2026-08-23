@@ -54,6 +54,7 @@ class NotificationConsumer(
                     "created_at": event["created_at"],
                     "is_read": event["is_read"],
                     "transport_id": event["transport_id"],
+                    "ticket_id": event["ticket_id"],
                     "source": event["source"],
                     "destination": event["destination"],
                     "transport_type": event["transport_type"],

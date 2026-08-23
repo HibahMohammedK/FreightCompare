@@ -8,7 +8,7 @@ from realtime.broadcaster import RealtimeBroadcaster
 from .serializers import MessageSerializer
 from realtime.events import CHAT_MESSAGE, CHAT_READ, TICKET_UPDATED
 from tickets.serializers import TicketListSerializer
-
+from realtime.chat_presence import is_user_in_chat
 
 
 
@@ -112,13 +112,23 @@ class MessageService:
         conversation.save()
 
         if recipient:
-            send_notification(
-                user=recipient,
-                title="New message",
-                message=f"{sender.username} sent you a message.",
-                notification_type=Notification.CHAT,
-                ticket=conversation.ticket,
+
+            recipient_is_viewing_chat = is_user_in_chat(
+                conversation_id=conversation.id,
+                user_id=recipient.id,
             )
+
+            if not recipient_is_viewing_chat:
+
+                send_notification(
+                    user=recipient,
+                    title="New message",
+                    message=(
+                        f"{sender.username} sent you a message."
+                    ),
+                    notification_type=Notification.CHAT,
+                    ticket=conversation.ticket,
+                )
         
 
         data=MessageSerializer(chat_message).data
@@ -217,8 +227,15 @@ class MessageService:
             ),
         )
 
-        return updated
-    
+        return {
+            "conversation": str(conversation.id),
+            "message_ids": [
+                str(message_id)
+                for message_id in message_ids
+            ],
+            "reader": str(user.id),
+        }
+                    
 
 
     @staticmethod

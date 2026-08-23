@@ -9,7 +9,11 @@ import {
   getUsersByUrl,
   toggleBlockUser,
 } from "../../api/adminUsers";
+import {
+  getAdminSubscriptionPlans,
+} from "../../api/subscription";
 
+import type { SubscriptionPlan } from "../../types/subscription";
 
 
 export const UserManagementPage: React.FC = () => {
@@ -21,9 +25,9 @@ export const UserManagementPage: React.FC = () => {
   const [prevPage, setPrevPage] = useState<string | null>(null);
   const [userToToggle, setUserToToggle] = useState<any | null>(null);
 
-  const [premiumFilter, setPremiumFilter] = useState<
-      "all" | "premium" | "free"
-  >("all");
+  const [planFilter, setPlanFilter] = useState("all");
+
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
 
   const handleToggleBlock = async () => {
     if (!userToToggle) return;
@@ -49,28 +53,32 @@ export const UserManagementPage: React.FC = () => {
     }
   };
 
+  const fetchPlans = async () => {
+    try {
+      const res = await getAdminSubscriptionPlans();
+      setPlans(res.data);
+    } catch (err) {
+      console.error("Failed loading subscription plans", err);
+    }
+  };
+  useEffect(() => {
+    fetchPlans();
+  }, []);
   const fetchUsers = async (
     url?: string,
     searchTerm?: string,
-    premium?: "all" | "premium" | "free"
+    plan?: string
   ) => {
-
     try {
-
       let res;
 
       if (url) {
-
         res = await getUsersByUrl(url);
-
       } else {
-
         res = await getAdminUsers(
           searchTerm || search,
-          premium ?? premiumFilter
-
+          plan ?? planFilter
         );
-
       }
 
       setUsers(res.data.results || []);
@@ -78,25 +86,19 @@ export const UserManagementPage: React.FC = () => {
       setPrevPage(res.data.previous);
 
     } catch (err) {
-
       console.error("Failed loading users", err);
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
  useEffect(() => {
-
     fetchUsers(
       undefined,
       search,
-      premiumFilter
+      planFilter
     );
-
-  }, [search, premiumFilter]);
+  }, [search, planFilter]);
 
   if (loading) {
     return <div className="p-8">Loading customers...</div>;
@@ -127,29 +129,23 @@ export const UserManagementPage: React.FC = () => {
             </div>
 
             <select
-                value={premiumFilter}
-                onChange={(e) =>
-                    setPremiumFilter(
-                        e.target.value as
-                            | "all"
-                            | "premium"
-                            | "free"
-                    )
-                }
-                className="h-10 rounded-lg border border-border-light bg-white px-3 text-sm text-text-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                  <option value="all">
-                      All Customers
-                  </option>
+              value={planFilter}
+              onChange={(e) => setPlanFilter(e.target.value)}
+              className="h-10 rounded-lg border border-border-light bg-white px-3 text-sm text-text-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="all">
+                All Plans
+              </option>
 
-                  <option value="premium">
-                      Premium
-                  </option>
-
-                  <option value="free">
-                      Free
-                  </option>
-              </select>
+              {plans.map((plan) => (
+                <option
+                  key={plan.id}
+                  value={String(plan.id)}
+                >
+                  {plan.name}
+                </option>
+              ))}
+            </select>
           </div>
       </Card>
 
@@ -163,7 +159,7 @@ export const UserManagementPage: React.FC = () => {
                   Customer
                 </th>
                 <th className="p-4 text-xs font-semibold text-text-medium uppercase tracking-wider">
-                  Premium
+                  Plan
                 </th>
                 <th className="p-4 text-xs font-semibold text-text-medium uppercase tracking-wider text-right">
                   Actions
@@ -203,13 +199,21 @@ export const UserManagementPage: React.FC = () => {
                   
                   <td className="p-5">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.is_premium
-                          ? 'bg-warning-bg text-warning border border-yellow-200'
-                          : 'bg-bg-light text-text-medium border border-border-light'
-                      }`}
+                      className="
+                        inline-flex
+                        items-center
+                        px-2.5
+                        py-0.5
+                        rounded-full
+                        text-xs
+                        font-medium
+                        bg-primary-light
+                        text-primary-dark
+                        border
+                        border-primary-light
+                      "
                     >
-                      {user.is_premium ? 'Premium' : 'Free'}
+                      {user.plan_name || "No Plan"}
                     </span>
                   </td>
 
