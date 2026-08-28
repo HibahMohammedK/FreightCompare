@@ -3,15 +3,33 @@ import uuid
 from django.core.cache import cache
 
 
+# ============================================================
+# CHAT PRESENCE CONFIGURATION
+# ============================================================
+
+
 CHAT_PRESENCE_TIMEOUT = 120
 
 
-def _presence_key(conversation_id, user_id):
+# ============================================================
+# PRESENCE KEY
+# ============================================================
+
+
+def _presence_key(
+    conversation_id,
+    user_id,
+):
     return (
         f"chat_presence:"
         f"{conversation_id}:"
         f"{user_id}"
     )
+
+
+# ============================================================
+# ADD CHAT CONNECTION
+# ============================================================
 
 
 def add_chat_connection(
@@ -23,7 +41,9 @@ def add_chat_connection(
     for a user inside a conversation.
     """
 
-    connection_id = str(uuid.uuid4())
+    connection_id = str(
+        uuid.uuid4()
+    )
 
     key = _presence_key(
         conversation_id,
@@ -35,9 +55,13 @@ def add_chat_connection(
         set(),
     )
 
-    connections = set(connections)
+    connections = set(
+        connections
+    )
 
-    connections.add(connection_id)
+    connections.add(
+        connection_id
+    )
 
     cache.set(
         key,
@@ -46,6 +70,11 @@ def add_chat_connection(
     )
 
     return connection_id
+
+
+# ============================================================
+# REMOVE CHAT CONNECTION
+# ============================================================
 
 
 def remove_chat_connection(
@@ -67,7 +96,9 @@ def remove_chat_connection(
         set(),
     )
 
-    connections = set(connections)
+    connections = set(
+        connections
+    )
 
     connections.discard(
         connection_id
@@ -84,6 +115,11 @@ def remove_chat_connection(
     else:
 
         cache.delete(key)
+
+
+# ============================================================
+# CHECK CHAT PRESENCE
+# ============================================================
 
 
 def is_user_in_chat(

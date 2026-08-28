@@ -3,9 +3,11 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 
-class NotificationConsumer(
-    AsyncWebsocketConsumer,
-):
+class NotificationConsumer(AsyncWebsocketConsumer):
+
+    # ========================================================
+    # CONNECTION
+    # ========================================================
 
     async def connect(self):
 
@@ -26,24 +28,34 @@ class NotificationConsumer(
 
         await self.accept()
 
+    # ========================================================
+    # DISCONNECTION
+    # ========================================================
+
     async def disconnect(
         self,
         close_code,
     ):
 
-        if hasattr(self, "notification_group_name"):
+        if hasattr(
+            self,
+            "notification_group_name",
+        ):
 
             await self.channel_layer.group_discard(
                 self.notification_group_name,
                 self.channel_name,
             )
 
-
+    # ========================================================
+    # SEND NOTIFICATION
+    # ========================================================
 
     async def send_notification(
         self,
         event,
     ):
+
         await self.send(
             text_data=json.dumps(
                 {

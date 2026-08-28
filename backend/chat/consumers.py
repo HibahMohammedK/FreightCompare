@@ -1,17 +1,21 @@
 import json
 
-from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-
-from .models import Conversation
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 from realtime.chat_presence import (
     add_chat_connection,
     remove_chat_connection,
 )
 
+from .models import Conversation
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
+
+    # ========================================================
+    # CONNECTION
+    # ========================================================
 
     async def connect(self):
 
@@ -69,6 +73,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
+    # ========================================================
+    # DISCONNECTION
+    # ========================================================
+
     async def disconnect(
         self,
         close_code,
@@ -92,6 +100,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             await self.remove_chat_presence()
 
+    # ========================================================
+    # CHAT PRESENCE
+    # ========================================================
+
     @database_sync_to_async
     def add_chat_presence(self):
 
@@ -108,6 +120,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             user_id=self.user.id,
             connection_id=self.connection_id,
         )
+
+    # ========================================================
+    # RECEIVE CLIENT EVENTS
+    # ========================================================
 
     async def receive(
         self,
@@ -132,6 +148,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
 
             return
+
+    # ========================================================
+    # REALTIME EVENT
+    # ========================================================
 
     async def realtime_event(
         self,

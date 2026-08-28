@@ -1,6 +1,11 @@
 from rest_framework.permissions import BasePermission
 
 
+# ============================================================
+# TICKET OWNERSHIP
+# ============================================================
+
+
 class IsTicketOwner(BasePermission):
     """
     Allows customers to access only their own tickets.
@@ -8,6 +13,12 @@ class IsTicketOwner(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return obj.customer == request.user
+
+
+# ============================================================
+# ASSIGNED STAFF
+# ============================================================
+
 
 class IsAssignedStaff(BasePermission):
     """
@@ -18,6 +29,11 @@ class IsAssignedStaff(BasePermission):
         return obj.assigned_staff == request.user
 
 
+# ============================================================
+# ROLE PERMISSIONS
+# ============================================================
+
+
 class IsAdmin(BasePermission):
     """
     Allows only administrators.
@@ -25,13 +41,18 @@ class IsAdmin(BasePermission):
 
     def has_permission(self, request, view):
         return request.user.role == "admin"
-    
+
 
 class IsCustomer(BasePermission):
 
     def has_permission(self, request, view):
         return request.user.role == "customer"
-    
+
+
+# ============================================================
+# TICKET ACCESS
+# ============================================================
+
 
 class CanViewTicket(BasePermission):
     """
@@ -44,6 +65,7 @@ class CanViewTicket(BasePermission):
             or obj.assigned_staff == request.user
             or request.user.role == "admin"
         )
+
 
 class CanUpdateTicket(BasePermission):
 

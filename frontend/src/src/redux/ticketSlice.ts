@@ -18,7 +18,6 @@ import type {
   CreateTicketRequest,
   UpdateTicketStatusRequest,
   AssignTicketRequest,
-  TicketStatus,
 } from "../types/ticket";
 
 interface TicketState {

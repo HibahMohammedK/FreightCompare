@@ -1,18 +1,27 @@
 from django.db import transaction
 from django.db.models import Q, Prefetch
 
-from .models import Conversation, Message
-from notifications.utils import send_notification
 from notifications.models import Notification
+from notifications.utils import send_notification
 from realtime.broadcaster import RealtimeBroadcaster
-from .serializers import MessageSerializer
-from realtime.events import CHAT_MESSAGE, CHAT_READ, TICKET_UPDATED
-from tickets.serializers import TicketListSerializer
 from realtime.chat_presence import is_user_in_chat
+from realtime.events import (
+    CHAT_MESSAGE,
+    CHAT_READ,
+    TICKET_UPDATED,
+)
+from tickets.serializers import TicketListSerializer
+
+from .models import Conversation, Message
+from .serializers import MessageSerializer
 
 
+# ============================================================
+# CONVERSATION SERVICE
+# ============================================================
 
 class ConversationService:
+
     @staticmethod
     @transaction.atomic
     def create_conversation(ticket):
@@ -31,19 +40,33 @@ class ConversationService:
         return conversation
 
     @staticmethod
-    def get_conversation(user, conversation_id):
-        queryset = Conversation.objects.select_related(
-            "ticket",
-            "customer",
-            "staff",
-        ).prefetch_related(
-            Prefetch(
-                "messages",
-                queryset=Message.objects.select_related("sender").order_by("created_at"),
+    def get_conversation(
+        user,
+        conversation_id,
+    ):
+        queryset = (
+            Conversation.objects
+            .select_related(
+                "ticket",
+                "customer",
+                "staff",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "messages",
+                    queryset=(
+                        Message.objects
+                        .select_related("sender")
+                        .order_by("created_at")
+                    ),
+                )
             )
         )
+
         if user.is_superuser:
-            return queryset.get(id=conversation_id)
+            return queryset.get(
+                id=conversation_id
+            )
 
         return queryset.get(
             Q(customer=user) | Q(staff=user),
@@ -65,23 +88,37 @@ class ConversationService:
             Q(customer=user) | Q(staff=user)
         ).order_by("-updated_at")
 
-
     @staticmethod
     @transaction.atomic
     def close_conversation(conversation):
         conversation.status = Conversation.Status.CLOSED
-        conversation.save(update_fields=["status", "updated_at"])
+
+        conversation.save(
+            update_fields=[
+                "status",
+                "updated_at",
+            ]
+        )
 
         return conversation
 
 
+# ============================================================
+# MESSAGE SERVICE
+# ============================================================
+
 class MessageService:
 
     @staticmethod
-    def _serialize_ticket(ticket, user=None):
+    def _serialize_ticket(
+        ticket,
+        user=None,
+    ):
         return TicketListSerializer(
             ticket,
-            context={"request_user": user} if user else {},
+            context={
+                "request_user": user
+            } if user else {},
         ).data
 
     @staticmethod
@@ -91,7 +128,7 @@ class MessageService:
         sender,
         content="",
         attachment=None,
-        ):
+    ):
         """
         Create a new chat message and broadcast it in realtime.
         """
@@ -129,10 +166,14 @@ class MessageService:
                     notification_type=Notification.CHAT,
                     ticket=conversation.ticket,
                 )
-        
 
-        data=MessageSerializer(chat_message).data
-    
+        data = MessageSerializer(
+            chat_message
+        ).data
+
+        # ====================================================
+        # BROADCAST CHAT MESSAGE
+        # ====================================================
 
         RealtimeBroadcaster.broadcast_to_group(
             group_name=f"conversation_{conversation.id}",
@@ -140,11 +181,14 @@ class MessageService:
             data=data,
         )
 
-
-
         ticket = conversation.ticket
 
+        # ====================================================
+        # BROADCAST TICKET UPDATE TO STAFF
+        # ====================================================
+
         if ticket.assigned_staff:
+
             RealtimeBroadcaster.broadcast_to_group(
                 group_name=f"staff_{ticket.assigned_staff.id}",
                 event=TICKET_UPDATED,
@@ -153,6 +197,10 @@ class MessageService:
                     ticket.assigned_staff,
                 ),
             )
+
+        # ====================================================
+        # BROADCAST TICKET UPDATE TO CUSTOMER
+        # ====================================================
 
         RealtimeBroadcaster.broadcast_to_group(
             group_name=f"customer_{ticket.customer.id}",
@@ -163,18 +211,26 @@ class MessageService:
             ),
         )
 
+        # ====================================================
+        # BROADCAST TICKET UPDATE TO ADMINS
+        # ====================================================
+
         RealtimeBroadcaster.broadcast_to_group(
             group_name="admins",
             event=TICKET_UPDATED,
-            data=MessageService._serialize_ticket(ticket),
+            data=MessageService._serialize_ticket(
+                ticket
+            ),
         )
 
         return chat_message
 
-
     @staticmethod
     @transaction.atomic
-    def mark_messages_as_read(conversation, user):
+    def mark_messages_as_read(
+        conversation,
+        user,
+    ):
         """
         Mark all unread messages from the other participant as read
         and notify the sender in realtime.
@@ -187,17 +243,29 @@ class MessageService:
         )
 
         message_ids = list(
-            messages.values_list("id", flat=True)
+            messages.values_list(
+                "id",
+                flat=True,
+            )
         )
 
-        updated = messages.update(is_read=True)
+        updated = messages.update(
+            is_read=True
+        )
+
+        # ====================================================
+        # BROADCAST READ EVENT
+        # ====================================================
 
         if updated:
+
             RealtimeBroadcaster.broadcast_to_group(
                 group_name=f"conversation_{conversation.id}",
                 event=CHAT_READ,
                 data={
-                    "conversation": str(conversation.id),
+                    "conversation": str(
+                        conversation.id
+                    ),
                     "message_ids": [
                         str(message_id)
                         for message_id in message_ids
@@ -208,7 +276,12 @@ class MessageService:
 
         ticket = conversation.ticket
 
+        # ====================================================
+        # BROADCAST TICKET UPDATE TO STAFF
+        # ====================================================
+
         if ticket.assigned_staff:
+
             RealtimeBroadcaster.broadcast_to_group(
                 group_name=f"staff_{ticket.assigned_staff.id}",
                 event=TICKET_UPDATED,
@@ -217,6 +290,10 @@ class MessageService:
                     ticket.assigned_staff,
                 ),
             )
+
+        # ====================================================
+        # BROADCAST TICKET UPDATE TO CUSTOMER
+        # ====================================================
 
         RealtimeBroadcaster.broadcast_to_group(
             group_name=f"customer_{ticket.customer.id}",
@@ -228,15 +305,19 @@ class MessageService:
         )
 
         return {
-            "conversation": str(conversation.id),
+            "conversation": str(
+                conversation.id
+            ),
             "message_ids": [
                 str(message_id)
                 for message_id in message_ids
             ],
             "reader": str(user.id),
         }
-                    
 
+    # ========================================================
+    # GET MESSAGES
+    # ========================================================
 
     @staticmethod
     def get_messages(conversation):

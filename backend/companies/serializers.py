@@ -1,20 +1,34 @@
 from rest_framework import serializers
-from .models import Company
 from django.db.models.functions import Lower
 
+from .models import Company
+
+
 class CompanySerializer(serializers.ModelSerializer):
+
+    # ========================================================
+    # META
+    # ========================================================
+
     class Meta:
         model = Company
+
         fields = [
             "id",
             "name",
             "website",
             "created_at",
-            "is_active"
-            ]
+            "is_active",
+        ]
+
+    # ========================================================
+    # NAME VALIDATION
+    # ========================================================
 
     def validate_name(self, value):
-        value = " ".join(value.split()).strip()
+        value = " ".join(
+            value.split()
+        ).strip()
 
         queryset = Company.objects.annotate(
             name_lower=Lower("name")

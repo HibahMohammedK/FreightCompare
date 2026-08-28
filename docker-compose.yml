@@ -28,6 +28,9 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_HOST=db
+      - REDIS_HOST=redis
+      - REDIS_PORT=637
+      
     depends_on:
       - db
       - redis

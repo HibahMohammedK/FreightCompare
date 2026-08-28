@@ -1,11 +1,14 @@
 import json
-
-from channels.generic.websocket import AsyncWebsocketConsumer
 from datetime import timedelta
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.utils import timezone
+
+
+# ============================================================
+# SUPPORT CONSUMER
+# ============================================================
 
 
 class SupportConsumer(AsyncWebsocketConsumer):
@@ -53,6 +56,11 @@ class SupportConsumer(AsyncWebsocketConsumer):
         )
 
 
+# ============================================================
+# PRESENCE CONSUMER
+# ============================================================
+
+
 class PresenceConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
@@ -83,21 +91,30 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             "online"
         )
 
-    async def receive(self, text_data=None, bytes_data=None):
+    async def receive(
+        self,
+        text_data=None,
+        bytes_data=None,
+    ):
 
         if not text_data:
             return
 
         try:
-            data = json.loads(text_data)
+            data = json.loads(
+                text_data
+            )
+
         except json.JSONDecodeError:
             return
 
         if data.get("type") == "heartbeat":
-
             await self.update_last_seen()
 
-    async def disconnect(self, close_code):
+    async def disconnect(
+        self,
+        close_code,
+    ):
 
         if hasattr(self, "group_name"):
 
@@ -106,7 +123,10 @@ class PresenceConsumer(AsyncWebsocketConsumer):
                 self.channel_name,
             )
 
-        if hasattr(self, "user") and self.user.is_authenticated:
+        if (
+            hasattr(self, "user")
+            and self.user.is_authenticated
+        ):
 
             if self.user.role == "staff":
 
@@ -140,13 +160,18 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             ]
         )
 
-    async def broadcast_presence(self, presence_status):
+    async def broadcast_presence(
+        self,
+        presence_status,
+    ):
 
         await self.channel_layer.group_send(
             self.group_name,
             {
                 "type": "presence_event",
-                "staff_id": str(self.user.id),
+                "staff_id": str(
+                    self.user.id
+                ),
                 "status": presence_status,
             },
         )

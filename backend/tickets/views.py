@@ -1,26 +1,45 @@
 from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import (
+    CreateAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+    UpdateAPIView,
+)
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from realtime.broadcaster import RealtimeBroadcaster
 from realtime.events import TICKET_CREATED
+from subscription.utils import has_feature
 
 from .models import Ticket
+from .permissions import (
+    CanUpdateTicket,
+    CanViewTicket,
+    IsAdmin,
+    IsCustomer,
+)
 from .serializers import (
+    TicketAssignSerializer,
+    TicketBulkReassignSerializer,
     TicketCreateSerializer,
     TicketDetailSerializer,
     TicketListSerializer,
     TicketStatusSerializer,
-    TicketAssignSerializer,
-    TicketBulkReassignSerializer
 )
-from .services import TicketAssignmentService,TicketStatusService
-from .permissions import CanViewTicket, IsCustomer, CanUpdateTicket, IsAdmin
-from subscription.utils import has_feature
+from .services import (
+    TicketAssignmentService,
+    TicketStatusService,
+)
+
+
+# ============================================================
+# TICKET CREATION
+# ============================================================
+
 
 class TicketCreateAPIView(CreateAPIView):
-
     serializer_class = TicketCreateSerializer
 
     permission_classes = [
@@ -29,7 +48,6 @@ class TicketCreateAPIView(CreateAPIView):
     ]
 
     def create(self, request, *args, **kwargs):
-
         if not has_feature(
             request.user,
             "support_tickets",
@@ -71,6 +89,12 @@ class TicketCreateAPIView(CreateAPIView):
             TicketListSerializer(ticket).data,
             status=status.HTTP_201_CREATED,
         )
+
+
+# ============================================================
+# TICKET LIST
+# ============================================================
+
 
 class TicketListAPIView(ListAPIView):
     """
@@ -115,6 +139,10 @@ class TicketListAPIView(ListAPIView):
         )
 
 
+# ============================================================
+# TICKET DETAIL
+# ============================================================
+
 
 class TicketDetailAPIView(RetrieveAPIView):
     """
@@ -122,7 +150,7 @@ class TicketDetailAPIView(RetrieveAPIView):
     """
 
     serializer_class = TicketDetailSerializer
-    
+
     permission_classes = [
         IsAuthenticated,
         CanViewTicket,
@@ -133,7 +161,12 @@ class TicketDetailAPIView(RetrieveAPIView):
             "customer",
             "assigned_staff",
         )
-    
+
+
+# ============================================================
+# TICKET STATUS
+# ============================================================
+
 
 class TicketStatusAPIView(UpdateAPIView):
     """
@@ -154,7 +187,6 @@ class TicketStatusAPIView(UpdateAPIView):
         )
 
     def update(self, request, *args, **kwargs):
-
         ticket = self.get_object()
 
         serializer = self.get_serializer(
@@ -176,7 +208,13 @@ class TicketStatusAPIView(UpdateAPIView):
             TicketDetailSerializer(ticket).data,
             status=status.HTTP_200_OK,
         )
-    
+
+
+# ============================================================
+# TICKET ASSIGNMENT
+# ============================================================
+
+
 class TicketAssignAPIView(UpdateAPIView):
     """
     Assign or reassign a ticket to a staff member.
@@ -187,7 +225,9 @@ class TicketAssignAPIView(UpdateAPIView):
         "customer",
         "assigned_staff",
     )
+
     serializer_class = TicketAssignSerializer
+
     permission_classes = [
         IsAuthenticated,
         IsAdmin,
@@ -196,10 +236,17 @@ class TicketAssignAPIView(UpdateAPIView):
     def update(self, request, *args, **kwargs):
         ticket = self.get_object()
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer = self.get_serializer(
+            data=request.data
+        )
 
-        staff = serializer.validated_data["assigned_staff"]
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        staff = serializer.validated_data[
+            "assigned_staff"
+        ]
 
         ticket = TicketAssignmentService.assign_to_staff(
             ticket=ticket,
@@ -210,6 +257,12 @@ class TicketAssignAPIView(UpdateAPIView):
             TicketDetailSerializer(ticket).data,
             status=status.HTTP_200_OK,
         )
+
+
+# ============================================================
+# BULK TICKET REASSIGNMENT
+# ============================================================
+
 
 class TicketBulkReassignAPIView(APIView):
     """
@@ -239,12 +292,17 @@ class TicketBulkReassignAPIView(APIView):
             "target_staff"
         ]
 
-        updated_count = Ticket.objects.filter(
-            assigned_staff=source_staff
-        ).exclude(
-            status="closed"
-        ).update(
-            assigned_staff=target_staff
+        updated_count = (
+            Ticket.objects
+            .filter(
+                assigned_staff=source_staff
+            )
+            .exclude(
+                status="closed"
+            )
+            .update(
+                assigned_staff=target_staff
+            )
         )
 
         return Response(

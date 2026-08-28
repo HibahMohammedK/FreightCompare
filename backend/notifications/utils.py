@@ -1,8 +1,12 @@
 from asgiref.sync import async_to_sync
-
 from channels.layers import get_channel_layer
 
 from .models import Notification
+
+
+# ============================================================
+# SEND NOTIFICATION
+# ============================================================
 
 
 def send_notification(
@@ -52,13 +56,11 @@ def send_notification(
                 if notification.transport
                 else None
             ),
-
             "destination": (
                 notification.transport.destination
                 if notification.transport
                 else None
             ),
-
             "transport_type": (
                 notification.transport.transport_type
                 if notification.transport

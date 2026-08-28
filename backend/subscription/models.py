@@ -1,15 +1,26 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+
+
+# ============================================================
+# SUBSCRIPTION PLAN
+# ============================================================
+
 
 class SubscriptionPlan(models.Model):
+
     BILLING_INTERVAL_CHOICES = (
         ("month", "Monthly"),
         ("year", "Yearly"),
     )
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(
+        max_length=100,
+    )
 
-    description = models.TextField(blank=True)
+    description = models.TextField(
+        blank=True,
+    )
 
     price = models.DecimalField(
         max_digits=10,
@@ -71,9 +82,13 @@ class SubscriptionPlan(models.Model):
         return self.name
 
 
+# ============================================================
+# USER SUBSCRIPTION
+# ============================================================
 
 
 class Subscription(models.Model):
+
     STATUS_CHOICES = (
         ("active", "Active"),
         ("cancelled", "Cancelled"),
@@ -117,15 +132,25 @@ class Subscription(models.Model):
     expiry_date = models.DateTimeField()
 
     cancel_at_period_end = models.BooleanField(
-        default=False
+        default=False,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
 
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
 
     def __str__(self):
         return f"{self.user.email} - {self.status}"
+
+
+# ============================================================
+# SUBSCRIPTION HISTORY
+# ============================================================
+
 
 class SubscriptionHistory(models.Model):
 

@@ -23,8 +23,7 @@ from .views import (
     GoogleLoginView,
     ChangeEmailView,
     VerifyEmailChangeView,
-   
-    
+
     StaffUpdateOwnStatusView
 
 )

@@ -1,5 +1,3 @@
-import { UserRole } from "./user";
-
 export type TicketCategory =
   | "transport"
   | "subscription"

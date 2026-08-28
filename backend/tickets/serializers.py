@@ -1,7 +1,14 @@
 from rest_framework import serializers
 
-from .models import Ticket
 from users.models import User
+
+from .models import Ticket
+
+
+# ============================================================
+# TICKET CREATION
+# ============================================================
+
 
 class TicketCreateSerializer(serializers.ModelSerializer):
     """
@@ -38,6 +45,11 @@ class TicketCreateSerializer(serializers.ModelSerializer):
         return value
 
 
+# ============================================================
+# TICKET LIST
+# ============================================================
+
+
 class TicketListSerializer(serializers.ModelSerializer):
     """
     Serializer used when listing tickets.
@@ -51,13 +63,14 @@ class TicketListSerializer(serializers.ModelSerializer):
         allow_null=True,
         read_only=True,
     )
+
     assigned_staff_name = serializers.SerializerMethodField()
     assigned_staff_email = serializers.SerializerMethodField()
 
     last_message = serializers.SerializerMethodField()
     last_message_at = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
-    
+
     last_message_sender_id = serializers.SerializerMethodField()
     last_message_sender_name = serializers.SerializerMethodField()
 
@@ -80,7 +93,7 @@ class TicketListSerializer(serializers.ModelSerializer):
             "last_message_at",
             "unread_count",
             "last_message_sender_id",
-            "last_message_sender_name"
+            "last_message_sender_name",
         )
 
     def get_customer_name(self, obj):
@@ -95,7 +108,11 @@ class TicketListSerializer(serializers.ModelSerializer):
         if not obj.assigned_staff:
             return None
 
-        full_name = obj.assigned_staff.get_full_name().strip()
+        full_name = (
+            obj.assigned_staff
+            .get_full_name()
+            .strip()
+        )
 
         return full_name or obj.assigned_staff.username
 
@@ -106,7 +123,11 @@ class TicketListSerializer(serializers.ModelSerializer):
         return None
 
     def _last_message(self, obj):
-        conversation = getattr(obj, "conversation", None)
+        conversation = getattr(
+            obj,
+            "conversation",
+            None,
+        )
 
         if not conversation:
             return None
@@ -117,14 +138,19 @@ class TicketListSerializer(serializers.ModelSerializer):
             .order_by("-created_at")
             .first()
         )
-    
+
     def get_last_message(self, obj):
         message = self._last_message(obj)
-        return message.message if message else None
 
+        return (
+            message.message
+            if message
+            else None
+        )
 
     def get_last_message_at(self, obj):
         message = self._last_message(obj)
+
         return (
             message.created_at.isoformat()
             if message
@@ -133,8 +159,12 @@ class TicketListSerializer(serializers.ModelSerializer):
 
     def get_last_message_sender_id(self, obj):
         message = self._last_message(obj)
-        return str(message.sender.id) if message else None
 
+        return (
+            str(message.sender.id)
+            if message
+            else None
+        )
 
     def get_last_message_sender_name(self, obj):
         message = self._last_message(obj)
@@ -143,17 +173,25 @@ class TicketListSerializer(serializers.ModelSerializer):
             return None
 
         return (
-            message.sender.get_full_name().strip()
+            message.sender
+            .get_full_name()
+            .strip()
             or message.sender.username
         )
 
     def get_unread_count(self, obj):
-        user = self.context.get("request_user")
+        user = self.context.get(
+            "request_user"
+        )
 
         if not user:
             return 0
 
-        conversation = getattr(obj, "conversation", None)
+        conversation = getattr(
+            obj,
+            "conversation",
+            None,
+        )
 
         if not conversation:
             return 0
@@ -166,10 +204,16 @@ class TicketListSerializer(serializers.ModelSerializer):
         )
 
 
+# ============================================================
+# TICKET DETAIL
+# ============================================================
+
+
 class TicketDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for retrieving ticket details.
     """
+
     conversation_id = serializers.UUIDField(
         source="conversation.id",
         read_only=True,
@@ -190,7 +234,6 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     )
 
     assigned_staff_name = serializers.SerializerMethodField()
-
     assigned_staff_email = serializers.SerializerMethodField()
 
     class Meta:
@@ -216,6 +259,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
             "resolved_at",
             "closed_at",
         )
+
         read_only_fields = fields
 
     def get_customer_name(self, obj):
@@ -230,7 +274,11 @@ class TicketDetailSerializer(serializers.ModelSerializer):
         if not obj.assigned_staff:
             return None
 
-        full_name = obj.assigned_staff.get_full_name().strip()
+        full_name = (
+            obj.assigned_staff
+            .get_full_name()
+            .strip()
+        )
 
         if full_name:
             return full_name
@@ -242,6 +290,12 @@ class TicketDetailSerializer(serializers.ModelSerializer):
             return obj.assigned_staff.email
 
         return None
+
+
+# ============================================================
+# TICKET STATUS
+# ============================================================
+
 
 class TicketStatusSerializer(serializers.ModelSerializer):
     """
@@ -255,6 +309,11 @@ class TicketStatusSerializer(serializers.ModelSerializer):
         )
 
 
+# ============================================================
+# TICKET ASSIGNMENT
+# ============================================================
+
+
 class TicketAssignSerializer(serializers.Serializer):
     assigned_staff = serializers.UUIDField()
 
@@ -265,12 +324,18 @@ class TicketAssignSerializer(serializers.Serializer):
                 role="staff",
                 is_active=True,
             )
+
         except User.DoesNotExist:
             raise serializers.ValidationError(
                 "Selected staff member does not exist."
             )
 
         return staff
+
+
+# ============================================================
+# BULK TICKET REASSIGNMENT
+# ============================================================
 
 
 class TicketBulkReassignSerializer(serializers.Serializer):
@@ -288,9 +353,14 @@ class TicketBulkReassignSerializer(serializers.Serializer):
                 id=attrs["from_staff"],
                 role="staff",
             )
+
         except User.DoesNotExist:
             raise serializers.ValidationError(
-                {"from_staff": "Source staff member does not exist."}
+                {
+                    "from_staff": (
+                        "Source staff member does not exist."
+                    )
+                }
             )
 
         try:
@@ -299,9 +369,15 @@ class TicketBulkReassignSerializer(serializers.Serializer):
                 role="staff",
                 is_active=True,
             )
+
         except User.DoesNotExist:
             raise serializers.ValidationError(
-                {"to_staff": "Target staff member does not exist or is inactive."}
+                {
+                    "to_staff": (
+                        "Target staff member does not exist "
+                        "or is inactive."
+                    )
+                }
             )
 
         attrs["source_staff"] = source_staff

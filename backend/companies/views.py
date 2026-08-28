@@ -1,51 +1,71 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, BasePermission
-from .models import Company
-from .serializers import CompanySerializer
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from .models import Company
+from .serializers import CompanySerializer
 
+
+# ============================================================
+# PERMISSIONS
+# ============================================================
 
 class IsAdminRole(BasePermission):
+
     def has_permission(
         self,
         request,
-        view
+        view,
     ):
         return (
             request.user.is_authenticated
             and request.user.role == "admin"
         )
-    
-    
+
+
+# ============================================================
+# PAGINATION
+# ============================================================
+
 class CompanyPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "page_size"
     max_page_size = 100
 
 
+# ============================================================
+# COMPANY VIEWSET
+# ============================================================
+
 class CompanyViewSet(viewsets.ModelViewSet):
+
     queryset = Company.objects.all().order_by("name")
     serializer_class = CompanySerializer
-    permission_classes = [IsAuthenticated, IsAdminRole]
+    permission_classes = [
+        IsAuthenticated,
+        IsAdminRole,
+    ]
+
     pagination_class = CompanyPagination
 
     filter_backends = [SearchFilter]
-
     search_fields = ["name"]
+
+    # ========================================================
+    # TOGGLE COMPANY STATUS
+    # ========================================================
 
     @action(
         detail=True,
-        methods=["patch"]
+        methods=["patch"],
     )
-    
     def toggle_status(
         self,
         request,
-        pk=None
+        pk=None,
     ):
         company = self.get_object()
 
@@ -55,7 +75,9 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
         company.save()
 
-        return Response({
-            "message": "Status updated",
-            "is_active": company.is_active
-        })
+        return Response(
+            {
+                "message": "Status updated",
+                "is_active": company.is_active,
+            }
+        )

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models, transaction
 from django.db.models import Max
 
+
 class Ticket(models.Model):
 
     STATUS_CHOICES = (
@@ -31,6 +32,10 @@ class Ticket(models.Model):
         ("general", "General"),
     )
 
+    # ========================================================
+    # IDENTIFICATION
+    # ========================================================
+
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -50,6 +55,10 @@ class Ticket(models.Model):
         null=True,
     )
 
+    # ========================================================
+    # USERS
+    # ========================================================
+
     customer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -63,6 +72,10 @@ class Ticket(models.Model):
         null=True,
         blank=True,
     )
+
+    # ========================================================
+    # TICKET INFORMATION
+    # ========================================================
 
     subject = models.CharField(
         max_length=255,
@@ -88,6 +101,10 @@ class Ticket(models.Model):
         default="open",
     )
 
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
     created_at = models.DateTimeField(
         auto_now_add=True,
     )
@@ -111,24 +128,37 @@ class Ticket(models.Model):
         blank=True,
     )
 
+    # ========================================================
+    # METHODS
+    # ========================================================
+
     def save(self, *args, **kwargs):
         if self.ticket_sequence is None:
             with transaction.atomic():
                 last_sequence = (
-                    Ticket.objects.select_for_update()
-                    .aggregate(max_sequence=Max("ticket_sequence"))
+                    Ticket.objects
+                    .select_for_update()
+                    .aggregate(
+                        max_sequence=Max(
+                            "ticket_sequence"
+                        )
+                    )
                     .get("max_sequence")
                 )
 
-                self.ticket_sequence = (last_sequence or 0) + 1
+                self.ticket_sequence = (
+                    last_sequence or 0
+                ) + 1
 
         if not self.ticket_number:
-            self.ticket_number = f"FC-{self.ticket_sequence:06d}"
+            self.ticket_number = (
+                f"FC-{self.ticket_sequence:06d}"
+            )
 
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.subject} ({self.status})"
-    
+
     class Meta:
         ordering = ["-created_at"]

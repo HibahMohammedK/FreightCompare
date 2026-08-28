@@ -1,49 +1,76 @@
-from .models import User
-from .serializers import RegisterSerializer, UserProfileSerializer, UpdateProfileSerializer
+# ============================================================
+# IMPORTS
+# ============================================================
 
+# Python
+import uuid
+from datetime import timedelta
+
+# Django
+from django.contrib.auth import authenticate
+from django.core.cache import cache
+from django.db.models import Count, Q
+from django.utils import timezone
+
+# Django REST Framework
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import (
+    CreateAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+    UpdateAPIView,
+)
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+# Django REST Framework Simple JWT
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
-from django.core.cache import cache
-from django.contrib.auth import authenticate
-from django.db.models import Q
-
-import uuid
-
-from .utils import generate_otp, hash_otp, send_otp_email
-
-from rest_framework.permissions import BasePermission
-from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView
-from rest_framework.pagination import PageNumberPagination
-
-from realtime.broadcaster import RealtimeBroadcaster
-from realtime.events import STAFF_STATUS_CHANGED
-
+# Local imports
+from .exceptions import handle_exception
+from .models import PasswordResetToken, User
 from .serializers import (
     AdminUserListSerializer,
-    CreateStaffSerializer,
-    ChangePasswordSerializer,
-    ForgotPasswordSerializer,
-    ResetPasswordSerializer,
     ChangeEmailSerializer,
-    VerifyEmailChangeSerializer
+    ChangePasswordSerializer,
+    CreateStaffSerializer,
+    ForgotPasswordSerializer,
+    RegisterSerializer,
+    ResetPasswordSerializer,
+    UpdateProfileSerializer,
+    UserProfileSerializer,
+    VerifyEmailChangeSerializer,
 )
-from .utils import verify_google_token
-from .exceptions import handle_exception
-from tickets.services import TicketAssignmentService
+from .utils import (
+    generate_otp,
+    generate_reset_token,
+    hash_otp,
+    hash_token,
+    send_otp_email,
+    send_password_reset_email,
+    verify_google_token,
+)
+
+# Other application imports
+from realtime.broadcaster import RealtimeBroadcaster
+from realtime.events import STAFF_STATUS_CHANGED
 from subscription.models import Subscription
 from tickets.models import Ticket
+from tickets.services import TicketAssignmentService
 from transports.models import Transport
 
-# =========================
-# REGISTER
-# =========================
+
+# ============================================================
+# AUTHENTICATION & REGISTRATION
+# ============================================================
+
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
@@ -65,20 +92,24 @@ class RegisterView(generics.CreateAPIView):
                 "otp_hash": otp_hash,
                 "attempts": 0,
             },
-            timeout=300
+            timeout=300,
         )
 
         send_otp_email(user.email, otp)
 
-        return Response({
-            "message": "OTP sent",
-            "verification_id": verification_id
-        })
+        return Response(
+            {
+                "message": "OTP sent",
+                "verification_id": verification_id,
+            }
+        )
 
 
-# =========================
+# ============================================================
 # VERIFY OTP + AUTO LOGIN
-# =========================
+# ============================================================
+
+
 class VerifyOTPView(APIView):
     def post(self, request):
         verification_id = request.data.get("verification_id")
@@ -95,9 +126,10 @@ class VerifyOTPView(APIView):
         if hash_otp(otp) != data["otp_hash"]:
             data["attempts"] += 1
             cache.set(f"verify:{verification_id}", data, timeout=300)
+
             return Response({"error": "Invalid OTP"}, status=400)
 
-        # ✅ success
+        # Success
         user = User.objects.get(email=data["email"])
         user.is_verified = True
         user.is_active = True
@@ -105,29 +137,33 @@ class VerifyOTPView(APIView):
 
         cache.delete(f"verify:{verification_id}")
 
-        # 🔐 AUTO LOGIN (JWT)
+        # Auto Login (JWT)
         refresh = RefreshToken.for_user(user)
 
-        res = Response({
-            "message": "Verified successfully",
-            "access": str(refresh.access_token),
-        })
+        res = Response(
+            {
+                "message": "Verified successfully",
+                "access": str(refresh.access_token),
+            }
+        )
 
-        # ✅ store refresh token in cookie
+        # Store refresh token in cookie
         res.set_cookie(
             key="refresh_token",
             value=str(refresh),
             httponly=True,
-            secure=False,  # 🔥 True in production (HTTPS)
+            secure=False,  # True in production (HTTPS)
             samesite="Lax",
         )
 
         return res
 
 
-# =========================
+# ============================================================
 # RESEND OTP
-# =========================
+# ============================================================
+
+
 class ResendOTPView(APIView):
     def post(self, request):
         email = request.data.get("email")
@@ -148,22 +184,25 @@ class ResendOTPView(APIView):
                 "otp_hash": otp_hash,
                 "attempts": 0,
             },
-            timeout=300
+            timeout=300,
         )
 
         send_otp_email(user.email, otp)
 
-        return Response({
-            "message": "OTP resent",
-            "verification_id": verification_id
-        })
+        return Response(
+            {
+                "message": "OTP resent",
+                "verification_id": verification_id,
+            }
+        )
 
 
-# =========================
+# ============================================================
 # LOGIN
-# =========================
-class LoginView(TokenObtainPairView):
+# ============================================================
 
+
+class LoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         email = request.data.get("email")
         password = request.data.get("password")
@@ -173,13 +212,13 @@ class LoginView(TokenObtainPairView):
         if user is None:
             return Response(
                 {"error": "Invalid credentials"},
-                status=status.HTTP_401_UNAUTHORIZED
+                status=status.HTTP_401_UNAUTHORIZED,
             )
 
         if not user.is_verified and user.role == "customer":
             return Response(
                 {"error": "Please verify your email first"},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         response = super().post(request, *args, **kwargs)
@@ -188,13 +227,16 @@ class LoginView(TokenObtainPairView):
             refresh = response.data.get("refresh")
             access = response.data.get("access")
 
-            res = Response({"access": access}, status=status.HTTP_200_OK)
+            res = Response(
+                {"access": access},
+                status=status.HTTP_200_OK,
+            )
 
             res.set_cookie(
                 key="refresh_token",
                 value=refresh,
                 httponly=True,
-                secure=False,  
+                secure=False,
                 samesite="Lax",
             )
 
@@ -203,22 +245,25 @@ class LoginView(TokenObtainPairView):
         return response
 
 
-# =========================
+# ============================================================
 # LOGOUT
-# =========================
-class LogoutView(APIView):
+# ============================================================
 
+
+class LogoutView(APIView):
     def post(self, request):
         res = Response({"message": "Logged out"})
         res.delete_cookie("refresh_token")
+
         return res
 
 
-# =========================
+# ============================================================
 # REFRESH TOKEN (COOKIE)
-# =========================
-class CookieTokenRefreshView(TokenRefreshView):
+# ============================================================
 
+
+class CookieTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh = request.COOKIES.get("refresh_token")
 
@@ -226,18 +271,22 @@ class CookieTokenRefreshView(TokenRefreshView):
             return Response({"error": "No refresh token"}, status=400)
 
         request.data["refresh"] = refresh
+
         return super().post(request, *args, **kwargs)
 
-# =========================
-# Change Password
-# =========================
+
+# ============================================================
+# PASSWORD & ACCOUNT SECURITY
+# ============================================================
+
+
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = ChangePasswordSerializer(
             data=request.data,
-            context={"request": request}
+            context={"request": request},
         )
 
         serializer.is_valid(raise_exception=True)
@@ -250,17 +299,14 @@ class ChangePasswordView(APIView):
 
         user.save()
 
-        return Response({
-            "message": "Password changed successfully"
-        })
+        return Response(
+            {
+                "message": "Password changed successfully",
+            }
+        )
 
-from .models import PasswordResetToken
-from .utils import generate_reset_token, hash_token, send_password_reset_email
-from django.utils import timezone
-from datetime import timedelta
 
 class ForgotPasswordView(APIView):
-
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -270,10 +316,12 @@ class ForgotPasswordView(APIView):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            # 🔐 NEVER reveal user existence
-            return Response({
-                "message": "If an account exists, a reset link has been sent."
-            })
+            # Never reveal user existence
+            return Response(
+                {
+                    "message": "If an account exists, a reset link has been sent.",
+                }
+            )
 
         token = generate_reset_token()
         token_hash = hash_token(token)
@@ -281,17 +329,19 @@ class ForgotPasswordView(APIView):
         PasswordResetToken.objects.create(
             user=user,
             token_hash=token_hash,
-            expires_at=timezone.now() + timedelta(minutes=15)
+            expires_at=timezone.now() + timedelta(minutes=15),
         )
 
         send_password_reset_email(user.email, token)
 
-        return Response({
-            "message": "If an account exists, a reset link has been sent."
-        })
+        return Response(
+            {
+                "message": "If an account exists, a reset link has been sent.",
+            }
+        )
+
 
 class ResetPasswordView(APIView):
-
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -305,12 +355,14 @@ class ResetPasswordView(APIView):
         reset_obj.is_used = True
         reset_obj.save()
 
-        return Response({
-            "message": "Password reset successful"
-        })
+        return Response(
+            {
+                "message": "Password reset successful",
+            }
+        )
+
 
 class ValidateResetTokenView(APIView):
-
     permission_classes = []
 
     def get(self, request):
@@ -319,21 +371,24 @@ class ValidateResetTokenView(APIView):
         if not token:
             return Response(
                 {"valid": False},
-                status=400
+                status=400,
             )
 
         token_hash = hash_token(token)
 
         try:
             reset_obj = PasswordResetToken.objects.get(
-                token_hash=token_hash
+                token_hash=token_hash,
             )
         except PasswordResetToken.DoesNotExist:
             return Response({"valid": False})
 
-        return Response({
-            "valid": reset_obj.is_valid()
-        })
+        return Response(
+            {
+                "valid": reset_obj.is_valid(),
+            }
+        )
+
 
 class GoogleLoginView(APIView):
     def post(self, request):
@@ -344,7 +399,7 @@ class GoogleLoginView(APIView):
         if not idinfo:
             return Response(
                 {"error": "Invalid Google token"},
-                status=400
+                status=400,
             )
 
         email = idinfo.get("email")
@@ -355,14 +410,16 @@ class GoogleLoginView(APIView):
             defaults={
                 "username": name,
                 "is_verified": True,
-            }
+            },
         )
 
         refresh = RefreshToken.for_user(user)
 
-        res = Response({
-            "access": str(refresh.access_token)
-        })
+        res = Response(
+            {
+                "access": str(refresh.access_token),
+            }
+        )
 
         res.set_cookie(
             key="refresh_token",
@@ -373,64 +430,51 @@ class GoogleLoginView(APIView):
         )
 
         return res
-    
-# =========================
+
+
+# ============================================================
 # PROFILE
-# =========================
+# ============================================================
+
+
 class ProfileView(RetrieveAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
-    
 
     def get_object(self):
-        return self.request.user 
-        
-    
-class UpdateProfileView(UpdateAPIView):
+        return self.request.user
 
+
+class UpdateProfileView(UpdateAPIView):
     serializer_class = UpdateProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
-    
-    def perform_update(self, serializer):
 
+    def perform_update(self, serializer):
         user = serializer.instance
 
-        if serializer.validated_data.get(
-            "remove_profile_image"
-        ):
-
+        if serializer.validated_data.get("remove_profile_image"):
             if user.profile_image:
-                user.profile_image.delete(
-                    save=False
-                )
+                user.profile_image.delete(save=False)
 
             user.profile_image = None
 
         serializer.save()
-    
-class ChangeEmailView(APIView):
 
+
+class ChangeEmailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        serializer = ChangeEmailSerializer(data=request.data)
 
-        serializer = ChangeEmailSerializer(
-            data=request.data
-        )
+        serializer.is_valid(raise_exception=True)
 
-        serializer.is_valid(
-            raise_exception=True
-        )
-
-        new_email = serializer.validated_data[
-            "new_email"
-        ]
+        new_email = serializer.validated_data["new_email"]
 
         otp = generate_otp()
-
         verification_id = uuid.uuid4().hex
 
         cache.set(
@@ -441,40 +485,35 @@ class ChangeEmailView(APIView):
                 "otp_hash": hash_otp(otp),
                 "attempts": 0,
             },
-            timeout=300
+            timeout=300,
         )
 
         send_otp_email(
             new_email,
-            otp
+            otp,
         )
 
-        return Response({
-            "message": "OTP sent",
-            "verification_id": verification_id
-        })
-    
-class VerifyEmailChangeView(APIView):
+        return Response(
+            {
+                "message": "OTP sent",
+                "verification_id": verification_id,
+            }
+        )
 
+
+class VerifyEmailChangeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        serializer = VerifyEmailChangeSerializer(data=request.data)
 
-        serializer = VerifyEmailChangeSerializer(
-            data=request.data
-        )
-
-        serializer.is_valid(
-            raise_exception=True
-        )
+        serializer.is_valid(raise_exception=True)
 
         verification_id = serializer.validated_data[
             "verification_id"
         ]
 
-        otp = serializer.validated_data[
-            "otp"
-        ]
+        otp = serializer.validated_data["otp"]
 
         data = cache.get(
             f"email_change:{verification_id}"
@@ -483,39 +522,36 @@ class VerifyEmailChangeView(APIView):
         if not data:
             return Response(
                 {
-                    "error": "OTP expired"
+                    "error": "OTP expired",
                 },
-                status=400
+                status=400,
             )
 
         if data["attempts"] >= 5:
             return Response(
                 {
-                    "error": "Too many attempts"
+                    "error": "Too many attempts",
                 },
-                status=400
+                status=400,
             )
 
         if hash_otp(otp) != data["otp_hash"]:
-
             data["attempts"] += 1
 
             cache.set(
                 f"email_change:{verification_id}",
                 data,
-                timeout=300
+                timeout=300,
             )
 
             return Response(
                 {
-                    "error": "Invalid OTP"
+                    "error": "Invalid OTP",
                 },
-                status=400
+                status=400,
             )
 
-        request.user.email = data[
-            "new_email"
-        ]
+        request.user.email = data["new_email"]
 
         request.user.save()
 
@@ -523,29 +559,34 @@ class VerifyEmailChangeView(APIView):
             f"email_change:{verification_id}"
         )
 
-        return Response({
-            "message": "Email updated successfully",
-            "email": request.user.email,
-        })
-    
-# ========================================================================================================
-# ================  ADMIN VIEWS =============================
-# ========================================================================================================
+        return Response(
+            {
+                "message": "Email updated successfully",
+                "email": request.user.email,
+            }
+        )
+
+
+# ============================================================
+# ADMIN VIEWS
+# ============================================================
+
+
 class IsAdminRole(BasePermission):
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
             and request.user.role == "admin"
         )
-    
+
+
 class AdminDashboardView(APIView):
     permission_classes = [
         IsAuthenticated,
-        IsAdminRole
+        IsAdminRole,
     ]
 
     def get(self, request):
-
         total_users = User.objects.filter(
             role="customer"
         ).count()
@@ -580,21 +621,22 @@ class AdminDashboardView(APIView):
         ).order_by("-created_at")[:10]
 
         for user in users:
-            activities.append({
-                "title": "New User Registration",
-                "description": user.username,
-                "type": "user",
-                "created_at": user.created_at,
-            })
+            activities.append(
+                {
+                    "title": "New User Registration",
+                    "description": user.username,
+                    "type": "user",
+                    "created_at": user.created_at,
+                }
+            )
 
         # New subscriptions
         subscriptions = Subscription.objects.select_related(
             "user",
-            "plan"
+            "plan",
         ).order_by("-created_at")[:10]
 
         for subscription in subscriptions:
-
             if subscription.status == "active":
                 title = "New Premium Subscription"
             elif subscription.status == "cancelled":
@@ -604,15 +646,17 @@ class AdminDashboardView(APIView):
             else:
                 title = "Subscription Updated"
 
-            activities.append({
-                "title": title,
-                "description": (
-                    f"{subscription.user.username} "
-                    f"({subscription.plan.name if subscription.plan else 'No Plan'})"
-                ),
-                "type": "subscription",
-                "created_at": subscription.created_at,
-            })
+            activities.append(
+                {
+                    "title": title,
+                    "description": (
+                        f"{subscription.user.username} "
+                        f"({subscription.plan.name if subscription.plan else 'No Plan'})"
+                    ),
+                    "type": "subscription",
+                    "created_at": subscription.created_at,
+                }
+            )
 
         # Tickets
         tickets = Ticket.objects.select_related(
@@ -620,14 +664,16 @@ class AdminDashboardView(APIView):
         ).order_by("-created_at")[:10]
 
         for ticket in tickets:
-            activities.append({
-                "title": "New Support Ticket",
-                "description": (
-                    f"{ticket.ticket_number} · {ticket.subject}"
-                ),
-                "type": "ticket",
-                "created_at": ticket.created_at,
-            })
+            activities.append(
+                {
+                    "title": "New Support Ticket",
+                    "description": (
+                        f"{ticket.ticket_number} · {ticket.subject}"
+                    ),
+                    "type": "ticket",
+                    "created_at": ticket.created_at,
+                }
+            )
 
         # Transports
         transports = Transport.objects.select_related(
@@ -635,21 +681,23 @@ class AdminDashboardView(APIView):
         ).order_by("-created_at")[:10]
 
         for transport in transports:
-            activities.append({
-                "title": "New Transport Route",
-                "description": (
-                    f"{transport.source} → "
-                    f"{transport.destination} "
-                    f"({transport.transport_type.upper()})"
-                ),
-                "type": "transport",
-                "created_at": transport.created_at,
-            })
+            activities.append(
+                {
+                    "title": "New Transport Route",
+                    "description": (
+                        f"{transport.source} → "
+                        f"{transport.destination} "
+                        f"({transport.transport_type.upper()})"
+                    ),
+                    "type": "transport",
+                    "created_at": transport.created_at,
+                }
+            )
 
         # Sort everything together
         activities.sort(
             key=lambda activity: activity["created_at"],
-            reverse=True
+            reverse=True,
         )
 
         # Keep only latest 5
@@ -661,24 +709,24 @@ class AdminDashboardView(APIView):
                 activity["created_at"].isoformat()
             )
 
-        return Response({
-            "total_users": total_users,
-            "premium_users": premium_users,
-            "active_staff": active_staff,
-            "open_tickets": open_tickets,
-            "recent_activity": activities,
-        })
-        
+        return Response(
+            {
+                "total_users": total_users,
+                "premium_users": premium_users,
+                "active_staff": active_staff,
+                "open_tickets": open_tickets,
+                "recent_activity": activities,
+            }
+        )
+
+
 class AdminUserPagination(PageNumberPagination):
     page_size = 3
     page_size_query_param = "page_size"
     max_page_size = 100
 
 
-
-
 class AdminUserListView(ListAPIView):
-
     serializer_class = AdminUserListSerializer
 
     permission_classes = [
@@ -689,7 +737,6 @@ class AdminUserListView(ListAPIView):
     pagination_class = AdminUserPagination
 
     def get_queryset(self):
-
         queryset = (
             User.objects
             .filter(role="customer")
@@ -705,10 +752,10 @@ class AdminUserListView(ListAPIView):
 
         if search:
             queryset = queryset.filter(
-                Q(username__icontains=search) |
-                Q(email__icontains=search) |
-                Q(first_name__icontains=search) |
-                Q(last_name__icontains=search)
+                Q(username__icontains=search)
+                | Q(email__icontains=search)
+                | Q(first_name__icontains=search)
+                | Q(last_name__icontains=search)
             )
 
         # Dynamic subscription-plan filtering
@@ -720,22 +767,23 @@ class AdminUserListView(ListAPIView):
 
         return queryset
 
-from django.db.models import Count
-    
+
 class StaffListView(ListAPIView):
     serializer_class = AdminUserListSerializer
+
     permission_classes = [
         IsAuthenticated,
-        IsAdminRole
+        IsAdminRole,
     ]
+
     pagination_class = AdminUserPagination
 
     def get_queryset(self):
-
-        queryset = ( User.objects.filter(role="staff")
+        queryset = (
+            User.objects
+            .filter(role="staff")
             .annotate(
                 ticket_count=Count("assigned_tickets"),
-
                 active_ticket_count=Count(
                     "assigned_tickets",
                     filter=Q(
@@ -749,7 +797,7 @@ class StaffListView(ListAPIView):
             )
             .order_by("-created_at")
         )
-        
+
         search = self.request.query_params.get("search")
         status = self.request.query_params.get("status")
 
@@ -760,8 +808,8 @@ class StaffListView(ListAPIView):
 
         if search:
             queryset = queryset.filter(
-                Q(username__icontains=search) |
-                Q(email__icontains=search)
+                Q(username__icontains=search)
+                | Q(email__icontains=search)
             )
 
         return queryset
@@ -769,11 +817,17 @@ class StaffListView(ListAPIView):
 
 class CreateStaffView(CreateAPIView):
     serializer_class = CreateStaffSerializer
-    permission_classes = [IsAuthenticated, IsAdminRole]
+    permission_classes = [
+        IsAuthenticated,
+        IsAdminRole,
+    ]
 
 
 class ToggleUserBlockView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminRole]
+    permission_classes = [
+        IsAuthenticated,
+        IsAdminRole,
+    ]
 
     def patch(self, request, user_id):
         try:
@@ -781,55 +835,55 @@ class ToggleUserBlockView(APIView):
         except User.DoesNotExist:
             return Response(
                 {"error": "User not found"},
-                status=404
+                status=404,
             )
 
         if user.role == "admin":
             return Response(
                 {"error": "Admin cannot be blocked"},
-                status=400
+                status=400,
             )
 
         user.is_active = not user.is_active
         user.save()
 
-        return Response({
-            "message": "User updated",
-            "is_active": user.is_active
-        })
+        return Response(
+            {
+                "message": "User updated",
+                "is_active": user.is_active,
+            }
+        )
+
 
 class UpdateStaffStatusView(APIView):
     permission_classes = [
         IsAuthenticated,
-        IsAdminRole
+        IsAdminRole,
     ]
 
     def patch(self, request, user_id):
-
         try:
             user = User.objects.get(
                 id=user_id,
-                role="staff"
+                role="staff",
             )
 
         except User.DoesNotExist:
             return Response(
                 {"error": "Staff not found"},
-                status=404
+                status=404,
             )
 
-        status_value = request.data.get(
-            "status"
-        )
+        status_value = request.data.get("status")
 
         if status_value not in [
             "online",
             "busy",
-            "offline"
+            "offline",
         ]:
             return Response(
                 {"error": "Invalid status"},
-                status=400
+                status=400,
             )
 
         old_status = user.status
@@ -878,9 +932,11 @@ class UpdateStaffStatusView(APIView):
         )
 
 
-# ===================================================================================
-# ======================== STAFF VIEWS ==================================
-# ===================================================================================
+# ============================================================
+# STAFF VIEWS
+# ============================================================
+
+
 class IsStaffRole(BasePermission):
     def has_permission(self, request, view):
         return (
@@ -888,30 +944,27 @@ class IsStaffRole(BasePermission):
             and request.user.role == "staff"
         )
 
+
 class StaffUpdateOwnStatusView(APIView):
     permission_classes = [
         IsAuthenticated,
-        IsStaffRole
+        IsStaffRole,
     ]
 
     def patch(self, request):
-
         try:
-
-            status_value = request.data.get(
-                "status"
-            )
+            status_value = request.data.get("status")
 
             if status_value not in [
                 "online",
                 "busy",
-                "offline"
+                "offline",
             ]:
                 return Response(
                     {"error": "Invalid status"},
-                    status=400
+                    status=400,
                 )
-            
+
             old_status = request.user.status
 
             request.user.status = status_value
@@ -953,14 +1006,15 @@ class StaffUpdateOwnStatusView(APIView):
             ):
                 TicketAssignmentService.assign_pending_tickets()
 
-            return Response({
-                "message": "Status updated",
-                "status": request.user.status,
-            })
+            return Response(
+                {
+                    "message": "Status updated",
+                    "status": request.user.status,
+                }
+            )
 
         except Exception as e:
-
             return handle_exception(
                 e,
-                "Failed to update staff status"
+                "Failed to update staff status",
             )

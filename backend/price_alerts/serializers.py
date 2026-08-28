@@ -3,10 +3,14 @@ from rest_framework import serializers
 from .models import PriceAlert
 
 
+# ============================================================
+# PRICE ALERT SERIALIZER
+# ============================================================
+
+
 class PriceAlertSerializer(serializers.ModelSerializer):
 
     class Meta:
-
         model = PriceAlert
 
         fields = [
@@ -44,32 +48,44 @@ class PriceAlertSerializer(serializers.ModelSerializer):
 
         transport = attrs.get(
             "transport",
-            self.instance.transport if self.instance else None,
+            self.instance.transport
+            if self.instance
+            else None,
         )
 
         source = attrs.get(
             "source",
-            self.instance.source if self.instance else None,
+            self.instance.source
+            if self.instance
+            else None,
         )
 
         destination = attrs.get(
             "destination",
-            self.instance.destination if self.instance else None,
+            self.instance.destination
+            if self.instance
+            else None,
         )
 
         departure_date = attrs.get(
             "departure_date",
-            self.instance.departure_date if self.instance else None,
+            self.instance.departure_date
+            if self.instance
+            else None,
         )
 
         transport_type = attrs.get(
             "transport_type",
-            self.instance.transport_type if self.instance else None,
+            self.instance.transport_type
+            if self.instance
+            else None,
         )
 
         target_price = attrs.get(
             "target_price",
-            self.instance.target_price if self.instance else None,
+            self.instance.target_price
+            if self.instance
+            else None,
         )
 
         queryset = PriceAlert.objects.filter(

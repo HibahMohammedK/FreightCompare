@@ -1,7 +1,13 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 from transports.models import Transport
+
+
+# ============================================================
+# PRICE ALERT
+# ============================================================
+
 
 class PriceAlert(models.Model):
 
@@ -37,8 +43,10 @@ class PriceAlert(models.Model):
         decimal_places=2,
     )
 
-    departure_date = models.DateField(null=True,
-    blank=True,)
+    departure_date = models.DateField(
+        null=True,
+        blank=True,
+    )
 
     is_active = models.BooleanField(
         default=True,
@@ -73,6 +81,10 @@ class PriceAlert(models.Model):
         auto_now=True,
     )
 
+    # ========================================================
+    # METHODS
+    # ========================================================
+
     def __str__(self):
 
         return (
@@ -81,6 +93,10 @@ class PriceAlert(models.Model):
             f"{self.destination} "
             f"({self.target_price})"
         )
+
+    # ========================================================
+    # META
+    # ========================================================
 
     class Meta:
 

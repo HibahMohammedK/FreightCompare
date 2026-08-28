@@ -2,6 +2,11 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 
+# ============================================================
+# REALTIME BROADCASTER
+# ============================================================
+
+
 class RealtimeBroadcaster:
 
     @staticmethod
@@ -10,7 +15,11 @@ class RealtimeBroadcaster:
         event,
         data,
     ):
-        print("BROADCAST TO GROUP:", group_name)
+        print(
+            "BROADCAST TO GROUP:",
+            group_name,
+        )
+
         channel_layer = get_channel_layer()
 
         async_to_sync(

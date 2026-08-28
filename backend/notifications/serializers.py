@@ -3,10 +3,12 @@ from rest_framework import serializers
 from .models import Notification
 
 
-class NotificationSerializer(
-    serializers.ModelSerializer
-):
-    
+class NotificationSerializer(serializers.ModelSerializer):
+
+    # ========================================================
+    # RELATED OBJECT FIELDS
+    # ========================================================
+
     transport_id = serializers.IntegerField(
         source="transport.id",
         read_only=True,
@@ -32,8 +34,11 @@ class NotificationSerializer(
         read_only=True,
     )
 
-    class Meta:
+    # ========================================================
+    # META
+    # ========================================================
 
+    class Meta:
         model = Notification
 
         fields = [
@@ -48,5 +53,4 @@ class NotificationSerializer(
             "source",
             "destination",
             "transport_type",
-
         ]

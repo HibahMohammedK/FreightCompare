@@ -2,6 +2,7 @@ import type { NavigateFunction } from "react-router-dom";
 import type { Notification } from "../types/notification";
 import type { UserRole } from "../types/user";
 
+
 export function navigateFromNotification(
     notification: Notification,
     role: UserRole,
@@ -40,7 +41,6 @@ export function navigateFromNotification(
             break;
 
         case "price_alert":
-
         case "route_match":
 
             if (

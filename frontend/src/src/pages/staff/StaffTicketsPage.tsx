@@ -13,7 +13,6 @@ export const StaffTicketsPage: React.FC = () => {
   const {
     tickets,
     selectedTicket,
-    loading,
   } = useAppSelector((state) => state.ticket);
 
   const [filter, setFilter] = useState("all");

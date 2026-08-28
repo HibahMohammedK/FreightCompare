@@ -2,16 +2,24 @@ from django.db import transaction
 from django.db.models import Count, Min, Q
 from django.utils import timezone
 
+from chat.services import ConversationService
+from notifications.models import Notification
+from notifications.utils import send_notification
+from realtime.broadcaster import RealtimeBroadcaster
+from realtime.events import (
+    TICKET_ASSIGNED,
+    TICKET_STATUS_CHANGED,
+)
 from users.models import User
 
 from .models import Ticket
-from notifications.models import Notification
-from notifications.utils import send_notification
-
-from realtime.broadcaster import RealtimeBroadcaster
-from realtime.events import TICKET_ASSIGNED, TICKET_STATUS_CHANGED
-from chat.services import ConversationService
 from .serializers import TicketListSerializer
+
+
+# ============================================================
+# TICKET ASSIGNMENT SERVICE
+# ============================================================
+
 
 class TicketAssignmentService:
     """
@@ -20,15 +28,16 @@ class TicketAssignmentService:
     """
 
     ACTIVE_STATUSES = (
-            "assigned",
-            "in_progress",
-            "resolved",
-        )
+        "assigned",
+        "in_progress",
+        "resolved",
+    )
 
     @classmethod
     def assign(cls, ticket):
         """
-        Assign a newly created ticket to the most suitable staff member.
+        Assign a newly created ticket to the most suitable
+        staff member.
         """
 
         available_staff = cls._get_available_staff()
@@ -49,7 +58,6 @@ class TicketAssignmentService:
             staff,
         )
 
-
     @classmethod
     def _apply_assignment(
         cls,
@@ -62,7 +70,6 @@ class TicketAssignmentService:
         """
 
         with transaction.atomic():
-
             ticket.assigned_staff = staff
 
             if ticket.assigned_at is None:
@@ -79,7 +86,10 @@ class TicketAssignmentService:
                     "updated_at",
                 ]
             )
-            ConversationService.create_conversation(ticket)
+
+            ConversationService.create_conversation(
+                ticket
+            )
 
         send_notification(
             user=staff,
@@ -108,7 +118,6 @@ class TicketAssignmentService:
 
         return ticket
 
-
     @staticmethod
     def _get_available_staff():
         """
@@ -129,18 +138,15 @@ class TicketAssignmentService:
             status="busy",
         )
 
-    
-    
-
     @staticmethod
     def _get_least_loaded_staff(staff_queryset):
-
-
         staff_with_load = staff_queryset.annotate(
             active_ticket_count=Count(
                 "assigned_tickets",
                 filter=Q(
-                    assigned_tickets__status__in=TicketAssignmentService.ACTIVE_STATUSES
+                    assigned_tickets__status__in=(
+                        TicketAssignmentService.ACTIVE_STATUSES
+                    )
                 ),
             )
         )
@@ -155,7 +161,6 @@ class TicketAssignmentService:
 
     @staticmethod
     def _select_round_robin(candidates):
-
         candidates = list(candidates)
 
         if len(candidates) == 1:
@@ -173,7 +178,10 @@ class TicketAssignmentService:
         if not last_ticket:
             return candidates[0]
 
-        candidate_ids = [staff.id for staff in candidates]
+        candidate_ids = [
+            staff.id
+            for staff in candidates
+        ]
 
         if last_ticket.assigned_staff.id not in candidate_ids:
             return candidates[0]
@@ -182,7 +190,9 @@ class TicketAssignmentService:
             last_ticket.assigned_staff.id
         )
 
-        next_index = (current_index + 1) % len(candidates)
+        next_index = (
+            current_index + 1
+        ) % len(candidates)
 
         return candidates[next_index]
 
@@ -197,16 +207,17 @@ class TicketAssignmentService:
             staff=staff,
         )
 
-
     @classmethod
     def assign_pending_tickets(cls):
         """
-        Assign all pending unassigned tickets when staff become available.
+        Assign all pending unassigned tickets when staff
+        become available.
         Returns the number of tickets assigned.
         """
 
         pending_tickets = (
-            Ticket.objects.filter(
+            Ticket.objects
+            .filter(
                 assigned_staff__isnull=True,
                 status="open",
             )
@@ -216,7 +227,6 @@ class TicketAssignmentService:
         assigned_count = 0
 
         for ticket in pending_tickets:
-
             updated_ticket = cls.assign(ticket)
 
             if updated_ticket.assigned_staff is None:
@@ -225,6 +235,12 @@ class TicketAssignmentService:
             assigned_count += 1
 
         return assigned_count
+
+
+# ============================================================
+# TICKET STATUS SERVICE
+# ============================================================
+
 
 class TicketStatusService:
 
@@ -241,7 +257,6 @@ class TicketStatusService:
         """
 
         with transaction.atomic():
-
             ticket.status = status
 
             if (
@@ -267,7 +282,6 @@ class TicketStatusService:
 
             # Close the conversation when the ticket is closed
             if status == "closed":
-
                 conversation = getattr(
                     ticket,
                     "conversation",
@@ -281,7 +295,6 @@ class TicketStatusService:
 
         # Customer notification
         if status == "resolved":
-
             send_notification(
                 user=ticket.customer,
                 title="Ticket Resolved",
@@ -294,7 +307,6 @@ class TicketStatusService:
             )
 
         elif status == "closed":
-
             send_notification(
                 user=ticket.customer,
                 title="Ticket Closed",
@@ -311,7 +323,9 @@ class TicketStatusService:
 
         if ticket.assigned_staff:
             RealtimeBroadcaster.broadcast_to_group(
-                group_name=f"staff_{ticket.assigned_staff.id}",
+                group_name=(
+                    f"staff_{ticket.assigned_staff.id}"
+                ),
                 event=TICKET_STATUS_CHANGED,
                 data=data,
             )
@@ -326,7 +340,6 @@ class TicketStatusService:
             group_name="admins",
             event=TICKET_STATUS_CHANGED,
             data=data,
-
         )
 
         return ticket

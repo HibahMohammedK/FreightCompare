@@ -3,20 +3,39 @@ from rest_framework import serializers
 from .models import Conversation, Message
 
 
+# ============================================================
+# MESSAGE SERIALIZER
+# ============================================================
+
 class MessageSerializer(serializers.ModelSerializer):
+
     conversation = serializers.UUIDField(
         source="conversation.id",
         read_only=True,
     )
-    sender = serializers.UUIDField(source="sender.id", read_only=True)
-    sender_name = serializers.CharField(source="sender.full_name", read_only=True)
-    sender_email = serializers.EmailField(source="sender.email", read_only=True)
+
+    sender = serializers.UUIDField(
+        source="sender.id",
+        read_only=True,
+    )
+
+    sender_name = serializers.CharField(
+        source="sender.full_name",
+        read_only=True,
+    )
+
+    sender_email = serializers.EmailField(
+        source="sender.email",
+        read_only=True,
+    )
+
     attachment = serializers.FileField(
         read_only=True,
     )
 
     class Meta:
         model = Message
+
         fields = [
             "id",
             "conversation",
@@ -28,10 +47,16 @@ class MessageSerializer(serializers.ModelSerializer):
             "is_read",
             "created_at",
         ]
+
         read_only_fields = fields
 
 
+# ============================================================
+# SEND MESSAGE SERIALIZER
+# ============================================================
+
 class SendMessageSerializer(serializers.Serializer):
+
     conversation = serializers.UUIDField()
 
     message = serializers.CharField(
@@ -47,8 +72,14 @@ class SendMessageSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
-        message = attrs.get("message", "").strip()
-        attachment = attrs.get("attachment")
+        message = attrs.get(
+            "message",
+            "",
+        ).strip()
+
+        attachment = attrs.get(
+            "attachment"
+        )
 
         if not message and not attachment:
             raise serializers.ValidationError(
@@ -60,9 +91,21 @@ class SendMessageSerializer(serializers.Serializer):
         return attrs
 
 
+# ============================================================
+# CONVERSATION LIST SERIALIZER
+# ============================================================
+
 class ConversationListSerializer(serializers.ModelSerializer):
-    ticket_id = serializers.UUIDField(source="ticket.id", read_only=True)
-    ticket_number = serializers.CharField(source="ticket.ticket_number", read_only=True)
+
+    ticket_id = serializers.UUIDField(
+        source="ticket.id",
+        read_only=True,
+    )
+
+    ticket_number = serializers.CharField(
+        source="ticket.ticket_number",
+        read_only=True,
+    )
 
     customer_name = serializers.SerializerMethodField()
     staff_name = serializers.SerializerMethodField()
@@ -73,6 +116,7 @@ class ConversationListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Conversation
+
         fields = [
             "id",
             "ticket_id",
@@ -87,21 +131,41 @@ class ConversationListSerializer(serializers.ModelSerializer):
         ]
 
     def get_customer_name(self, obj):
-            return obj.customer.first_name or obj.customer.username
-    
+        return (
+            obj.customer.first_name
+            or obj.customer.username
+        )
+
     def get_staff_name(self, obj):
         if not obj.staff:
             return None
 
-        return obj.staff.first_name or obj.staff.username
+        return (
+            obj.staff.first_name
+            or obj.staff.username
+        )
 
     def get_last_message(self, obj):
-        message = obj.messages.order_by("-created_at").first()
+        message = (
+            obj.messages
+            .order_by("-created_at")
+            .first()
+        )
+
         return message.message if message else None
 
     def get_last_message_at(self, obj):
-        message = obj.messages.order_by("-created_at").first()
-        return message.created_at if message else None
+        message = (
+            obj.messages
+            .order_by("-created_at")
+            .first()
+        )
+
+        return (
+            message.created_at
+            if message
+            else None
+        )
 
     def get_unread_count(self, obj):
         request = self.context.get("request")
@@ -110,19 +174,32 @@ class ConversationListSerializer(serializers.ModelSerializer):
             return 0
 
         return (
-            obj.messages.exclude(sender=request.user)
+            obj.messages
+            .exclude(sender=request.user)
             .filter(is_read=False)
             .count()
         )
 
 
+# ============================================================
+# CONVERSATION DETAIL SERIALIZER
+# ============================================================
+
 class ConversationDetailSerializer(serializers.ModelSerializer):
-    ticket_id = serializers.UUIDField(source="ticket.id", read_only=True)
-    ticket_number = serializers.CharField(source="ticket.ticket_number", read_only=True)
+
+    ticket_id = serializers.UUIDField(
+        source="ticket.id",
+        read_only=True,
+    )
+
+    ticket_number = serializers.CharField(
+        source="ticket.ticket_number",
+        read_only=True,
+    )
 
     customer_name = serializers.SerializerMethodField()
     staff_name = serializers.SerializerMethodField()
-    
+
     messages = MessageSerializer(
         many=True,
         read_only=True,
@@ -141,6 +218,7 @@ class ConversationDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Conversation
+
         fields = [
             "id",
             "ticket_id",
@@ -156,12 +234,18 @@ class ConversationDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        
+
     def get_customer_name(self, obj):
-                return obj.customer.first_name or obj.customer.username
-        
+        return (
+            obj.customer.first_name
+            or obj.customer.username
+        )
+
     def get_staff_name(self, obj):
         if not obj.staff:
             return None
 
-        return obj.staff.first_name or obj.staff.username
+        return (
+            obj.staff.first_name
+            or obj.staff.username
+        )

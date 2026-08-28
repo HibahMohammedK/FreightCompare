@@ -1,17 +1,24 @@
-from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.views import APIView
 
 from .models import Notification
 from .serializers import NotificationSerializer
-from django.shortcuts import get_object_or_404
+
+
+# ============================================================
+# NOTIFICATION LIST
+# ============================================================
+
 
 class NotificationListView(APIView):
 
-    permission_classes = [ IsAuthenticated ]
+    permission_classes = [IsAuthenticated]
 
-    def get(self, request,):
+    def get(self, request):
 
         notifications = (
             Notification.objects.filter(
@@ -28,11 +35,16 @@ class NotificationListView(APIView):
             serializer.data,
             status=status.HTTP_200_OK,
         )
-    
+
+
+# ============================================================
+# MARK NOTIFICATION AS READ
+# ============================================================
+
 
 class MarkNotificationReadView(APIView):
 
-    permission_classes = [ IsAuthenticated ]
+    permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
 
@@ -43,6 +55,7 @@ class MarkNotificationReadView(APIView):
         )
 
         if not notification.is_read:
+
             notification.is_read = True
 
             notification.save(
@@ -57,11 +70,16 @@ class MarkNotificationReadView(APIView):
             },
             status=status.HTTP_200_OK,
         )
-    
+
+
+# ============================================================
+# MARK ALL NOTIFICATIONS AS READ
+# ============================================================
+
 
 class MarkAllNotificationsReadView(APIView):
 
-    permission_classes = [ IsAuthenticated ]
+    permission_classes = [IsAuthenticated]
 
     def patch(self, request):
 
@@ -78,6 +96,12 @@ class MarkAllNotificationsReadView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+# ============================================================
+# DELETE NOTIFICATION
+# ============================================================
+
 
 class DeleteNotificationView(APIView):
 
@@ -99,7 +123,13 @@ class DeleteNotificationView(APIView):
             },
             status=status.HTTP_200_OK,
         )
-    
+
+
+# ============================================================
+# CLEAR ALL NOTIFICATIONS
+# ============================================================
+
+
 class ClearNotificationsView(APIView):
 
     permission_classes = [IsAuthenticated]

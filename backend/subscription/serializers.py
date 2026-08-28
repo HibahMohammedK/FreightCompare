@@ -1,9 +1,24 @@
 from rest_framework import serializers
-from .models import Subscription, SubscriptionPlan, SubscriptionHistory
+
+from .models import (
+    Subscription,
+    SubscriptionHistory,
+    SubscriptionPlan,
+)
+
+
+# ============================================================
+# CHECKOUT
+# ============================================================
 
 
 class CreateCheckoutSessionSerializer(serializers.Serializer):
     plan_id = serializers.IntegerField()
+
+
+# ============================================================
+# PUBLIC SUBSCRIPTION PLAN
+# ============================================================
 
 
 class PublicSubscriptionPlanSerializer(serializers.ModelSerializer):
@@ -22,8 +37,18 @@ class PublicSubscriptionPlanSerializer(serializers.ModelSerializer):
             "sort_order",
         ]
 
+
+# ============================================================
+# USER SUBSCRIPTION
+# ============================================================
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
-    plan = PublicSubscriptionPlanSerializer(read_only=True)
+
+    plan = PublicSubscriptionPlanSerializer(
+        read_only=True
+    )
+
     class Meta:
         model = Subscription
         fields = [
@@ -31,8 +56,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "status",
             "start_date",
             "expiry_date",
-            "cancel_at_period_end"
+            "cancel_at_period_end",
         ]
+
+
+# ============================================================
+# SUBSCRIPTION PLAN
+# ============================================================
+
 
 class SubscriptionPlanSerializer(serializers.ModelSerializer):
 
@@ -62,6 +93,12 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+# ============================================================
+# ADMIN SUBSCRIPTION
+# ============================================================
+
 
 class AdminSubscriptionSerializer(serializers.ModelSerializer):
 
@@ -101,6 +138,11 @@ class AdminSubscriptionSerializer(serializers.ModelSerializer):
             return None
 
         return obj.plan.name
+
+
+# ============================================================
+# SUBSCRIPTION HISTORY
+# ============================================================
 
 
 class SubscriptionHistorySerializer(serializers.ModelSerializer):

@@ -10,14 +10,18 @@ def check_route_matches(transport):
     a newly created transport.
     """
 
-    matching_searches = SearchHistory.objects.filter(
-        source__iexact=transport.source,
-        destination__iexact=transport.destination,
-        transport_type__in=[
-            "all",
-            transport.transport_type,
-        ],
-    ).select_related("user")
+    matching_searches = (
+        SearchHistory.objects
+        .filter(
+            source__iexact=transport.source,
+            destination__iexact=transport.destination,
+            transport_type__in=[
+                "all",
+                transport.transport_type,
+            ],
+        )
+        .select_related("user")
+    )
 
     for search in matching_searches:
 

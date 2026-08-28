@@ -6,7 +6,6 @@ import { Button } from "../../components/shared/Button";
 import { useAppSelector } from "../../hooks/redux";
 
 import {
-  UserIcon,
   PencilIcon,
   ShieldCheckIcon
 } from "lucide-react";

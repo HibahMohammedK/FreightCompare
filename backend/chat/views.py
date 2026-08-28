@@ -13,29 +13,49 @@ from .serializers import (
     MessageSerializer,
     SendMessageSerializer,
 )
-from .services import ConversationService, MessageService
+from .services import (
+    ConversationService,
+    MessageService,
+)
 
 
+# ============================================================
+# CONVERSATION LIST
+# ============================================================
 
 class ConversationListAPIView(generics.ListAPIView):
+
     serializer_class = ConversationListSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [
+        permissions.IsAuthenticated,
+    ]
 
     def get_queryset(self):
-        return ConversationService.get_conversations(self.request.user)
+        return ConversationService.get_conversations(
+            self.request.user
+        )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+
         context["request"] = self.request
+
         return context
 
 
+# ============================================================
+# CONVERSATION DETAIL
+# ============================================================
+
 class ConversationDetailAPIView(generics.RetrieveAPIView):
+
     serializer_class = ConversationDetailSerializer
+
     permission_classes = [
         permissions.IsAuthenticated,
         IsConversationParticipant,
     ]
+
     lookup_field = "id"
 
     def get_object(self):
@@ -52,46 +72,70 @@ class ConversationDetailAPIView(generics.RetrieveAPIView):
         return conversation
 
 
+# ============================================================
+# SEND MESSAGE
+# ============================================================
+
 class SendMessageAPIView(APIView):
+
     permission_classes = [
-                permissions.IsAuthenticated,
-                CanSendMessage,
-            ]
+        permissions.IsAuthenticated,
+        CanSendMessage,
+    ]
 
     parser_classes = [
         MultiPartParser,
         FormParser,
     ]
 
-
     def post(self, request):
-        serializer = SendMessageSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer = SendMessageSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
 
         conversation = ConversationService.get_conversation(
             request.user,
             serializer.validated_data["conversation"],
         )
 
-        self.check_object_permissions(request, conversation)
+        self.check_object_permissions(
+            request,
+            conversation,
+        )
 
         message = MessageService.send_message(
             conversation=conversation,
             sender=request.user,
-            content=serializer.validated_data.get("message", ""),
-            attachment=serializer.validated_data.get("attachment"),
+            content=serializer.validated_data.get(
+                "message",
+                "",
+            ),
+            attachment=serializer.validated_data.get(
+                "attachment"
+            ),
         )
 
         return Response(
             MessageSerializer(
                 message,
-                context={"request": request},
+                context={
+                    "request": request
+                },
             ).data,
             status=status.HTTP_201_CREATED,
         )
 
 
+# ============================================================
+# MARK MESSAGES AS READ
+# ============================================================
+
 class MarkMessagesReadAPIView(APIView):
+
     permission_classes = [
         permissions.IsAuthenticated,
         IsConversationParticipant,
@@ -103,7 +147,10 @@ class MarkMessagesReadAPIView(APIView):
             id,
         )
 
-        self.check_object_permissions(request, conversation)
+        self.check_object_permissions(
+            request,
+            conversation,
+        )
 
         updated = MessageService.mark_messages_as_read(
             conversation,

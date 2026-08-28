@@ -1,13 +1,19 @@
-from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.views import APIView
+
+from subscription.utils import get_plan_limit
 
 from .models import PriceAlert
 from .serializers import PriceAlertSerializer
-from django.shortcuts import get_object_or_404
 
-from subscription.utils import get_plan_limit
+
+# ============================================================
+# PRICE ALERT LIST / CREATE
+# ============================================================
 
 
 class PriceAlertListCreateView(APIView):
@@ -87,6 +93,11 @@ class PriceAlertListCreateView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+# ============================================================
+# PRICE ALERT DETAIL
+# ============================================================
 
 
 class PriceAlertDetailView(APIView):

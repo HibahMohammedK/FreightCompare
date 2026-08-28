@@ -24,6 +24,9 @@ export const NotificationList: React.FC<NotificationListProps> = ({
   const displayNotifications = maxItems ?
   notifications.slice(0, maxItems) :
   notifications;
+  const role = useAppSelector(
+        (state) => state.auth.user?.role
+    );
 
   if (notifications.length === 0) {
     return (
@@ -57,9 +60,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
 
   };
 
-  const role = useAppSelector(
-        (state) => state.auth.user?.role
-    );
+  
 
   const handleNotificationClick = async (
         notification: Notification
@@ -71,9 +72,13 @@ export const NotificationList: React.FC<NotificationListProps> = ({
 
         console.log(notification);
 
+        if (!role) {
+            return;
+        }
+
         navigateFromNotification(
             notification,
-            role!,
+            role,
             navigate,
         );
     };

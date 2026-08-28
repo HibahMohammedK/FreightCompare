@@ -1,23 +1,33 @@
 import csv
 import io
 
+from django.db import IntegrityError, transaction
+
+from rest_framework import filters, status, viewsets
+from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from companies.models import Company
+from price_alerts.utils import check_price_alerts
+
 from .csv_serializers import (
     CsvUploadSerializer,
     TransportCsvRowSerializer,
 )
-from rest_framework import viewsets, filters, status
-from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
-from .models import Transport, SearchHistory
-from .serializers import TransportSerializer, SearchHistorySerializer
+from .models import SearchHistory, Transport
 from .permissions import IsAdminUserCustom
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.generics import get_object_or_404
-from django.db import IntegrityError, transaction
-from price_alerts.utils import check_price_alerts
+from .serializers import (
+    SearchHistorySerializer,
+    TransportSerializer,
+)
 from .utils import check_route_matches
 
+
+# ============================================================
+# TRANSPORT
+# ============================================================
 
 
 class TransportViewSet(viewsets.ModelViewSet):
@@ -53,55 +63,82 @@ class TransportViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    # 🔥 Dynamic permission handling
+    # Dynamic permission handling
     def get_permissions(self):
         if self.request.method in SAFE_METHODS:
-            return [IsAuthenticated()]  # ✅ Users can view
-        return [IsAuthenticated(), IsAdminUserCustom()]  # ❌ Only admin can modify
+            return [IsAuthenticated()]
 
-    # 🔍 Filtering + search
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["source", "destination"]
-    ordering_fields = ["price", "duration", "departure_date"]
+        return [
+            IsAuthenticated(),
+            IsAdminUserCustom(),
+        ]
+
+    # Filtering + search
+    filter_backends = [
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+
+    search_fields = [
+        "source",
+        "destination",
+    ]
+
+    ordering_fields = [
+        "price",
+        "duration",
+        "departure_date",
+    ]
 
     def perform_create(self, serializer):
         transport = serializer.save(
             created_by=self.request.user
         )
+
         check_route_matches(transport)
-    
+
     def perform_update(self, serializer):
         transport = serializer.save()
 
-        check_price_alerts(
-            transport
-        )
+        check_price_alerts(transport)
+
+
+# ============================================================
+# TRANSPORT LOCATIONS
+# ============================================================
+
 
 class TransportLocationsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
         locations = (
             Transport.objects
             .values_list("source", flat=True)
             .union(
                 Transport.objects.values_list(
                     "destination",
-                    flat=True
+                    flat=True,
                 )
             )
         )
 
-        return Response({
-            "locations": sorted(locations)
-        })
-    
+        return Response(
+            {
+                "locations": sorted(locations),
+            }
+        )
+
+
+# ============================================================
+# SEARCH HISTORY
+# ============================================================
+
+
 class SearchHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
         serializer = SearchHistorySerializer(
             data=request.data
         )
@@ -115,56 +152,88 @@ class SearchHistoryView(APIView):
             source=serializer.validated_data["source"],
             destination=serializer.validated_data["destination"],
             transport_type=serializer.validated_data["transport_type"],
-            defaults={}
+            defaults={},
         )
 
         return Response(
-            {"message": "Search saved"}
+            {
+                "message": "Search saved",
+            }
         )
 
     def get(self, request):
-
         history = SearchHistory.objects.filter(
             user=request.user
         )
 
         serializer = SearchHistorySerializer(
             history,
-            many=True
+            many=True,
         )
 
         return Response(serializer.data)
-    
+
+
 class SearchHistoryDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, pk):
-        history = get_object_or_404(SearchHistory, id=pk, user = request.user)
+        history = get_object_or_404(
+            SearchHistory,
+            id=pk,
+            user=request.user,
+        )
+
         history.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
+        )
+
 
 class ClearSearchHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request):
-        history = SearchHistory.objects.filter(user = request.user)
+        history = SearchHistory.objects.filter(
+            user=request.user
+        )
+
         history.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
- 
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+
+# ============================================================
+# CSV UPLOAD
+# ============================================================
+
 
 class CsvUploadView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUserCustom]
+    permission_classes = [
+        IsAuthenticated,
+        IsAdminUserCustom,
+    ]
 
     def post(self, request):
-        file_serializer = CsvUploadSerializer(data=request.data)
-        file_serializer.is_valid(raise_exception=True)
+        file_serializer = CsvUploadSerializer(
+            data=request.data
+        )
+
+        file_serializer.is_valid(
+            raise_exception=True
+        )
 
         csv_file = file_serializer.validated_data["file"]
 
         try:
             decoded_file = csv_file.read().decode("utf-8")
-            reader = csv.DictReader(io.StringIO(decoded_file))
+
+            reader = csv.DictReader(
+                io.StringIO(decoded_file)
+            )
 
             expected_headers = {
                 "company",
@@ -180,17 +249,23 @@ class CsvUploadView(APIView):
 
             if reader.fieldnames is None:
                 return Response(
-                    {"detail": "CSV file is empty."},
+                    {
+                        "detail": "CSV file is empty."
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            uploaded_headers = set(reader.fieldnames)
+            uploaded_headers = set(
+                reader.fieldnames
+            )
 
             if uploaded_headers != expected_headers:
                 return Response(
                     {
                         "detail": "Invalid CSV headers.",
-                        "expected": sorted(expected_headers),
+                        "expected": sorted(
+                            expected_headers
+                        ),
                         "received": reader.fieldnames,
                     },
                     status=status.HTTP_400_BAD_REQUEST,
@@ -198,21 +273,29 @@ class CsvUploadView(APIView):
 
         except (UnicodeDecodeError, csv.Error):
             return Response(
-                {"detail": "Invalid CSV file."},
+                {
+                    "detail": "Invalid CSV file."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         created = 0
         skipped = 0
 
-        for index, row in enumerate(reader, start=2):
-
-            row_serializer = TransportCsvRowSerializer(data=row)
+        for index, row in enumerate(
+            reader,
+            start=2,
+        ):
+            row_serializer = TransportCsvRowSerializer(
+                data=row
+            )
 
             if not row_serializer.is_valid():
                 return Response(
                     {
-                        "detail": f"Validation failed on row {index}.",
+                        "detail": (
+                            f"Validation failed on row {index}."
+                        ),
                         "errors": row_serializer.errors,
                     },
                     status=status.HTTP_400_BAD_REQUEST,
@@ -235,6 +318,7 @@ class CsvUploadView(APIView):
                             name=company_name,
                             is_active=True,
                         )
+
                 except IntegrityError:
                     company = Company.objects.get(
                         name__iexact=company_name
@@ -263,10 +347,14 @@ class CsvUploadView(APIView):
 
         return Response(
             {
-                "message": "CSV upload completed successfully.",
+                "message": (
+                    "CSV upload completed successfully."
+                ),
                 "created": created,
                 "skipped": skipped,
-                "reason": "Duplicate transport records were skipped.",
+                "reason": (
+                    "Duplicate transport records were skipped."
+                ),
             },
             status=status.HTTP_201_CREATED,
         )

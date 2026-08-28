@@ -9,7 +9,16 @@ from django.utils import timezone
 from users.models import User
 
 
+# ============================================================
+# STAFF PRESENCE CONSUMER
+# ============================================================
+
+
 class PresenceConsumer(AsyncWebsocketConsumer):
+
+    # ========================================================
+    # CONNECTION
+    # ========================================================
 
     async def connect(self):
 
@@ -23,7 +32,9 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
-        self.connection_id = str(uuid.uuid4())
+        self.connection_id = str(
+            uuid.uuid4()
+        )
 
         self.presence_key = (
             f"staff_presence:{self.user.id}"
@@ -40,6 +51,10 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             status="online"
         )
 
+    # ========================================================
+    # RECEIVE
+    # ========================================================
+
     async def receive(
         self,
         text_data=None,
@@ -50,18 +65,23 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             return
 
         try:
-            data = json.loads(text_data)
+            data = json.loads(
+                text_data
+            )
 
         except json.JSONDecodeError:
             return
 
         if data.get("type") == "heartbeat":
-
             await self.refresh_connection()
+
+    # ========================================================
+    # DISCONNECT
+    # ========================================================
 
     async def disconnect(
         self,
-        close_code
+        close_code,
     ):
 
         if not hasattr(self, "user"):
@@ -88,6 +108,10 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             await self.broadcast_presence(
                 status="offline"
             )
+
+    # ========================================================
+    # CONNECTION CACHE MANAGEMENT
+    # ========================================================
 
     @database_sync_to_async
     def add_connection(self):
@@ -169,6 +193,10 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             timeout=120,
         )
 
+    # ========================================================
+    # USER PRESENCE STATUS
+    # ========================================================
+
     @database_sync_to_async
     def mark_online(self):
 
@@ -215,6 +243,10 @@ class PresenceConsumer(AsyncWebsocketConsumer):
                 "updated_at",
             ]
         )
+
+    # ========================================================
+    # BROADCAST PRESENCE
+    # ========================================================
 
     async def broadcast_presence(
         self,

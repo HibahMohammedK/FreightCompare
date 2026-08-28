@@ -6,13 +6,24 @@ class CsvUploadSerializer(serializers.Serializer):
 
 
 class TransportCsvRowSerializer(serializers.Serializer):
-    company = serializers.CharField(max_length=255)
-    transport_type = serializers.ChoiceField(
-        choices=["air", "sea"]
+    company = serializers.CharField(
+        max_length=255,
     )
 
-    source = serializers.CharField(max_length=255)
-    destination = serializers.CharField(max_length=255)
+    transport_type = serializers.ChoiceField(
+        choices=[
+            "air",
+            "sea",
+        ],
+    )
+
+    source = serializers.CharField(
+        max_length=255,
+    )
+
+    destination = serializers.CharField(
+        max_length=255,
+    )
 
     price = serializers.DecimalField(
         max_digits=10,
@@ -26,7 +37,7 @@ class TransportCsvRowSerializer(serializers.Serializer):
             "cbm",
             "pallet",
             "container",
-        ]
+        ],
     )
 
     duration = serializers.IntegerField()

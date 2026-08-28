@@ -1,9 +1,13 @@
-from .models import Subscription
 import stripe
-from django.conf import settings
-from .models import SubscriptionPlan
 
-from .models import Subscription
+from django.conf import settings
+
+from .models import Subscription, SubscriptionPlan
+
+
+# ============================================================
+# USER SUBSCRIPTION
+# ============================================================
 
 
 def get_user_subscription(user):
@@ -48,11 +52,19 @@ def get_plan_limit(user, limit_name, default=0):
         default,
     )
 
+
 def is_premium(user):
     try:
         return user.subscription.status == "active"
+
     except Subscription.DoesNotExist:
         return False
+
+
+# ============================================================
+# STRIPE
+# ============================================================
+
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -78,6 +90,7 @@ def create_stripe_plan(plan):
 
     plan.stripe_product_id = product.id
     plan.stripe_price_id = stripe_price.id
+
     plan.save(
         update_fields=[
             "stripe_product_id",

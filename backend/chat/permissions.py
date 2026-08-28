@@ -3,14 +3,25 @@ from rest_framework.permissions import BasePermission
 from .models import Conversation
 
 
+# ============================================================
+# CONVERSATION PARTICIPANT PERMISSION
+# ============================================================
+
 class IsConversationParticipant(BasePermission):
     """
     Allows access only to the conversation participants or admin.
     """
 
-    message = "You do not have permission to access this conversation."
+    message = (
+        "You do not have permission to access this conversation."
+    )
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(
+        self,
+        request,
+        view,
+        obj,
+    ):
         user = request.user
 
         if user.role == "admin":
@@ -22,14 +33,25 @@ class IsConversationParticipant(BasePermission):
         )
 
 
+# ============================================================
+# SEND MESSAGE PERMISSION
+# ============================================================
+
 class CanSendMessage(BasePermission):
     """
     Allows sending messages only in active conversations by participants.
     """
 
-    message = "You cannot send messages in this conversation."
+    message = (
+        "You cannot send messages in this conversation."
+    )
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(
+        self,
+        request,
+        view,
+        obj,
+    ):
         user = request.user
 
         if obj.status != Conversation.Status.ACTIVE:
