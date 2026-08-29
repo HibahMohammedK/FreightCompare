@@ -152,6 +152,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -188,6 +190,10 @@ REDIS_PORT = config(
     cast=int,
 )
 
+FRONTEND_URL = config(
+    "FRONTEND_URL",
+    "http://localhost"
+)
 
 CACHES = {
     "default": {

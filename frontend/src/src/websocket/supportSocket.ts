@@ -1,5 +1,5 @@
 import store from "../redux/store";
-
+import WS_BASE_URL from "../config/websocket";
 import {
     updateStaffStatus
 } from "../redux/staffSlice";
@@ -27,7 +27,7 @@ class SupportSocket {
         }
 
         this.socket = new WebSocket(
-            `ws://localhost:8000/ws/support/?token=${token}`
+            `${WS_BASE_URL}/ws/support/?token=${token}`
         );
 
         this.socket.onopen = () => {

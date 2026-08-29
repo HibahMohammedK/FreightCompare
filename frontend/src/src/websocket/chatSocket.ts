@@ -1,4 +1,5 @@
 import store from "../redux/store";
+import WS_BASE_URL from "../config/websocket";
 
 import {
     messageReceived,
@@ -27,7 +28,7 @@ class ChatSocket {
         }
 
         this.socket = new WebSocket(
-            `ws://localhost:8000/ws/chat/${conversationId}/?token=${token}`
+            `${WS_BASE_URL}/ws/chat/${conversationId}/?token=${token}`
         );
 
 

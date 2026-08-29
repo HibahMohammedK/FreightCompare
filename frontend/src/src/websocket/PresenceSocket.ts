@@ -1,3 +1,5 @@
+import WS_BASE_URL from "../config/websocket";
+
 class PresenceSocket {
     private socket: WebSocket | null = null;
 
@@ -55,7 +57,7 @@ class PresenceSocket {
         }
 
         const socket = new WebSocket(
-            `ws://localhost:8000/ws/presence/?token=${this.token}`
+            `${WS_BASE_URL}/ws/presence/?token=${this.token}`
         );
 
         this.socket = socket;

@@ -90,11 +90,11 @@ class CreateCheckoutSessionView(APIView):
                     "plan_id": str(plan.id),
                 },
                 success_url=(
-                    "http://localhost:5173/subscription/success"
+                    f"{settings.FRONTEND_URL}/subscription/success"
                     "?session_id={CHECKOUT_SESSION_ID}"
                 ),
                 cancel_url=(
-                    "http://localhost:5173/subscription/cancel"
+                    f"{settings.FRONTEND_URL}/subscription/cancel"
                 ),
             )
 

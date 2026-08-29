@@ -2,6 +2,7 @@ import store from "../redux/store";
 import { addNotification } from "../redux/notificationSlice";
 import { getPriceAlerts } from "../api/priceAlerts";
 import { setPriceAlerts } from "../redux/transportSlice";
+import WS_BASE_URL from "../config/websocket";
 
 class NotificationSocket {
 
@@ -14,7 +15,7 @@ class NotificationSocket {
         }
 
         this.socket = new WebSocket(
-            `ws://localhost:8000/ws/notifications/?token=${token}`
+            `${WS_BASE_URL}/ws/notifications/?token=${token}`
         );
 
         this.socket.onopen = () => {

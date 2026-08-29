@@ -2,14 +2,18 @@ import axios from "axios";
 import store from "../redux/store";
 import { setAccessToken, logout } from "../redux/authSlice";
 
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    "/api";
+
 const API = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
 // 🔥 Separate instance (no interceptors)
 const refreshAPI = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
