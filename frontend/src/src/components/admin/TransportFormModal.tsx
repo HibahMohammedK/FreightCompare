@@ -172,20 +172,48 @@ export const TransportFormModal: React.FC<TransportFormModalProps> = ({
   };
 
   const handleAIApply = (recommendation: AIRecommendation) => {
+    const appliedPrice =
+      recommendation.price ??
+      (recommendation.price_min != null &&
+      recommendation.price_max != null
+        ? (recommendation.price_min +
+            recommendation.price_max) /
+          2
+        : recommendation.price_min ??
+          recommendation.price_max ??
+          null);
+
+    const appliedDuration =
+      recommendation.duration ??
+      (recommendation.duration_min_hours != null &&
+      recommendation.duration_max_hours != null
+        ? Math.round(
+            (recommendation.duration_min_hours +
+              recommendation.duration_max_hours) /
+              2
+          )
+        : recommendation.duration_min_hours ??
+          recommendation.duration_max_hours ??
+          null);
+
     setValues((prev) => ({
       ...prev,
+
       company: recommendation.company ?? "",
-      source: prev.source,
-      destination: prev.destination,
-      transportType: prev.transportType,
+
       price:
-      recommendation.price !== null
-        ? String(recommendation.price)
-        : "",
-      duration: recommendation.duration
-        ? String(recommendation.duration)
-        : prev.duration,
-      bookingUrl: recommendation.booking_url ?? "",
+        appliedPrice != null
+          ? String(appliedPrice)
+          : prev.price,
+
+      duration:
+        appliedDuration != null
+          ? String(appliedDuration)
+          : prev.duration,
+
+      bookingUrl:
+        recommendation.booking_url ??
+        prev.bookingUrl,
     }));
 
     setIsAIModalOpen(false);
