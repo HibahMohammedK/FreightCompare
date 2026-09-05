@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.utils import timezone
 
 from users.models import User
+from tickets.services import TicketAssignmentService
 
 
 # ============================================================
@@ -21,7 +22,6 @@ class PresenceConsumer(AsyncWebsocketConsumer):
     # ========================================================
 
     async def connect(self):
-
         self.user = self.scope["user"]
 
         if self.user.is_anonymous:
@@ -32,24 +32,22 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
-        self.connection_id = str(
-            uuid.uuid4()
-        )
+        self.connection_id = str(uuid.uuid4())
+        self.presence_key = f"staff_presence:{self.user.id}"
 
-        self.presence_key = (
-            f"staff_presence:{self.user.id}"
-        )
-
-        await self.add_connection()
+        # Returns True only when this is the first active connection
+        became_available = await self.add_connection()
 
         await self.accept()
 
-        # A fresh active session always starts as ONLINE.
         await self.mark_online()
 
-        await self.broadcast_presence(
-            status="online"
-        )
+        # Automatically assign any pending tickets
+        # when this staff member becomes available.
+        if became_available:
+            await self.assign_pending_tickets()
+
+        await self.broadcast_presence(status="online")
 
     # ========================================================
     # RECEIVE
@@ -113,25 +111,24 @@ class PresenceConsumer(AsyncWebsocketConsumer):
     # CONNECTION CACHE MANAGEMENT
     # ========================================================
 
+    
     @database_sync_to_async
     def add_connection(self):
-
-        connections = cache.get(
-            self.presence_key,
-            set(),
-        )
-
+        connections = cache.get(self.presence_key, set())
         connections = set(connections)
 
-        connections.add(
-            self.connection_id
-        )
+        # True only if there were no active connections before this one.
+        became_available = not connections
+
+        connections.add(self.connection_id)
 
         cache.set(
             self.presence_key,
             connections,
             timeout=120,
         )
+
+        return became_available
 
     @database_sync_to_async
     def remove_connection(self):
@@ -281,3 +278,8 @@ class PresenceConsumer(AsyncWebsocketConsumer):
                 "data": data,
             },
         )
+
+
+    @database_sync_to_async
+    def assign_pending_tickets(self):
+        return TicketAssignmentService.assign_pending_tickets()
