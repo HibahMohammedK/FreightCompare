@@ -8,6 +8,7 @@ import { CreateTicketModal } from "../../components/shared/ticket/CreateTicketMo
 import { useAppDispatch,useAppSelector } from '../../hooks/redux';
 import { fetchTickets, fetchTicket } from "../../redux/ticketSlice";
 import { getCurrentSubscription } from "../../api/subscription";
+
 export const CustomerSupportPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -27,6 +28,8 @@ export const CustomerSupportPage: React.FC = () => {
   const [upgradeMessage, setUpgradeMessage] =
     useState("");
 
+  const [hasTicketsFeature, setHasTicketsFeature] = useState(false);
+
   const filteredTickets = tickets.filter((ticket) => {
       const matchesFilter =
           filter === "all" || ticket.status === filter;
@@ -45,12 +48,21 @@ export const CustomerSupportPage: React.FC = () => {
             try {
                 const res = await getCurrentSubscription();
 
+                const subscription = res.data;
+
                 setIsSubscribed(
-                    res.data?.status === "active"
+                    subscription?.status === "active"
                 );
+
+                setHasTicketsFeature(
+                    subscription?.status === "active" &&
+                    subscription?.plan?.features?.includes("support_tickets")
+                );
+
             } catch (err) {
                 console.error(err);
                 setIsSubscribed(false);
+                setHasTicketsFeature(false);
             }
         };
 
@@ -69,9 +81,9 @@ export const CustomerSupportPage: React.FC = () => {
   }, [dispatch, tickets, selectedTicket]);
 
   const handleCreateTicket = () => {
-        if (!isSubscribed) {
+        if (!isSubscribed || !hasTicketsFeature) {
             setUpgradeMessage(
-                "Creating support tickets is available only for subscribed users. Please choose a subscription plan to create a support ticket."
+                "Creating support tickets is not available on your current subscription plan. Please choose a plan that includes support tickets."
             );
             setShowUpgradeModal(true);
             return;
