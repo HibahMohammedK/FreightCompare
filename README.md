@@ -1,371 +1,404 @@
-🚚 FreightCompare
+# 🚚 FreightCompare
 
-An AI-powered freight comparison and logistics management platform that enables customers to compare freight transport options, track prices, receive real-time notifications, communicate with support staff, and manage freight requirements through a modern web application.
+> **AI-powered freight comparison and logistics management platform**
 
-FreightCompare is built using React, TypeScript, Django REST Framework, PostgreSQL, Redis, Docker, Django Channels, Groq LLM, and Tavily Search.
+FreightCompare is a full-stack logistics platform that helps customers discover and compare freight transport options, manage saved routes and price alerts, communicate with support staff in real time, and access AI-assisted transport research.
 
-The application provides separate workflows for customers, administrators, and support staff, including authentication, freight comparison, AI-assisted transport operations, subscription management, real-time communication, customer support, and logistics management.
+The platform provides dedicated workflows for **Customers, Support Staff, and Administrators**, with role-based access control, subscription management, real-time communication, AI integration, and containerized deployment.
 
-📸 Application Preview
+### 🌐 Live Demo
 
-🚧 Project Status: Development Complete
+**[freightcompare.online](https://freightcompare.online)**
 
-The core application functionality has been implemented, including authentication, freight comparison, transport and company management, subscriptions, AI assistance, real-time notifications, customer support chat, ticket management, price alerts, and administrative workflows.
+### 💻 Source Code
 
-The current phase focuses on testing, CI/CD, deployment, performance validation, and final production refinements.
+**[GitHub Repository](https://github.com/HibahMohammedK/FreightCompare)**
 
-📑 Table of Contents
+---
 
-Features
+## 📌 Project Overview
 
-AI Transport Assistant
+FreightCompare was built as a production-oriented full-stack application to explore how a logistics platform can combine:
 
-Real-Time Communication
+* Freight comparison and transport search
+* AI-assisted logistics research
+* Real-time customer support
+* Subscription-based feature access
+* Price tracking and alerts
+* Role-based administration
+* RESTful API architecture
+* WebSocket-based communication
+* Containerized deployment
+* CI automation
 
-Customer Support
+The application follows a separation of concerns between the frontend, backend API, database, caching layer, and real-time communication infrastructure.
 
-Subscription System
+---
 
-Authentication
+## ✨ Key Features
 
-Tech Stack
-
-Environment Variables
-
-Getting Started
-
-Application Modules
-
-Testing
-
-CI/CD
-
-Deployment
-
-Screenshots
-
-Project Goals
-
-Author
-
-License
-
-✨ Features
-
-👤 Customer
+### 👤 Customer
 
 Customers can:
 
-Search and compare freight transport options
+* Search and compare freight transport options
+* Filter transport options by route and transport type
+* View transport pricing and duration
+* Save transport options
+* View search history
+* Create and manage price alerts
+* Receive real-time notifications
+* Register and authenticate using email/password
+* Authenticate using Google
+* Verify their email through OTP
+* Manage their profile
+* Change and reset passwords
+* Subscribe to premium plans
+* View subscription history
+* Cancel subscriptions
+* Use the AI Transport Assistant
+* Create customer support tickets
+* Communicate with support staff through real-time chat
+* Track ticket status and updates
 
-Filter transport options by route and transport type
+---
 
-View transport pricing and duration
-
-Save transport options
-
-View search history
-
-Create and manage price alerts
-
-Receive real-time notifications
-
-Authenticate using email/password
-
-Authenticate using Google
-
-Manage their profile
-
-Change their password
-
-Reset forgotten passwords
-
-Subscribe to premium plans
-
-View subscription history
-
-Cancel subscriptions
-
-Use the AI Transport Assistant
-
-Create customer support tickets
-
-Communicate with support staff through real-time chat
-
-Track ticket status and updates
-
-👨‍💼 Administrator
+### 👨‍💼 Administrator
 
 Administrators can:
 
-Access the administration dashboard
+* Access the administration dashboard
+* Manage transport records
+* Add and update transport information
+* Upload transport data through CSV
+* Manage freight companies
+* Activate and deactivate companies
+* Manage customers
+* Manage support staff
+* Manage subscription plans
+* Monitor customer subscriptions
+* Manage support tickets
+* Assign and reassign tickets
+* Monitor staff availability
+* Use the AI Transport Assistant
+* Receive real-time administrative notifications
 
-Manage transport records
+---
 
-Add and update transport information
-
-Upload transport data through CSV
-
-Manage freight companies
-
-Activate and deactivate companies
-
-Manage customers
-
-Manage staff
-
-Manage subscription plans
-
-Monitor customer subscriptions
-
-Manage support tickets
-
-Assign tickets to staff
-
-Reassign tickets between staff members
-
-Monitor real-time staff availability
-
-Use the AI Transport Assistant
-
-Receive real-time administrative notifications
-
-👨‍💻 Support Staff
+### 👨‍💻 Support Staff
 
 Support staff can:
 
-Access the staff dashboard
+* Access the staff dashboard
+* View assigned support tickets
+* Update ticket status
+* Communicate with customers
+* Receive real-time notifications
+* Participate in customer support conversations
+* Maintain availability status
+* Receive automatically assigned tickets
 
-View assigned support tickets
+---
 
-Manage ticket status
+# 🤖 AI Transport Assistant
 
-Communicate with customers
+FreightCompare integrates **Tavily Search API** and **Groq LLM** to provide AI-assisted transport research.
 
-Receive real-time notifications
+The AI workflow can assist with:
 
-Participate in real-time customer support conversations
+* Freight recommendations
+* Web-based transport research
+* Transport information extraction
+* Company extraction
+* Price extraction
+* Duration extraction
+* Transport type identification
+* Confidence scoring
+* AI-assisted transport creation
 
-Maintain staff availability status
+### AI Flow
 
-Receive automatically assigned support tickets
+```text
+User Requirements
+       │
+       ▼
+Tavily Search API
+       │
+       ▼
+Web Search Results
+       │
+       ▼
+Groq LLM
+       │
+       ▼
+Information Processing
+       │
+       ├── Transport
+       ├── Company
+       ├── Price
+       ├── Duration
+       └── Transport Type
+       │
+       ▼
+Processed Transport Information
+```
 
-🤖 AI Transport Assistant
+---
 
-FreightCompare includes an AI-powered transport assistant designed to assist with freight transport research and transport data creation.
+# 🔔 Real-Time Communication
 
-AI capabilities
-
-AI-assisted freight recommendations
-
-Tavily Search integration
-
-Groq LLM integration
-
-Transport information extraction
-
-Company extraction
-
-Price extraction
-
-Duration extraction
-
-Transport type identification
-
-Confidence scoring
-
-AI-assisted transport creation
-
-🔔 Real-Time Communication
-
-FreightCompare uses Django Channels, Redis, and WebSockets to provide real-time application communication.
+FreightCompare uses **Django Channels, Redis, WebSockets, and Daphne** to support real-time application features.
 
 Real-time functionality includes:
 
-Notification delivery
-
-Ticket updates
-
-Ticket assignment updates
-
-Ticket status updates
-
-Customer support chat
-
-Message delivery
-
-Message read status
-
-Staff presence
-
-Online/offline availability
-
-Route-match notifications
-
-Price-alert notifications
-
-💬 Customer Support
-
-The platform includes an integrated customer support system.
-
-Support workflow
-
-Customer creates a support ticket
-
-Ticket is automatically assigned to available support staff
-
-Assignment uses workload balancing and round-robin selection
-
-Staff receives a real-time notification
-
-Customer and staff communicate through real-time chat
-
-Ticket status can be updated throughout the support process
-
-Customer receives status notifications
-
-Administrators can monitor and reassign tickets
-
-Supported ticket statuses include:
-
-Open
-
-Assigned
-
-In Progress
-
-Resolved
-
-Closed
-
-💳 Subscription System
-
-FreightCompare includes a subscription-based feature system.
-
-Subscription plans support:
-
-Monthly billing
-
-Yearly billing
-
-Feature-based access
-
-Usage limits
-
-Premium functionality
-
-Subscription history
-
-Subscription cancellation
-
-Stripe integration
-
-Application features can be controlled using subscription-plan permissions and limits.
-
-🔐 Authentication
-
-FreightCompare implements multiple authentication and account-management features.
-
-JWT authentication
-
-Google OAuth authentication
-
-Email verification
-
-OTP verification
-
-Password reset
-
-Password change
-
-Forced password change for staff accounts
-
-Role-based access control
-
-Supported user roles:
-
-Customer
-
-Staff
-
-Administrator
-
-🛠 Tech Stack
-
-Frontend
-
-React
-
-TypeScript
-
-Redux Toolkit
-
-Tailwind CSS
-
-React Router
-
-Axios
-
-Vite
-
-Backend
-
-Python
-
-Django
-
-Django REST Framework
-
-PostgreSQL
-
-JWT Authentication
-
-Google OAuth
-
-AI
-
-Groq LLM
-
-Tavily Search API
-
-Real-Time
-
+* Notifications
+* Ticket updates
+* Ticket assignment updates
+* Ticket status changes
+* Customer support chat
+* Message delivery
+* Message read status
+* Staff presence
+* Online/offline availability
+* Route-match notifications
+* Price-alert notifications
+
+### WebSocket Architecture
+
+```text
+React Client
+     │
+     │ WebSocket
+     ▼
 Django Channels
+     │
+     ▼
+Redis Channel Layer
+     │
+     ├── Notifications
+     ├── Ticket Events
+     ├── Chat Messages
+     └── Presence Updates
+```
 
-Redis
+---
 
-WebSockets
+# 💬 Customer Support System
 
-Payments
+FreightCompare includes an integrated support-ticket and real-time communication system.
 
-Stripe
+### Support Workflow
 
-DevOps
+```text
+Customer
+   │
+   ▼
+Create Support Ticket
+   │
+   ▼
+Automatic Staff Assignment
+   │
+   ▼
+Real-Time Notification
+   │
+   ▼
+Staff ↔ Customer Chat
+   │
+   ▼
+Ticket Status Updates
+   │
+   ▼
+Resolution
+```
 
-Docker
+Ticket assignment uses **workload balancing and round-robin selection**.
 
-Docker Compose
+### Ticket Statuses
 
-Git
+* Open
+* Assigned
+* In Progress
+* Resolved
+* Closed
 
-GitHub
+Administrators can monitor tickets and reassign them when required.
 
-🔐 Environment Variables
+---
+
+# 💳 Subscription System
+
+FreightCompare includes subscription-based feature access using **Stripe**.
+
+Subscription functionality includes:
+
+* Monthly billing
+* Yearly billing
+* Feature-based access
+* Usage limits
+* Premium functionality
+* Subscription history
+* Subscription cancellation
+* Stripe integration
+
+Application capabilities can be controlled according to subscription-plan permissions and usage limits.
+
+---
+
+# 🔐 Authentication & Authorization
+
+FreightCompare implements multiple authentication and account-management mechanisms.
+
+### Authentication
+
+* JWT authentication
+* Google OAuth
+* Email verification
+* OTP verification
+* Password reset
+* Password change
+* Forced password change for staff accounts
+
+### Authorization
+
+The application uses **Role-Based Access Control (RBAC)**.
+
+Supported roles:
+
+```text
+Customer
+Staff
+Administrator
+```
+
+Different roles receive access to different workflows and application resources.
+
+---
+
+# 🏗️ Application Architecture
+
+The application follows a modern full-stack architecture:
+
+```text
+                         ┌───────────────────┐
+                         │    React Client   │
+                         │ TypeScript / Vite │
+                         └─────────┬─────────┘
+                                   │
+                         REST API / WebSocket
+                                   │
+                                   ▼
+                         ┌───────────────────┐
+                         │  Django / DRF     │
+                         │   Backend API     │
+                         └───────┬───────────┘
+                                 │
+              ┌──────────────────┼──────────────────┐
+              │                  │                  │
+              ▼                  ▼                  ▼
+       ┌────────────┐     ┌────────────┐     ┌─────────────┐
+       │ PostgreSQL │     │   Redis    │     │ External    │
+       │  Database  │     │ Cache / RT │     │ Services    │
+       └────────────┘     └────────────┘     └─────────────┘
+                                                  │
+                              ┌───────────────────┼───────────────────┐
+                              │                   │                   │
+                              ▼                   ▼                   ▼
+                         Tavily API          Groq LLM            Stripe
+```
+
+---
+
+# 🛠️ Technology Stack
+
+## Frontend
+
+* React
+* TypeScript
+* Redux Toolkit
+* Tailwind CSS
+* React Router
+* Axios
+* Vite
+
+## Backend
+
+* Python
+* Django
+* Django REST Framework
+* Django ORM
+* JWT Authentication
+* Google OAuth
+
+## Database & Caching
+
+* PostgreSQL
+* Redis
+
+## Real-Time
+
+* Django Channels
+* WebSockets
+* Daphne
+
+## AI & External Integrations
+
+* Groq LLM
+* Tavily Search API
+* Stripe
+* Google OAuth
+
+## DevOps & Deployment
+
+* Docker
+* Docker Compose
+* AWS EC2
+* Git
+* GitHub
+* GitHub Actions
+* CI/CD
+
+---
+
+# 📦 Project Structure
+
+```text
+FreightCompare/
+│
+├── backend/
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── apps/
+│   └── ...
+│
+├── frontend/
+│   ├── src/
+│   ├── package.json
+│   └── ...
+│
+├── docker-compose.yml
+├── Dockerfile
+└── README.md
+```
+
+> The exact internal structure may evolve as the application is maintained.
+
+---
+
+# 🔐 Environment Configuration
 
 FreightCompare uses environment variables for application configuration, database connectivity, authentication, third-party services, AI integrations, payments, and email services.
 
-⚠️ Security: Never commit .env files, API keys, passwords, secret keys, or other credentials to the repository.
-
-Create the required environment files locally.
-
-Backend Environment Variables
+### Backend
 
 Create:
 
+```text
 backend/.env
+```
 
-Add the following variables:
+Example configuration:
 
+```env
 SECRET_KEY=
 DEBUG=
 
@@ -392,394 +425,380 @@ EMAIL_HOST_USER=
 EMAIL_HOST_PASSWORD=
 EMAIL_USE_TLS=
 DEFAULT_FROM_EMAIL=
+```
 
-Configure each value according to your local or deployment environment.
-
-Frontend Environment Variables
+### Frontend
 
 Create:
 
+```text
 frontend/.env
-
-Add the frontend-specific variables required by the application.
+```
 
 Example:
 
+```env
 VITE_API_URL=
 VITE_GOOGLE_CLIENT_ID=
+```
 
-Use the exact variable names required by your current frontend configuration. Do not commit the actual values.
+### ⚠️ Security
 
-🚀 Getting Started
+**Never commit secrets to GitHub.**
 
-Prerequisites
+Do not commit:
 
-Make sure the following are installed:
+* `.env` files
+* API keys
+* Passwords
+* Django secret keys
+* Stripe secrets
+* OAuth secrets
+* Database credentials
+* Email credentials
 
-Git
+---
 
-Docker
+# 🚀 Running Locally
 
-Docker Compose
+## Prerequisites
 
-For local development without Docker, also install:
+Make sure you have:
 
-Node.js
+* Git
+* Docker
+* Docker Compose
 
-npm
+For development without Docker:
 
-Python
+* Node.js
+* npm
+* Python
+* PostgreSQL
+* Redis
 
-PostgreSQL
+---
 
-Redis
+## 1. Clone the Repository
 
-1. Clone the Repository
-
+```bash
 git clone https://github.com/HibahMohammedK/FreightCompare.git
+
 cd FreightCompare
+```
 
-2. Configure Environment Variables
+---
+
+## 2. Configure Environment Variables
 
 Create:
 
+```text
 backend/.env
-
-Configure the required backend variables described in the Environment Variables section.
-
-Create:
-
 frontend/.env
+```
 
-Configure the required frontend variables.
+Configure the required environment variables for your development environment.
 
-Do not commit either .env file to Git.
+Do not commit these files.
 
-3. Run the Application with Docker
+---
 
-Build and start the application:
+## 3. Start the Application
 
+Using Docker Compose:
+
+```bash
 docker compose up --build
+```
 
-To run in detached mode:
+Or run in detached mode:
 
+```bash
 docker compose up --build -d
+```
 
-To stop the application:
+---
 
-docker compose down
+## 4. Access the Application
 
-4. Application URLs
+Frontend:
 
-Frontend
-
+```text
 http://localhost:5173
+```
 
-Backend
+Backend:
 
+```text
 http://localhost:8000
+```
 
-5. Database Migrations
+---
 
-If migrations need to be applied manually inside the backend container:
+## 5. Apply Database Migrations
 
+If migrations need to be applied manually:
+
+```bash
 docker compose exec backend python manage.py migrate
+```
 
-6. Create a Django Superuser
+---
 
-To create an administrator account:
+## 6. Create an Administrator
 
+Create a Django superuser with:
+
+```bash
 docker compose exec backend python manage.py createsuperuser
+```
 
 Follow the prompts in the terminal.
 
-📌 Application Modules
+---
 
-Module
+# 🧪 Testing
 
-Status
+Testing covers the major application workflows, including:
 
-Authentication
+* Backend API testing
+* Serializer validation
+* Authentication
+* Permission testing
+* Transport management
+* Price alerts
+* Subscription functionality
+* Ticket management
+* Real-time chat
+* WebSocket functionality
+* Notifications
+* Frontend functionality
+* Integration testing
+* Regression testing
 
-✅ Complete
+---
 
-Google Authentication
+# 🔄 CI/CD
 
-✅ Complete
+FreightCompare uses **GitHub Actions** to automate application build and deployment workflows.
 
-Email Verification
+The deployment workflow is designed around:
 
-✅ Complete
-
-Password Reset
-
-✅ Complete
-
-Customer Dashboard
-
-✅ Complete
-
-Transport Comparison
-
-✅ Complete
-
-Transport Management
-
-✅ Complete
-
-Saved Transports
-
-✅ Complete
-
-Search History
-
-✅ Complete
-
-Price Alerts
-
-✅ Complete
-
-Real-Time Notifications
-
-✅ Complete
-
-AI Transport Assistant
-
-✅ Complete
-
-Company Management
-
-✅ Complete
-
-Customer Management
-
-✅ Complete
-
-Staff Management
-
-✅ Complete
-
-Subscription Management
-
-✅ Complete
-
-Stripe Integration
-
-✅ Complete
-
-CSV Transport Upload
-
-✅ Complete
-
-Customer Support
-
-✅ Complete
-
-Real-Time Chat
-
-✅ Complete
-
-Ticket Management
-
-✅ Complete
-
-Automatic Ticket Assignment
-
-✅ Complete
-
-Staff Presence
-
-✅ Complete
-
-Dockerized Development
-
-✅ Complete
-
-🧪 Testing
-
-Testing is part of the final project-hosting phase.
-
-The testing process covers:
-
-Backend API testing
-
-Serializer validation
-
-Authentication testing
-
-Permission testing
-
-Transport management testing
-
-Price alert testing
-
-Subscription functionality testing
-
-Ticket management testing
-
-Chat functionality testing
-
-WebSocket functionality testing
-
-Notification testing
-
-Frontend functionality testing
-
-Integration testing
-
-Regression testing
-
-Automated tests will be executed as part of the CI/CD pipeline.
-
-🔄 CI/CD
-
-A CI/CD pipeline will be implemented to automate application validation and deployment workflows.
-
-The planned pipeline will:
-
-Trigger when changes are pushed to GitHub
-
-Install project dependencies
-
-Run automated tests
-
-Validate the backend
-
-Build the frontend
-
-Build Docker images
-
-Verify the application build
-
-Deploy the application to the configured hosting environment
-
-The CI/CD workflow will help reduce deployment errors and ensure that changes are validated before deployment.
-
-☁️ Deployment
-
-The application is containerized using Docker and Docker Compose.
-
-The deployment process will use:
-
-GitHub
+```text
+Git Push
    │
    ▼
-CI/CD Pipeline
+GitHub Actions
    │
-   ├── Automated Tests
-   ├── Frontend Build
-   ├── Backend Validation
-   └── Docker Build
-           │
-           ▼
-    Hosting Environment
+   ├── Validate application
+   ├── Run configured checks
+   ├── Build frontend
+   ├── Build Docker images
+   └── Deploy
+        │
+        ▼
+     AWS EC2
+```
 
-Production deployment configuration depends on the selected hosting infrastructure.
+This provides a repeatable deployment workflow and reduces manual deployment steps.
 
-📸 Screenshots
+---
 
-👤 Customer Experience
+# ☁️ Production Deployment
 
-Landing Page
+FreightCompare is deployed as a containerized application using:
 
-Add screenshot here.
+* AWS EC2
+* Docker
+* Docker Compose
+* GitHub Actions
+* PostgreSQL
+* Redis
+* Django
+* React
 
-Transport Search
+### Production Application
 
-Add screenshot here.
+🌐 **https://freightcompare.online**
 
-Search Results
+The production deployment provides access to the application's customer-facing workflows and demonstrates the project running in a real hosting environment.
 
-Add screenshot here.
+---
 
-Price Alerts
+# 📸 Application Screenshots
 
-Add screenshot here.
+Screenshots can be added here to demonstrate the main application workflows.
 
-Real-Time Notifications
+## Landing Page
 
-Add screenshot here.
+<!-- Add screenshot -->
 
-Customer Support Chat
+## Customer Dashboard
 
-Add screenshot here.
+<!-- Add screenshot -->
 
-Ticket Management
+## Transport Search & Comparison
 
-Add screenshot here.
+<!-- Add screenshot -->
 
-👨‍💼 Administration
+## Search Results
 
-Admin Dashboard
+<!-- Add screenshot -->
 
-Add screenshot here.
+## Price Alerts
 
-Transport Management
+<!-- Add screenshot -->
 
-Add screenshot here.
+## AI Transport Assistant
 
-Company Management
+<!-- Add screenshot -->
 
-Add screenshot here.
+## Real-Time Notifications
 
-CSV Upload
+<!-- Add screenshot -->
 
-Add screenshot here.
+## Customer Support Chat
 
-AI Transport Assistant
+<!-- Add screenshot -->
 
-Add screenshot here.
+## Admin Dashboard
 
-Customer Management
+<!-- Add screenshot -->
 
-Add screenshot here.
+## Transport Management
 
-Subscription Management
+<!-- Add screenshot -->
 
-Add screenshot here.
+## CSV Transport Upload
 
-Ticket Monitoring
+<!-- Add screenshot -->
 
-Add screenshot here.
+## Subscription Management
 
-🎯 Project Goals
+<!-- Add screenshot -->
 
-The objective of FreightCompare is to modernize freight comparison by combining traditional logistics management with AI-powered assistance and real-time communication.
+---
+
+# 📋 Application Modules
+
+| Module                      | Status        |
+| --------------------------- | ------------- |
+| Authentication              | ✅ Complete    |
+| Google Authentication       | ✅ Complete    |
+| Email Verification          | ✅ Complete    |
+| Password Reset              | ✅ Complete    |
+| Customer Dashboard          | ✅ Complete    |
+| Transport Comparison        | ✅ Complete    |
+| Transport Management        | ✅ Complete    |
+| Saved Transports            | ✅ Complete    |
+| Search History              | ✅ Complete    |
+| Price Alerts                | ✅ Complete    |
+| Real-Time Notifications     | ✅ Complete    |
+| AI Transport Assistant      | ✅ Complete    |
+| Company Management          | ✅ Complete    |
+| Customer Management         | ✅ Complete    |
+| Staff Management            | ✅ Complete    |
+| Subscription Management     | ✅ Complete    |
+| Stripe Integration          | ✅ Complete    |
+| CSV Transport Upload        | ✅ Complete    |
+| Customer Support            | ✅ Complete    |
+| Real-Time Chat              | ✅ Complete    |
+| Ticket Management           | ✅ Complete    |
+| Automatic Ticket Assignment | ✅ Complete    |
+| Staff Presence              | ✅ Complete    |
+| Dockerized Development      | ✅ Complete    |
+| AWS Deployment              | ✅ Complete    |
+| CI/CD                       | ✅ Implemented |
+
+---
+
+# 🎯 Project Goals
+
+FreightCompare was developed to demonstrate how modern full-stack technologies can be combined to build a practical logistics platform.
 
 The project focuses on:
 
-Improving freight transport comparison
+* Freight transport comparison
+* AI-assisted logistics research
+* Transport data management
+* Real-time customer support
+* Real-time notifications
+* Subscription-based functionality
+* Role-based application architecture
+* REST API development
+* WebSocket communication
+* Scalable backend services
+* Containerized development and deployment
+* Cloud deployment
+* CI/CD automation
+* Practical AI integration
 
-Providing intelligent logistics assistance
+---
 
-Simplifying transport data management
+# 📚 Engineering Concepts Demonstrated
 
-Providing real-time customer support
+This project provided hands-on implementation experience with:
 
-Improving customer engagement
+* Full-stack application architecture
+* RESTful API design
+* Database modelling
+* Django ORM
+* Authentication and authorization
+* Role-Based Access Control
+* JWT authentication
+* OAuth
+* WebSockets
+* Event-driven real-time communication
+* Redis
+* Background/realtime workflows
+* Third-party API integration
+* LLM integration
+* Subscription architecture
+* Payment integration
+* Docker containerization
+* Cloud deployment
+* CI/CD
+* Environment-based configuration
+* API testing
+* Production-oriented application structure
 
-Supporting subscription-based functionality
+---
 
-Implementing scalable backend services
+# 👩‍💻 Author
 
-Applying modern full-stack development practices
+## Hibah Mohammed K
 
-Using containerized application deployment
+**Software Engineer | Full-Stack Developer**
 
-Implementing automated testing and CI/CD
+Specializing in:
 
-Demonstrating practical AI integration in logistics
+```text
+Python
+Django
+Django REST Framework
+React
+TypeScript
+PostgreSQL
+Redis
+Docker
+AWS
+```
 
-👩‍💻 Author
+### Connect
 
-Hibah Mohammed K
+* 🌐 **Live Project:** https://freightcompare.online
+* 💻 **GitHub:** https://github.com/HibahMohammedK
+* 💼 **LinkedIn:** https://www.linkedin.com/in/mohammed-hibah-k/
 
-Software Developer | Full Stack Developer
+---
 
-🌐 GitHub: https://github.com/HibahMohammedK
+# 📄 License
 
-💼 LinkedIn: https://www.linkedin.com/in/mohammed-hibah-k/
+This project was developed as a portfolio project to demonstrate practical full-stack software engineering capabilities, including React, Django, REST API development, AI integration, real-time communication, subscription management, Docker, AWS deployment, and CI/CD.
 
-📄 License
+---
 
-This project was developed as a portfolio project to demonstrate modern full-stack software engineering practices using React, Django, AI integration, real-time communication, subscription management, Docker, testing, and CI/CD.
+## ⭐ If you find this project interesting
+
+Feel free to explore the live application and source code to learn more about the architecture and implementation.
