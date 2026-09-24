@@ -29,7 +29,7 @@ FreightCompare was built as a production-oriented full-stack application to expl
 * RESTful API architecture
 * WebSocket-based communication
 * Containerized deployment
-* CI automation
+* Continuous Integration (CI)
 
 The application follows a separation of concerns between the frontend, backend API, database, caching layer, and real-time communication infrastructure.
 
@@ -355,7 +355,7 @@ The application follows a modern full-stack architecture:
 * Git
 * GitHub
 * GitHub Actions
-* CI/CD
+* Continuous Integration (CI)
 
 ---
 
@@ -579,11 +579,13 @@ Testing covers the major application workflows, including:
 
 ---
 
-# 🔄 CI/CD
+# 🔄 Continuous Integration (CI)
 
-FreightCompare uses **GitHub Actions** to automate application build and deployment workflows.
+FreightCompare uses **GitHub Actions** for Continuous Integration.
 
-The deployment workflow is designed around:
+The CI workflow is triggered when changes are pushed to the repository and is used to validate the application before changes are considered ready for deployment.
+
+The workflow includes:
 
 ```text
 Git Push
@@ -591,28 +593,27 @@ Git Push
    ▼
 GitHub Actions
    │
-   ├── Validate application
+   ├── Install dependencies
    ├── Run configured checks
-   ├── Build frontend
-   ├── Build Docker images
-   └── Deploy
-        │
-        ▼
-     AWS EC2
+   ├── Validate application
+   └── Build / verify project
 ```
 
-This provides a repeatable deployment workflow and reduces manual deployment steps.
+CI helps maintain code quality and provides an automated validation process during development.
+
+> **Note:** Production deployment to AWS EC2 is handled separately and is not part of the CI pipeline.
 
 ---
 
 # ☁️ Production Deployment
 
-FreightCompare is deployed as a containerized application using:
+FreightCompare is deployed as a containerized application on **AWS EC2** using Docker and Docker Compose.
+
+### Production Stack
 
 * AWS EC2
 * Docker
 * Docker Compose
-* GitHub Actions
 * PostgreSQL
 * Redis
 * Django
@@ -622,7 +623,7 @@ FreightCompare is deployed as a containerized application using:
 
 🌐 **https://freightcompare.online**
 
-The production deployment provides access to the application's customer-facing workflows and demonstrates the project running in a real hosting environment.
+The production deployment provides access to the application's customer-facing workflows and demonstrates the application running in a real hosting environment.
 
 ---
 
@@ -709,7 +710,7 @@ Screenshots can be added here to demonstrate the main application workflows.
 | Staff Presence              | ✅ Complete    |
 | Dockerized Development      | ✅ Complete    |
 | AWS Deployment              | ✅ Complete    |
-| CI/CD                       | ✅ Implemented |
+| Continuous Integration      | ✅ Implemented |
 
 ---
 
@@ -728,10 +729,10 @@ The project focuses on:
 * Role-based application architecture
 * REST API development
 * WebSocket communication
-* Scalable backend services
+* Production-oriented backend architecture
 * Containerized development and deployment
 * Cloud deployment
-* CI/CD automation
+* Continuous Integration (CI)
 * Practical AI integration
 
 ---
@@ -751,14 +752,14 @@ This project provided hands-on implementation experience with:
 * WebSockets
 * Event-driven real-time communication
 * Redis
-* Background/realtime workflows
+* Real-time event workflows
 * Third-party API integration
 * LLM integration
 * Subscription architecture
 * Payment integration
 * Docker containerization
 * Cloud deployment
-* CI/CD
+* Continuous Integration (CI)
 * Environment-based configuration
 * API testing
 * Production-oriented application structure
@@ -795,7 +796,7 @@ AWS
 
 # 📄 License
 
-This project was developed as a portfolio project to demonstrate practical full-stack software engineering capabilities, including React, Django, REST API development, AI integration, real-time communication, subscription management, Docker, AWS deployment, and CI/CD.
+This project was developed as a portfolio project to demonstrate practical full-stack software engineering capabilities, including React, Django, REST API development, AI integration, real-time communication, subscription management, Docker, AWS deployment, and Continuous Integration (CI).
 
 ---
 
